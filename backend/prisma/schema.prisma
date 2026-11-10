@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum FolderMode {
+  READ
+  READWRITE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  DENIED
+  EXPIRED
+}
+
+enum RunStatus {
+  SUCCESS
+  ERROR
+  ABORTED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  name               String?
+  passwordHash       String? // kosong untuk akun yang hanya memakai Google
+  googleId           String?        @unique
+  image              String?
+  blockedAt          DateTime? // terisi = akun diblokir (tidak bisa masuk / memakai API)
+  sessionsValidAfter DateTime? // token yang diterbitkan sebelum waktu ini ditolak
+  role               Role           @default(USER)
+  conversations      Conversation[]
+  runs               AgentRun[]
+  workbooks          Workbook[]
+  memberships        Membership[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model Conversation {
+  id          String     @id @default(uuid())
+  title       String     @default("Percakapan baru")
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  runs        AgentRun[]
+  workbook    Workbook?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId, updatedAt])
+  @@index([workspaceId, userId, updatedAt])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  steps          Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+/// Satu kali agen menjawab satu perintah pengguna; dipakai dashboard admin untuk mengawasi layanan.
+model AgentRun {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId    String
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  model          String
+  status         RunStatus
+  durationMs     Int
+  inputTokens    Int           @default(0)
+  outputTokens   Int           @default(0)
+  toolCalls      Int           @default(0)
+  error          String?
+  prompt         String        @default("")
+  createdAt      DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([workspaceId, createdAt])
+}
+
+/// Riwayat tindakan admin. Tanpa relasi, agar catatan tetap ada walau akunnya dihapus.
+model AdminAudit {
+  id          String   @id @default(uuid())
+  actorId     String
+  actorEmail  String
+  action      String
+  targetId    String?
+  targetEmail String?
+  detail      String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Lembar kerja Excel milik satu percakapan (meeting). Isinya JSON; nilai rumus dihitung ulang saat dibaca.
+model Workbook {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId    String
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversationId String       @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  name           String       @default("Lembar kerja")
+  data           Json
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+/// Ruang kerja satu perusahaan/klien. Semua data (percakapan, lembar kerja, catatan audit) terikat ke satu workspace.
+model Workspace {
+  id            String          @id @default(uuid())
+  name          String
+  slug          String          @unique
+  memberships   Membership[]
+  invites       Invite[]
+  conversations Conversation[]
+  runs          AgentRun[]
+  workbooks     Workbook[]
+  audits        AuditLog[]
+  folders       AllowedFolder[]
+  approvals     Approval[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Membership {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+}
+
+/// Undangan untuk email yang belum punya akun; diklaim otomatis saat email itu mendaftar atau masuk.
+model Invite {
+  id          String        @id @default(uuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  email       String
+  role        WorkspaceRole @default(MEMBER)
+  invitedById String?
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, email])
+  @@index([email])
+}
+
+/// Catatan tindakan di dalam satu workspace. Tanpa relasi ke User agar tetap ada walau akunnya dihapus.
+model AuditLog {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actorId     String?
+  actorEmail  String
+  action      String
+  target      String?
+  detail      String?
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, createdAt])
+}
+
+/// Folder di komputer yang boleh disentuh agen. Di luar daftar ini, alat berkas dan shell menolak bekerja.
+model AllowedFolder {
+  id          String     @id @default(uuid())
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  path        String
+  mode        FolderMode @default(READ)
+  createdAt   DateTime   @default(now())
+
+  @@unique([workspaceId, path])
+}
+
+/// Permintaan izin dari agen untuk tindakan berdampak (tulis berkas, jalankan perintah, simpan Excel). Tercatat permanen.
+model Approval {
+  id             String         @id @default(uuid())
+  workspaceId    String
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId         String
+  conversationId String?
+  tool           String
+  summary        String
+  detail         String?
+  status         ApprovalStatus @default(PENDING)
+  createdAt      DateTime       @default(now())
+  decidedAt      DateTime?
+
+  @@index([workspaceId, createdAt])
+  @@index([userId, status])
+}

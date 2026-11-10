@@ -1,0 +1,325 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020202;
+  --surface: #0b0b0b;
+  --foreground: #ededed;
+  --muted: #a1a1a6;
+  --line: rgba(255, 255, 255, 0.12);
+  --accent: #34ada4;
+  --accent-strong: #3fd0c4;
+  --shield: #3b5b80;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-shield: var(--shield);
+  --font-sans: var(--font-satoshi);
+  --font-display: var(--font-sora);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-satoshi), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sora), var(--font-satoshi), system-ui, sans-serif;
+  font-weight: 600;
+}
+
+::selection {
+  background: var(--accent);
+  color: #0d1417;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Latar futuristik landing page */
+.fx-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 0%, transparent 75%);
+  animation: fx-grid-move 24s linear infinite;
+}
+
+.fx-aurora {
+  will-change: transform;
+}
+.fx-a {
+  animation: fx-drift-a 26s ease-in-out infinite alternate;
+}
+.fx-b {
+  animation: fx-drift-b 32s ease-in-out infinite alternate;
+}
+.fx-c {
+  animation: fx-drift-c 29s ease-in-out infinite alternate;
+}
+
+@keyframes fx-grid-move {
+  to {
+    background-position: 64px 64px;
+  }
+}
+@keyframes fx-drift-a {
+  to {
+    transform: translate(18vw, 10vh) scale(1.15);
+  }
+}
+@keyframes fx-drift-b {
+  to {
+    transform: translate(-16vw, -12vh) scale(0.9);
+  }
+}
+@keyframes fx-drift-c {
+  to {
+    transform: translate(-10vw, -14vh) scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-grid,
+  .fx-aurora {
+    animation: none;
+  }
+}
+
+/* Ilustrasi mode produk */
+@keyframes fx-bar {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
+.fx-bar {
+  transform-origin: bottom;
+  animation: fx-bar 0.9s ease-in-out infinite;
+}
+@keyframes fx-speak {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(63, 208, 196, 0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(63, 208, 196, 0); }
+}
+.fx-speak {
+  animation: fx-speak 1.6s ease-out infinite;
+}
+@keyframes fx-step {
+  0%, 8% { opacity: 0; transform: translateX(-6px); }
+  22%, 100% { opacity: 1; transform: none; }
+}
+.fx-step {
+  opacity: 0;
+  animation: fx-step 6s ease-out infinite;
+}
+@keyframes fx-type {
+  0%, 100% { transform: scaleX(0.25); opacity: 0.4; }
+  40%, 70% { transform: scaleX(1); opacity: 1; }
+}
+.fx-type {
+  transform-origin: left;
+  animation: fx-type 4s ease-in-out infinite;
+}
+@keyframes fx-caret {
+  50% { opacity: 0; }
+}
+.fx-caret {
+  animation: fx-caret 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-bar, .fx-speak, .fx-type, .fx-caret { animation: none; }
+  .fx-step { animation: none; opacity: 1; }
+}
+
+/* Garis penghubung "Cara kerja": gradasi teal yang mengalir */
+.fx-flow {
+  background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent-strong) 50%, var(--accent) 80%, transparent);
+  background-size: 200% 100%;
+  opacity: 0.7;
+  animation: fx-flow 5s linear infinite;
+}
+@keyframes fx-flow {
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-flow { animation: none; }
+}
+
+/* ===== Animasi tambahan ===== */
+
+/* kilau menyapu kartu/panel */
+.fx-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.fx-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.06) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: fx-shimmer 6s ease-in-out infinite;
+}
+@keyframes fx-shimmer {
+  0%, 55% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* latar gradasi yang mengalir */
+.fx-gradient {
+  background-size: 220% 220%;
+  animation: fx-gradient 12s ease-in-out infinite;
+}
+@keyframes fx-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* tombol utama: kilau saat disorot */
+.fx-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.fx-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+}
+.fx-btn:hover::after {
+  transform: translateX(120%);
+}
+
+/* pilihan mode bergantian menyala (ilustrasi "Pilih mode") */
+@keyframes fx-toggle-a {
+  0%, 45% { background: rgba(52, 173, 164, 0.15); border-color: rgba(52, 173, 164, 0.6); color: var(--accent-strong); }
+  55%, 100% { background: transparent; border-color: var(--line); color: var(--muted); }
+}
+@keyframes fx-toggle-b {
+  0%, 45% { background: transparent; border-color: var(--line); color: var(--muted); }
+  55%, 100% { background: rgba(52, 173, 164, 0.15); border-color: rgba(52, 173, 164, 0.6); color: var(--accent-strong); }
+}
+/* gaya dasar (dipakai juga saat animasi mati/"kurangi gerakan"): A = aktif, B = tidak aktif */
+.fx-toggle-a {
+  border: 1px solid rgba(52, 173, 164, 0.6);
+  background: rgba(52, 173, 164, 0.15);
+  color: var(--accent-strong);
+  animation: fx-toggle-a 6s ease-in-out infinite;
+}
+.fx-toggle-b {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  animation: fx-toggle-b 6s ease-in-out infinite;
+}
+
+/* melayang pelan */
+@keyframes fx-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.fx-float { animation: fx-float 5s ease-in-out infinite; }
+
+/* denyut cahaya */
+@keyframes fx-glow {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.12); }
+}
+.fx-glow { animation: fx-glow 4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-shimmer::after, .fx-gradient, .fx-toggle-a, .fx-toggle-b, .fx-float, .fx-glow { animation: none; }
+  .fx-btn::after { transition: none; }
+}
+
+/* ===== Dashboard admin: tema terang (mengikuti gambar acuan) =====
+   Mengganti token warna di dalam .admin, sehingga kelas bg-surface/text-muted/border-line dst. ikut berubah.
+   Untuk memakai aksen teal merek: ubah --accent / --accent-strong / --shield di bawah. */
+.admin,
+.admin-vars {
+  color-scheme: light;
+  --background: #eceefa;
+  --surface: #ffffff;
+  --foreground: #14142b;
+  --muted: #6e7090;
+  --line: rgba(20, 20, 43, 0.09);
+  --accent: #5b47f5;
+  --accent-strong: #4a37e6;
+  --shield: #7c6cf8;
+}
+/* .admin-vars dipakai oleh dialog/menu yang dirender lewat portal di luar .admin */
+.admin {
+  background: var(--background);
+  color: var(--foreground);
+}
+.admin ::selection {
+  background: var(--accent);
+  color: #fff;
+}
+html:has(.admin) {
+  color-scheme: light;
+}
+body:has(.admin) {
+  background: #eceefa;
+}
+
+/* ---------- lembar kerja Excel di layar bersama ---------- */
+.sheet-table { table-layout: fixed; }
+.sheet-corner, .sheet-colhead, .sheet-rowhead {
+  position: sticky;
+  background: #f1f3f4;
+  color: #5f6368;
+  font-weight: 500;
+  font-size: 11px;
+  border-right: 1px solid #dadce0;
+  border-bottom: 1px solid #dadce0;
+  user-select: none;
+}
+.sheet-colhead { top: 0; z-index: 2; height: 24px; }
+.sheet-corner { top: 0; left: 0; z-index: 3; width: 44px; min-width: 44px; }
+.sheet-rowhead { left: 0; z-index: 1; width: 44px; min-width: 44px; text-align: center; height: 24px; }
+.sheet-cell {
+  height: 24px;
+  padding: 0 6px;
+  border-right: 1px solid #e3e5e8;
+  border-bottom: 1px solid #e3e5e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: cell;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-cell.sheet-sel { outline: 2px solid #1a73e8; outline-offset: -2px; }
+.sheet-cell.sheet-err { color: #c5221f; font-weight: 600; }
+.sheet-fill { animation: fx-cell-fill 1.1s ease-out backwards; }
+@keyframes fx-cell-fill {
+  0% { background-color: rgba(26, 115, 232, 0.35); color: transparent; transform: scale(0.97); }
+  35% { background-color: rgba(26, 115, 232, 0.22); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-fill { animation: none; }
+}

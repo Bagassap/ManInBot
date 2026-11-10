@@ -1,0 +1,34 @@
+{
+  "name": "mib-desktop",
+  "version": "0.1.0",
+  "description": "MiB (Man in Bot) — agen AI yang berjalan di komputer Anda",
+  "author": "MiB",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "stage": "node scripts/stage.cjs",
+    "start": "electron .",
+    "dist": "node scripts/stage.cjs && electron-builder --win nsis",
+    "pack": "node scripts/stage.cjs && electron-builder --win --dir"
+  },
+  "devDependencies": {
+    "electron": "^45.2.2",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "id.mib.agent",
+    "productName": "MiB",
+    "directories": { "output": "release", "buildResources": "build" },
+    "files": ["main.cjs", "preload.cjs", "build/icon.png", "package.json"],
+    "extraResources": [{ "from": "stage", "to": "app-data" }],
+    "asar": true,
+    "win": { "target": ["nsis"], "icon": "build/icon.png" },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "MiB"
+    }
+  }
+}
