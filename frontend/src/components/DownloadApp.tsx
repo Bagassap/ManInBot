@@ -43,7 +43,7 @@ export default function DownloadApp() {
       <p className="mt-3 text-muted">
         MiB berjalan di komputer Anda sendiri: data dan folder tetap di sana, dan setiap
         tindakan yang mengubah berkas atau menjalankan perintah menunggu persetujuan Anda.
-        Anda hanya perlu kunci API AI milik sendiri.
+        Anda hanya perlu kode lisensi MiB.
       </p>
 
       <section className="mt-10 rounded-2xl border border-line bg-surface p-6">
@@ -93,7 +93,7 @@ export default function DownloadApp() {
         <h2 className="text-base font-medium text-foreground">Setelah terpasang</h2>
         <ol className="list-decimal space-y-1 pl-5">
           <li>Buka MiB, lalu daftar. Akun pertama otomatis menjadi admin.</li>
-          <li>Buka Pengaturan dan masukkan kunci API Anda.</li>
+          <li>Buka Pengaturan dan masukkan kode lisensi Anda.</li>
           <li>Di Pengaturan → Folder lokal, pilih folder yang boleh diakses MiB.</li>
         </ol>
         <p>

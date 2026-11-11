@@ -14,7 +14,7 @@ export default function QuickStart() {
       "",
       "# lalu buka MiB dari Start Menu",
     ].join("\n"),
-    Aplikasi: ["# Unduh pemasang .exe, jalankan, selesai.", "# Daftar -> akun pertama otomatis admin", "# Pengaturan -> masukkan kunci API"].join("\n"),
+    Aplikasi: ["# Unduh pemasang .exe, jalankan, selesai.", "# Daftar -> akun pertama otomatis admin", "# Pengaturan -> masukkan kode lisensi"].join("\n"),
     "Dari sumber": ["git clone <repo-mib> && cd mib/backend", "npm install", "npm run build && npm run start:prod", "# antarmuka di http://127.0.0.1:4000"].join("\n"),
   } as const;
   type Tab = keyof typeof tabs;

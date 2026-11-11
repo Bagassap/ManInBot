@@ -66,7 +66,7 @@ export class ConversationsController {
   ) {
     const conv = await this.conversations.getOwned(ws.workspaceId, user.id, id);
     if (!this.agent.enabled) {
-      throw new ServiceUnavailableException('Agen belum aktif: kunci API AI belum diatur. Buka Pengaturan untuk memasukkannya.');
+      throw new ServiceUnavailableException('Agen belum aktif: kode lisensi belum dimasukkan. Buka Pengaturan untuk memasukkannya.');
     }
 
     const userMessage = await this.conversations.addUserMessage(
@@ -123,12 +123,12 @@ export class ConversationsController {
         status = 'ERROR';
         failure = err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 300) : 'Galat tidak dikenal';
         this.logger.error(err instanceof Error ? err.stack : String(err));
-        const message =
-          err instanceof Anthropic.AuthenticationError
-            ? 'Kunci API AI tidak valid.'
-            : err instanceof Anthropic.RateLimitError
-              ? 'Layanan AI sedang sibuk, coba lagi sebentar lagi.'
-              : 'Terjadi kesalahan saat menjalankan agen.';
+        // Pesan dari gateway MiB (kode salah, dicabut, kedaluwarsa, kuota habis) sudah berbahasa Indonesia dan aman ditampilkan.
+        const gateway =
+          err instanceof Anthropic.APIError && [401, 403, 429].includes(err.status ?? 0)
+            ? ((err.error as { error?: { message?: string } } | undefined)?.error?.message ?? null)
+            : null;
+        const message = gateway ?? 'Terjadi kesalahan saat menjalankan agen.';
         send({ type: 'error', message });
       }
     }

@@ -55,7 +55,7 @@ const layers: {
     summary: "MiB bekerja di dalam batas yang jelas.",
     points: [
       "Hanya alat yang terdaftar yang dapat dijalankan; perhitungan tanpa eval kode.",
-      "Kunci API AI tersimpan di server dan tidak pernah dikirim ke browser Anda.",
+      "Kunci layanan AI hanya ada di server MiB; aplikasi Anda hanya memegang kode lisensi.",
       "Satu perintah dibatasi 8 langkah, sehingga agen tidak berputar tanpa henti.",
     ],
   },

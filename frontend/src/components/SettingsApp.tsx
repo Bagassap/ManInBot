@@ -16,8 +16,11 @@ export interface AppSettings {
   agentReady: boolean;
   keyHint: string | null;
   canSaveKey: boolean;
-  model: string;
+  license: { quotaTokens: number; usedTokens: number; expiresAt: string | null } | null;
+  licenseProblem: string | null;
 }
+
+const fmt = (n: number) => n.toLocaleString("id-ID");
 
 const messageOf = (e: unknown) =>
   e instanceof Error ? e.message : "Terjadi kesalahan";
@@ -54,15 +57,15 @@ export default function SettingsApp() {
     setError("");
     setNotice("");
     try {
-      const r = await api<{ verified: boolean }>("/settings/anthropic-key", {
+      const r = await api<{ verified: boolean }>("/settings/license", {
         method: "PUT",
-        body: JSON.stringify({ key: key.trim() }),
+        body: JSON.stringify({ code: key.trim() }),
       });
       setKey("");
       setNotice(
         r.verified
-          ? "Kunci tersimpan dan terverifikasi. MiB siap dipakai."
-          : "Kunci tersimpan, tetapi belum bisa diverifikasi (periksa koneksi internet). Kunci akan terbukti saat dipakai.",
+          ? "Kode lisensi aktif. MiB siap dipakai."
+          : "Kode tersimpan, tetapi belum bisa diperiksa (periksa koneksi internet). Kode akan terbukti saat dipakai.",
       );
       await load();
     } catch (err) {
@@ -75,14 +78,14 @@ export default function SettingsApp() {
   async function clear() {
     if (
       !confirm(
-        "Hapus kunci API dari komputer ini? MiB berhenti bekerja sampai kunci baru dimasukkan.",
+        "Hapus kode lisensi dari komputer ini? MiB berhenti bekerja sampai kode baru dimasukkan.",
       )
     )
       return;
     setError("");
     setNotice("");
     try {
-      await api("/settings/anthropic-key", { method: "DELETE" });
+      await api("/settings/license", { method: "DELETE" });
       await load();
     } catch (err) {
       setError(messageOf(err));
@@ -116,7 +119,7 @@ export default function SettingsApp() {
       <section className="rounded-2xl border border-line bg-surface p-5">
         <div className="flex items-center gap-2.5">
           <KeyRound className="size-5 text-accent-strong" />
-          <h2 className="font-medium">Kunci API AI</h2>
+          <h2 className="font-medium">Kode lisensi</h2>
           {settings && (
             <span
               className={`ml-auto flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ${settings.agentReady ? "bg-emerald-400/15 text-emerald-300" : "bg-amber-400/15 text-amber-200"}`}
@@ -132,24 +135,42 @@ export default function SettingsApp() {
           )}
         </div>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          MiB memakai model AI sebagai otaknya, dengan kunci API milik Anda
-          sendiri. Kunci disimpan hanya di komputer ini (di folder data
-          aplikasi, bukan di database) dan dikirim hanya ke layanan AI untuk
-          memproses permintaan Anda. Biaya pemakaian ditagih ke akun pemilik
-          kunci.
+          Masukkan kode lisensi MiB Anda untuk mengaktifkan agen. Kode
+          disimpan hanya di komputer ini. Pemakaian dihitung dari kuota pada
+          kode Anda; tidak ada kunci atau biaya lain yang perlu Anda atur.
         </p>
 
+        {settings?.licenseProblem && (
+          <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-sm text-red-200">
+            {settings.licenseProblem}
+          </p>
+        )}
+        {settings?.license && (
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-muted">
+              <span>
+                Kuota terpakai {fmt(settings.license.usedTokens)} dari {fmt(settings.license.quotaTokens)}
+              </span>
+              {settings.license.expiresAt && <span>Berlaku s.d. {new Date(settings.license.expiresAt).toLocaleDateString("id-ID")}</span>}
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full bg-accent"
+                style={{ width: `${Math.min(100, (settings.license.usedTokens / Math.max(1, settings.license.quotaTokens)) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
         {!settings ? (
           <p className="mt-4 animate-pulse text-sm text-muted">Memuat…</p>
         ) : !isAdmin ? (
           <p className="mt-4 text-sm text-muted">
-            Hanya admin komputer ini yang bisa mengubah kunci.
+            Hanya admin komputer ini yang bisa mengubah kode lisensi.
           </p>
         ) : !settings.canSaveKey ? (
           <p className="mt-4 text-sm text-muted">
-            Penyimpanan kunci lewat layar ini hanya tersedia pada aplikasi
-            terpasang. Pada mode pengembangan, isi kunci API di
-            backend/.env.
+            Penyimpanan kode lewat layar ini hanya tersedia pada aplikasi
+            terpasang.
           </p>
         ) : (
           <form
@@ -162,8 +183,8 @@ export default function SettingsApp() {
               spellCheck={false}
               value={key}
               onChange={(e) => setKey(e.target.value)}
-              placeholder="Tempel kunci API"
-              aria-label="Kunci API AI"
+              placeholder="MIB-XXXXXX-XXXXXX-XXXXXX"
+              aria-label="Kode lisensi"
               className="h-10 min-w-0 flex-1 rounded-xl border border-line bg-transparent px-3 font-mono text-sm outline-none focus:border-accent"
             />
             <button
@@ -171,13 +192,13 @@ export default function SettingsApp() {
               className="flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-[#0d1417] hover:bg-accent-strong disabled:opacity-50"
             >
               {busy && <Loader2 className="size-4 animate-spin" />}
-              {settings.agentReady ? "Ganti kunci" : "Simpan kunci"}
+              {settings.agentReady ? "Ganti kode" : "Aktifkan"}
             </button>
             {settings.agentReady && (
               <button
                 type="button"
                 onClick={() => void clear()}
-                aria-label="Hapus kunci"
+                aria-label="Hapus kode"
                 className="flex h-10 items-center justify-center gap-2 rounded-xl border border-line px-3 text-sm text-muted transition-colors hover:text-red-300"
               >
                 <Trash2 className="size-4" />

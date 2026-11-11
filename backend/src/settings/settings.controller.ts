@@ -1,16 +1,36 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Put, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { IsString, Matches, MaxLength } from 'class-validator';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
-import { SettingsService } from './settings.service.js';
+import { GATEWAY_URL, SettingsService } from './settings.service.js';
 
-class KeyDto {
+class LicenseDto {
   @IsString()
-  @MaxLength(300)
-  @Matches(/^sk-ant-[A-Za-z0-9_-]{20,}$/, { message: 'Format kunci tidak dikenali. Periksa kembali kunci Anda.' })
-  key!: string;
+  @MaxLength(60)
+  @Matches(/^MIB-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}$/, { message: 'Format kode tidak dikenali. Contoh: MIB-1A2B3C-4D5E6F-7A8B9C' })
+  code!: string;
+}
+
+export interface LicenseInfo {
+  quotaTokens: number;
+  usedTokens: number;
+  expiresAt: string | null;
+}
+
+type Check = { state: 'ok'; info: LicenseInfo } | { state: 'rejected'; message: string } | { state: 'offline' };
+
+/** Menanyakan kuota ke gateway MiB. `rejected` hanya bila gateway menjawab bahwa kode tidak sah. */
+async function checkLicense(code: string): Promise<Check> {
+  try {
+    const r = await fetch(`${GATEWAY_URL}/v1/license`, { headers: { 'x-api-key': code }, signal: AbortSignal.timeout(8000) });
+    const body = (await r.json().catch(() => null)) as { error?: { message?: string } } & Partial<LicenseInfo> | null;
+    if (r.ok && body) return { state: 'ok', info: { quotaTokens: body.quotaTokens ?? 0, usedTokens: body.usedTokens ?? 0, expiresAt: body.expiresAt ?? null } };
+    if (r.status >= 400 && r.status < 500) return { state: 'rejected', message: body?.error?.message ?? 'Kode lisensi ditolak.' };
+  } catch {
+    // tidak ada internet / server tidak terjangkau
+  }
+  return { state: 'offline' };
 }
 
 @Controller('settings')
@@ -19,40 +39,35 @@ export class SettingsController {
   constructor(private readonly settings: SettingsService) {}
 
   @Get()
-  status() {
+  async status() {
+    const code = this.settings.licenseCode;
+    const check = code ? await checkLicense(code) : null;
     return {
-      agentReady: this.settings.anthropicKey !== null,
+      agentReady: this.settings.credentials !== null,
       keyHint: this.settings.keyHint,
       canSaveKey: this.settings.canPersist,
-      model: process.env.ANTHROPIC_MODEL || 'claude-opus-5-5',
+      license: check?.state === 'ok' ? check.info : null,
+      licenseProblem: check?.state === 'rejected' ? check.message : null,
     };
   }
 
-  /** Menyimpan kunci API Claude milik pemakai. Hanya admin; kunci diperiksa ke Anthropic sebelum disimpan. */
-  @Put('anthropic-key')
+  /** Menyimpan kode lisensi MiB. Hanya admin; kode diperiksa ke server MiB sebelum disimpan. */
+  @Put('license')
   @UseGuards(AdminGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  async setKey(@Body() dto: KeyDto) {
-    if (!this.settings.canPersist) {
-      throw new BadRequestException('Penyimpanan kunci hanya tersedia pada aplikasi terpasang. Isi ANTHROPIC_API_KEY di .env server.');
-    }
-    let verified = true;
-    try {
-      await new Anthropic({ apiKey: dto.key, maxRetries: 0, timeout: 10_000 }).models.list({ limit: 1 });
-    } catch (e) {
-      if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
-        throw new BadRequestException('Kunci ditolak oleh layanan AI. Periksa kembali kunci Anda.');
-      }
-      verified = false; // mis. tidak ada internet: simpan saja, akan terbukti saat dipakai
-    }
-    this.settings.setAnthropicKey(dto.key);
-    return { saved: true, verified, keyHint: this.settings.keyHint };
+  async setLicense(@Body() dto: LicenseDto) {
+    if (!this.settings.canPersist) throw new BadRequestException('Penyimpanan kode hanya tersedia pada aplikasi terpasang.');
+    const code = dto.code.toUpperCase();
+    const check = await checkLicense(code);
+    if (check.state === 'rejected') throw new BadRequestException(check.message);
+    this.settings.setLicenseCode(code); // offline: simpan saja, akan terbukti saat dipakai
+    return { saved: true, verified: check.state === 'ok', keyHint: this.settings.keyHint, license: check.state === 'ok' ? check.info : null };
   }
 
-  @Delete('anthropic-key')
+  @Delete('license')
   @HttpCode(204)
   @UseGuards(AdminGuard)
-  clearKey() {
-    this.settings.setAnthropicKey(null);
+  clearLicense() {
+    this.settings.setLicenseCode(null);
   }
 }

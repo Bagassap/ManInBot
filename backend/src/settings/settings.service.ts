@@ -4,13 +4,15 @@ import { Injectable } from '@nestjs/common';
 import { dataDir, writePrivate } from '../runtime/bootstrap.js';
 
 interface StoredSettings {
-  anthropicKey?: string;
+  licenseCode?: string;
 }
 
+/** Alamat gateway MiB: kunci layanan AI hanya ada di server MiB, aplikasi memakai kode lisensi. */
+export const GATEWAY_URL = process.env.MIB_GATEWAY_URL || 'https://maninbot.id/ai';
+
 /**
- * Pengaturan yang diubah lewat aplikasi (kunci API Claude milik pemakai). Disimpan di folder data pengguna,
- * di luar database, supaya cadangan/ekspor database tidak ikut membawa kunci. Tanpa folder data (mode
- * pengembangan) kunci hanya dibaca dari ANTHROPIC_API_KEY.
+ * Pengaturan yang diubah lewat aplikasi (kode lisensi MiB). Disimpan di folder data pengguna, di luar database.
+ * Tanpa folder data (mode pengembangan) dipakai ANTHROPIC_API_KEY langsung ke layanan AI.
  */
 @Injectable()
 export class SettingsService {
@@ -25,26 +27,33 @@ export class SettingsService {
     }
   }
 
-  /** Kunci yang tersimpan di aplikasi menang atas variabel lingkungan. */
-  get anthropicKey(): string | null {
-    return this.read().anthropicKey || process.env.ANTHROPIC_API_KEY || null;
+  get licenseCode(): string | null {
+    return this.read().licenseCode || null;
+  }
+
+  /** Kredensial untuk klien AI: kode lisensi (lewat gateway) menang atas kunci langsung milik pengembang. */
+  get credentials(): { apiKey: string; baseURL?: string } | null {
+    const code = this.licenseCode;
+    if (code) return { apiKey: code, baseURL: GATEWAY_URL };
+    const dev = process.env.ANTHROPIC_API_KEY;
+    return dev ? { apiKey: dev } : null;
   }
 
   get canPersist() {
     return this.file !== null;
   }
 
-  setAnthropicKey(key: string | null) {
-    if (!this.file) throw new Error('Folder data tidak diatur; isi ANTHROPIC_API_KEY di .env');
+  setLicenseCode(code: string | null) {
+    if (!this.file) throw new Error('Folder data tidak diatur (mode pengembangan)');
     const s = this.read();
-    if (key) s.anthropicKey = key;
-    else delete s.anthropicKey;
+    if (code) s.licenseCode = code;
+    else delete s.licenseCode;
     writePrivate(this.file, JSON.stringify(s));
   }
 
   /** Petunjuk aman untuk ditampilkan: empat karakter terakhir saja. */
   get keyHint(): string | null {
-    const k = this.anthropicKey;
-    return k ? `…${k.slice(-4)}` : null;
+    const k = this.licenseCode;
+    return k ? `…${k.slice(-4)}` : this.credentials ? 'langsung' : null;
   }
 }

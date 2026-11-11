@@ -133,14 +133,15 @@ export class AgentService {
 
   /** Klien dibuat ulang bila kunci diganti lewat Pengaturan, jadi tidak perlu memulai ulang aplikasi. */
   private get client(): Anthropic | null {
-    const key = this.settings.anthropicKey;
-    if (!key) return null;
-    if (this.cached?.key !== key) this.cached = { key, client: new Anthropic({ apiKey: key }) };
+    const c = this.settings.credentials;
+    if (!c) return null;
+    const key = `${c.baseURL ?? ''}|${c.apiKey}`;
+    if (this.cached?.key !== key) this.cached = { key, client: new Anthropic({ apiKey: c.apiKey, baseURL: c.baseURL }) };
     return this.cached.client;
   }
 
   get enabled() {
-    return this.settings.anthropicKey !== null;
+    return this.settings.credentials !== null;
   }
 
   /** Menjalankan loop agen; mengembalikan teks akhir dan langkah alat yang dikerjakan. */
@@ -167,7 +168,7 @@ export class AgentService {
     ctx?: RunContext,
   ): Promise<{ text: string; steps: AgentStep[] }> {
     const client = this.client;
-    if (!client) throw new Error('Kunci API AI belum diatur');
+    if (!client) throw new Error('Kode lisensi belum diatur');
 
     const messages = [...history];
     const steps: AgentStep[] = [];
