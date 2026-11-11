@@ -25,9 +25,9 @@ const STEPS: { title: string; body: string; extra?: string; href?: [string, stri
     body: "Buka MiB dan buat akun. Akun pertama di komputer ini otomatis menjadi admin.",
   },
   {
-    title: "Masukkan kode lisensi",
-    body: "Buka Pengaturan dan tempel kode lisensi MiB Anda. MiB memeriksanya sebelum menyimpan. Tidak ada kunci atau akun lain yang perlu disiapkan.",
-    href: ["/docs/pengaturan-awal", "Cara memasang kode lisensi"],
+    title: "Masuk ke akun MiB",
+    body: "Buka Pengaturan, daftar dengan email, lalu masukkan kode verifikasi. Gratis 3 perintah per hari; paket berbayar membuka 30 perintah per hari. Tidak ada kunci atau akun lain yang perlu disiapkan.",
+    href: ["/docs/pengaturan-awal", "Akun dan paket"],
   },
   {
     title: "Pilih folder yang boleh diakses",
@@ -48,7 +48,7 @@ export default function PanduanPage() {
         <p className="mt-4 text-lg text-muted">Dari unduhan sampai tugas pertama, sekitar sepuluh menit.</p>
 
         <div className="mt-8 flex flex-wrap gap-2 text-sm">
-          {["Windows 10 / 11 (64-bit)", "±500 MB ruang kosong", "Koneksi internet", "Kode lisensi MiB"].map((r) => (
+          {["Windows 10 / 11 (64-bit)", "±500 MB ruang kosong", "Koneksi internet", "Email aktif untuk akun MiB"].map((r) => (
             <span key={r} className="rounded-full border border-line px-3 py-1 text-muted">
               {r}
             </span>

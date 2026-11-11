@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common';
 import { dataDir, writePrivate } from '../runtime/bootstrap.js';
 
 interface StoredSettings {
-  licenseCode?: string;
+  accountToken?: string;
 }
 
 /** Alamat gateway MiB: kunci layanan AI hanya ada di server MiB, aplikasi memakai kode lisensi. */
 export const GATEWAY_URL = process.env.MIB_GATEWAY_URL || 'https://maninbot.id/ai';
 
 /**
- * Pengaturan yang diubah lewat aplikasi (kode lisensi MiB). Disimpan di folder data pengguna, di luar database.
+ * Pengaturan yang diubah lewat aplikasi (token sesi akun MiB). Disimpan di folder data pengguna, di luar database.
  * Tanpa folder data (mode pengembangan) dipakai ANTHROPIC_API_KEY langsung ke layanan AI.
  */
 @Injectable()
@@ -27,14 +27,14 @@ export class SettingsService {
     }
   }
 
-  get licenseCode(): string | null {
-    return this.read().licenseCode || null;
+  get accountToken(): string | null {
+    return this.read().accountToken || null;
   }
 
-  /** Kredensial untuk klien AI: kode lisensi (lewat gateway) menang atas kunci langsung milik pengembang. */
+  /** Kredensial untuk klien AI: token akun MiB (lewat gateway) menang atas kunci langsung milik pengembang. */
   get credentials(): { apiKey: string; baseURL?: string } | null {
-    const code = this.licenseCode;
-    if (code) return { apiKey: code, baseURL: GATEWAY_URL };
+    const token = this.accountToken;
+    if (token) return { apiKey: token, baseURL: GATEWAY_URL };
     const dev = process.env.ANTHROPIC_API_KEY;
     return dev ? { apiKey: dev } : null;
   }
@@ -43,17 +43,11 @@ export class SettingsService {
     return this.file !== null;
   }
 
-  setLicenseCode(code: string | null) {
+  setAccountToken(token: string | null) {
     if (!this.file) throw new Error('Folder data tidak diatur (mode pengembangan)');
     const s = this.read();
-    if (code) s.licenseCode = code;
-    else delete s.licenseCode;
+    if (token) s.accountToken = token;
+    else delete s.accountToken;
     writePrivate(this.file, JSON.stringify(s));
-  }
-
-  /** Petunjuk aman untuk ditampilkan: empat karakter terakhir saja. */
-  get keyHint(): string | null {
-    const k = this.licenseCode;
-    return k ? `…${k.slice(-4)}` : this.credentials ? 'langsung' : null;
   }
 }

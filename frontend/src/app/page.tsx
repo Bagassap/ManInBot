@@ -185,7 +185,7 @@ export default function Home() {
             <h2 className="text-3xl font-semibold tracking-tight">Bekerja dengan</h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["Model AI", "Otak agen, sudah termasuk di kode lisensi Anda"],
+                ["Model AI", "Otak agen, sudah termasuk di akun MiB"],
                 ["Dokumen", "Word, PowerPoint, Excel"],
                 ["Folder lokal", "Berkas dan dokumen kantor"],
                 ["PowerShell", "Otomasi di Windows"],

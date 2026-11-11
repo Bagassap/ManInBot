@@ -66,7 +66,7 @@ export class ConversationsController {
   ) {
     const conv = await this.conversations.getOwned(ws.workspaceId, user.id, id);
     if (!this.agent.enabled) {
-      throw new ServiceUnavailableException('Agen belum aktif: kode lisensi belum dimasukkan. Buka Pengaturan untuk memasukkannya.');
+      throw new ServiceUnavailableException('Agen belum aktif: Anda belum masuk ke akun MiB. Buka Pengaturan untuk masuk.');
     }
 
     const userMessage = await this.conversations.addUserMessage(

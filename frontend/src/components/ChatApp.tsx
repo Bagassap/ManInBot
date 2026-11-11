@@ -459,9 +459,9 @@ export default function ChatApp() {
 
             {!agentReady && (
               <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
-                MiB belum diaktifkan dengan kode lisensi.{" "}
+                Anda belum masuk ke akun MiB.{" "}
                 <Link href="/app/settings" className="underline">
-                  Masukkan di Pengaturan
+                  Masuk di Pengaturan
                 </Link>{" "}
                 agar bisa bekerja.
               </p>

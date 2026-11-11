@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -168,8 +169,10 @@ export class AgentService {
     ctx?: RunContext,
   ): Promise<{ text: string; steps: AgentStep[] }> {
     const client = this.client;
-    if (!client) throw new Error('Kode lisensi belum diatur');
+    if (!client) throw new Error('Akun MiB belum masuk');
 
+    // Satu putaran agen = satu perintah pengguna; gateway menghitung kuota harian per perintah, bukan per panggilan.
+    const cmdHeaders = this.settings.credentials?.baseURL ? { 'x-mib-command': randomUUID() } : undefined;
     const messages = [...history];
     const steps: AgentStep[] = [];
     const texts: string[] = [];
@@ -193,7 +196,7 @@ export class AgentService {
           tools: toolsFor(),
           messages,
         },
-        { signal },
+        { signal, headers: cmdHeaders },
       );
       stream.on('text', (delta) => emit({ type: 'text', delta }));
       const message = await stream.finalMessage();

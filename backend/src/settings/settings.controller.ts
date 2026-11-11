@@ -1,36 +1,84 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Post, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { IsString, Matches, MaxLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Length, MaxLength, MinLength } from 'class-validator';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { GATEWAY_URL, SettingsService } from './settings.service.js';
 
-class LicenseDto {
+class CredsDto {
+  @IsEmail()
+  @MaxLength(120)
+  email!: string;
+
   @IsString()
-  @MaxLength(60)
-  @Matches(/^MIB-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}-[0-9A-Fa-f]{6}$/, { message: 'Format kode tidak dikenali. Contoh: MIB-1A2B3C-4D5E6F-7A8B9C' })
+  @MinLength(8)
+  @MaxLength(100)
+  password!: string;
+}
+class VerifyDto {
+  @IsEmail()
+  @MaxLength(120)
+  email!: string;
+
+  @IsString()
+  @Length(6, 6)
   code!: string;
 }
-
-export interface LicenseInfo {
-  quotaTokens: number;
-  usedTokens: number;
-  expiresAt: string | null;
+class ForgotDto {
+  @IsEmail()
+  @MaxLength(120)
+  email!: string;
+}
+class ResetDto extends VerifyDto {
+  @IsString()
+  @MinLength(8)
+  @MaxLength(100)
+  password!: string;
+}
+class OptionalDto {
+  @IsOptional()
+  @IsString()
+  _?: string;
 }
 
-type Check = { state: 'ok'; info: LicenseInfo } | { state: 'rejected'; message: string } | { state: 'offline' };
+export interface AccountView {
+  email: string;
+  paid: boolean;
+  paidUntil: string | null;
+  usedToday: number;
+  limitToday: number;
+  plan: PlanView;
+}
+export interface PlanView {
+  freePerDay: number;
+  paidPerDay: number;
+  days: number;
+  priceIdr: number;
+  canPay: boolean;
+}
 
-/** Menanyakan kuota ke gateway MiB. `rejected` hanya bila gateway menjawab bahwa kode tidak sah. */
-async function checkLicense(code: string): Promise<Check> {
+interface GwResult<T> {
+  status: number;
+  body: T & { error?: string; needVerify?: boolean };
+}
+
+/** Memanggil gateway MiB. Galat jaringan menjadi 503; galat dari gateway diteruskan apa adanya (pesannya sudah berbahasa Indonesia). */
+async function gw<T = Record<string, unknown>>(path: string, opts: { method?: string; body?: unknown; token?: string | null } = {}): Promise<GwResult<T>> {
   try {
-    const r = await fetch(`${GATEWAY_URL}/v1/license`, { headers: { 'x-api-key': code }, signal: AbortSignal.timeout(8000) });
-    const body = (await r.json().catch(() => null)) as { error?: { message?: string } } & Partial<LicenseInfo> | null;
-    if (r.ok && body) return { state: 'ok', info: { quotaTokens: body.quotaTokens ?? 0, usedTokens: body.usedTokens ?? 0, expiresAt: body.expiresAt ?? null } };
-    if (r.status >= 400 && r.status < 500) return { state: 'rejected', message: body?.error?.message ?? 'Kode lisensi ditolak.' };
+    const r = await fetch(`${GATEWAY_URL}${path}`, {
+      method: opts.method ?? (opts.body ? 'POST' : 'GET'),
+      headers: { 'Content-Type': 'application/json', ...(opts.token ? { 'x-api-key': opts.token } : {}) },
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      signal: AbortSignal.timeout(20_000),
+    });
+    return { status: r.status, body: ((await r.json().catch(() => ({}))) as GwResult<T>['body']) ?? {} };
   } catch {
-    // tidak ada internet / server tidak terjangkau
+    throw new HttpException('Tidak bisa terhubung ke server MiB. Periksa koneksi internet Anda.', 503);
   }
-  return { state: 'offline' };
+}
+function ok<T>(r: GwResult<T>): GwResult<T>['body'] {
+  if (r.status >= 200 && r.status < 300) return r.body;
+  throw new HttpException({ message: r.body.error ?? 'Permintaan ditolak.', needVerify: r.body.needVerify === true }, r.status);
 }
 
 @Controller('settings')
@@ -38,36 +86,90 @@ async function checkLicense(code: string): Promise<Check> {
 export class SettingsController {
   constructor(private readonly settings: SettingsService) {}
 
+  /** Status akun MiB dari gateway. Sesi yang sudah berakhir dibersihkan agar pengguna diminta masuk lagi. */
   @Get()
   async status() {
-    const code = this.settings.licenseCode;
-    const check = code ? await checkLicense(code) : null;
+    const token = this.settings.accountToken;
+    let account: AccountView | null = null;
+    let problem: string | null = null;
+    if (token) {
+      try {
+        const r = await gw<AccountView>('/v1/account', { token });
+        if (r.status === 200) account = r.body as AccountView;
+        else if (r.status === 401) this.settings.setAccountToken(null);
+        else problem = r.body.error ?? null;
+      } catch {
+        problem = 'Tidak bisa terhubung ke server MiB untuk memeriksa akun.';
+      }
+    }
+    let plan: PlanView | null = account?.plan ?? null;
+    if (!plan) plan = await gw<PlanView>('/v1/plan').then((r) => (r.status === 200 ? (r.body as PlanView) : null)).catch(() => null);
     return {
       agentReady: this.settings.credentials !== null,
-      keyHint: this.settings.keyHint,
       canSaveKey: this.settings.canPersist,
-      license: check?.state === 'ok' ? check.info : null,
-      licenseProblem: check?.state === 'rejected' ? check.message : null,
+      loggedIn: this.settings.accountToken !== null,
+      account,
+      accountProblem: problem,
+      plan,
     };
   }
 
-  /** Menyimpan kode lisensi MiB. Hanya admin; kode diperiksa ke server MiB sebelum disimpan. */
-  @Put('license')
+  @Post('account/register')
   @UseGuards(AdminGuard)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  async setLicense(@Body() dto: LicenseDto) {
-    if (!this.settings.canPersist) throw new BadRequestException('Penyimpanan kode hanya tersedia pada aplikasi terpasang.');
-    const code = dto.code.toUpperCase();
-    const check = await checkLicense(code);
-    if (check.state === 'rejected') throw new BadRequestException(check.message);
-    this.settings.setLicenseCode(code); // offline: simpan saja, akan terbukti saat dipakai
-    return { saved: true, verified: check.state === 'ok', keyHint: this.settings.keyHint, license: check.state === 'ok' ? check.info : null };
+  @Throttle({ default: { limit: 8, ttl: 60_000 } })
+  async register(@Body() dto: CredsDto) {
+    return ok(await gw('/v1/account/register', { body: dto }));
   }
 
-  @Delete('license')
+  @Post('account/verify')
+  @UseGuards(AdminGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async verify(@Body() dto: VerifyDto) {
+    const b = ok(await gw<{ token: string }>('/v1/account/verify', { body: dto }));
+    this.settings.setAccountToken(b.token as string);
+    return { ok: true };
+  }
+
+  @Post('account/login')
+  @UseGuards(AdminGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async login(@Body() dto: CredsDto) {
+    const b = ok(await gw<{ token: string }>('/v1/account/login', { body: dto }));
+    this.settings.setAccountToken(b.token as string);
+    return { ok: true };
+  }
+
+  @Post('account/forgot')
+  @UseGuards(AdminGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async forgot(@Body() dto: ForgotDto) {
+    return ok(await gw('/v1/account/forgot', { body: dto }));
+  }
+
+  @Post('account/reset')
+  @UseGuards(AdminGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async reset(@Body() dto: ResetDto) {
+    return ok(await gw('/v1/account/reset', { body: dto }));
+  }
+
+  /** Membuat pembayaran paket berbayar; mengembalikan alamat halaman bayar yang dibuka pengguna di browser. */
+  @Post('account/checkout')
+  @UseGuards(AdminGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async checkout(@Body() _dto: OptionalDto) {
+    const token = this.settings.accountToken;
+    if (!token) throw new HttpException('Masuk ke akun MiB terlebih dahulu.', 401);
+    const b = ok(await gw<{ url: string }>('/v1/account/checkout', { method: 'POST', body: {}, token }));
+    return { url: b.url as string };
+  }
+
+  @Delete('account')
   @HttpCode(204)
   @UseGuards(AdminGuard)
-  clearLicense() {
-    this.settings.setLicenseCode(null);
+  async logout() {
+    const token = this.settings.accountToken;
+    if (token) await gw('/v1/account/logout', { method: 'POST', body: {}, token }).catch(() => undefined);
+    this.settings.setAccountToken(null);
   }
 }

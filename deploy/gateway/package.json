@@ -1,0 +1,10 @@
+{
+  "name": "mib-gateway",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Gateway MiB: akun, kuota harian, pembayaran Midtrans, dan perantara ke layanan AI",
+  "dependencies": {
+    "nodemailer": "^6.9.16"
+  }
+}

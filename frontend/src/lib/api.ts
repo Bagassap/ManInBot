@@ -7,6 +7,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public body?: unknown,
   ) {
     super(message);
   }
@@ -54,7 +55,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);
   if (!res.ok)
-    throw new ApiError(res.status, errorMessage(body, "Terjadi kesalahan"));
+    throw new ApiError(res.status, errorMessage(body, "Terjadi kesalahan"), body);
   return body as T;
 }
 
