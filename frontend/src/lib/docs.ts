@@ -69,7 +69,7 @@ export const DOCS: DocPage[] = [
       ] },
       { t: "h2", text: "Cara 2: satu baris PowerShell" },
       { t: "p", text: "Buka PowerShell, lalu jalankan perintah berikut. Skrip mengunduh pemasang, memeriksa sidik jari SHA-256-nya, dan membatalkan pemasangan bila tidak cocok." },
-      { t: "code", text: "irm https://DOMAIN-ANDA/download/install.ps1 | iex" },
+      { t: "code", text: "irm https://maninbot.id/download/install.ps1 | iex" },
       { t: "note", kind: "warn", text: "Hanya jalankan perintah semacam ini dari alamat yang Anda percaya, dan pastikan alamatnya memakai https." },
       { t: "h2", text: "Memeriksa unduhan" },
       { t: "p", text: "Halaman Unduh menampilkan SHA-256 pemasang. Bandingkan dengan hasil perintah ini:" },
