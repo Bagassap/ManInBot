@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -104,9 +105,9 @@ export default function DownloadApp() {
           Bila muncul layar biru “Windows protected your PC” (SmartScreen), itu wajar karena pemasang belum
           ditandatangani secara digital. Klik “Info lainnya”, lalu tombol “Tetap jalankan”. Panduan
           lengkap dengan gambaran tiap langkah ada di{" "}
-          <a href="/panduan" className="text-accent-strong underline underline-offset-2 hover:no-underline">
-            panduan instalasi
-          </a>
+          <Link href="/docs/instalasi" className="text-accent-strong underline underline-offset-2 hover:no-underline">
+            dokumentasi instalasi
+          </Link>
           .
         </p>
       </section>

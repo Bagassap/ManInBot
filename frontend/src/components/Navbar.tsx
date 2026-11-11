@@ -5,7 +5,6 @@ import NavLinks from "./NavLinks";
 
 const links = [
   { href: "/fitur", label: "Fitur" },
-  { href: "/panduan", label: "Panduan" },
   { href: "/docs", label: "Dokumentasi" },
 ];
 

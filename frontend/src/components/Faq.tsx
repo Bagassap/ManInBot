@@ -8,7 +8,7 @@ export const FAQ_ITEMS: [string, string][] = [
   ["Apa yang saya butuhkan untuk memakainya?", "Komputer Windows 10/11 dan email aktif untuk membuat akun MiB. Layanan AI-nya sudah termasuk, jadi tidak ada kunci atau akun lain yang perlu Anda siapkan."],
   ["Berapa biayanya?", "Gratis 3 perintah per hari. Untuk lebih banyak, tersedia paket berbayar dengan 30 perintah per hari selama 30 hari. Harga dan sisa kuota terlihat di Pengaturan aplikasi; pembayaran lewat QRIS, transfer bank, atau e-wallet."],
   ["Apa yang dihitung sebagai satu perintah?", "Satu pesan yang Anda kirim ke agen, berapa pun langkah yang dikerjakannya. Kuota diperbarui setiap hari pukul 00.00 WIB."],
-  ["Bagaimana cara memasangnya?", "Unduh pemasang dari halaman Unduh, jalankan, lalu ikuti wizard. Langkah lengkapnya, termasuk apa yang dilakukan saat Windows menampilkan peringatan, ada di panduan instalasi."],
+  ["Bagaimana cara memasangnya?", "Unduh pemasang dari halaman Unduh, jalankan, lalu ikuti wizard. Langkah lengkapnya, termasuk apa yang dilakukan saat Windows menampilkan peringatan, ada di dokumentasi instalasi."],
   ["Bagaimana dengan macOS dan Linux?", "Belum tersedia. Saat ini MiB dirilis untuk Windows lebih dulu."],
   ["Kenapa Windows memperingatkan saat memasang?", "Pemasang belum ditandatangani sehingga SmartScreen menampilkan peringatan. Anda bisa mencocokkan SHA-256 di halaman Unduh untuk memastikan berkasnya asli."],
 ];

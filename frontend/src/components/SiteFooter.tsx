@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 const COLS: [string, [string, string][]][] = [
-  ["Produk", [["Unduh", "/unduh"], ["Fitur", "/fitur"], ["Panduan instalasi", "/panduan"]]],
+  ["Produk", [["Unduh", "/unduh"], ["Fitur", "/fitur"], ["Mulai cepat", "/docs/mulai-cepat"]]],
   ["Dokumentasi", [["Ikhtisar", "/docs/ikhtisar"], ["Mulai cepat", "/docs/mulai-cepat"], ["Instalasi", "/docs/instalasi"], ["Konfigurasi", "/docs/konfigurasi"]]],
-  ["Bantuan", [["FAQ", "/panduan#faq"]]],
+  ["Bantuan", [["FAQ", "/#faq"]]],
 ];
 
 export default function SiteFooter() {
