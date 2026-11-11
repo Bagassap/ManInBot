@@ -3,8 +3,8 @@ import Link from "next/link";
 
 const COLS: [string, [string, string][]][] = [
   ["Produk", [["Unduh", "/unduh"], ["Fitur", "/fitur"], ["Panduan instalasi", "/panduan"]]],
-  ["Dokumentasi", [["Pengantar", "/docs/pengantar"], ["Kendali layar", "/docs/kendali-layar"], ["Keamanan", "/docs/keamanan"]]],
-  ["Bantuan", [["Pemecahan masalah", "/docs/pemecahan-masalah"], ["FAQ", "/panduan#faq"]]],
+  ["Dokumentasi", [["Ikhtisar", "/docs/ikhtisar"], ["Mulai cepat", "/docs/mulai-cepat"], ["Instalasi", "/docs/instalasi"], ["Konfigurasi", "/docs/konfigurasi"]]],
+  ["Bantuan", [["FAQ", "/panduan#faq"]]],
 ];
 
 export default function SiteFooter() {

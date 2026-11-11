@@ -1,8 +1,17 @@
 "use client";
 
+import { BookOpen, Download, ListChecks, Settings, Terminal, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DOCS, GROUPS } from "@/lib/docs";
+
+const ICONS: Record<(typeof DOCS)[number]["icon"], LucideIcon> = {
+  book: BookOpen,
+  terminal: Terminal,
+  download: Download,
+  checklist: ListChecks,
+  settings: Settings,
+};
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -20,8 +29,12 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
                     href={`/docs/${d.slug}`}
                     onClick={onNavigate}
                     aria-current={on ? "page" : undefined}
-                    className={`block rounded-lg px-3 py-1.5 transition-colors ${on ? "bg-accent/15 text-accent-strong" : "text-muted hover:bg-surface hover:text-foreground"}`}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${on ? "bg-accent/15 text-accent-strong" : "text-muted hover:bg-surface hover:text-foreground"}`}
                   >
+                    {(() => {
+                      const Icon = ICONS[d.icon];
+                      return <Icon className="size-4 shrink-0" />;
+                    })()}
                     {d.title}
                   </Link>
                 </li>

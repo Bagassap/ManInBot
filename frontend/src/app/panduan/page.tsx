@@ -27,12 +27,12 @@ const STEPS: { title: string; body: string; extra?: string; href?: [string, stri
   {
     title: "Masuk ke akun MiB",
     body: "Buka Pengaturan, panel Akun MiB. Daftar dengan email, lalu tempel kode 6 angka yang dikirim ke email Anda (cek Spam bila belum ada). Gratis 3 perintah per hari; paket berbayar membuka 30 perintah per hari. Tidak ada kunci atau akun lain yang perlu disiapkan.",
-    href: ["/docs/pengaturan-awal", "Akun dan paket"],
+    href: ["/docs/orientasi", "Akun dan paket"],
   },
   {
     title: "Pilih folder yang boleh diakses",
     body: "Buka Pengaturan, Folder lokal, tambahkan folder kerja Anda. Pilih Hanya baca bila MiB cukup melihat, atau Baca dan tulis bila ia boleh membuat dan mengubah berkas.",
-    href: ["/docs/folder-izin", "Tentang folder dan izin"],
+    href: ["/docs/konfigurasi", "Tentang folder dan izin"],
   },
   {
     title: "Beri tugas pertama",
@@ -89,7 +89,7 @@ export default function PanduanPage() {
           </div>
           <p className="mt-6 text-sm text-muted">
             Masih bermasalah? Lihat{" "}
-            <Link href="/docs/pemecahan-masalah" className="text-accent-strong hover:underline">
+            <Link href="/docs/konfigurasi" className="text-accent-strong hover:underline">
               Pemecahan masalah
             </Link>
             .

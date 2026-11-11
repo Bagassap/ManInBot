@@ -26,7 +26,7 @@ const FEATURES: Feature[] = [
     text: "MiB adalah aplikasi desktop, bukan layanan web. Berkas dan pengaturan tetap di komputer Anda.",
     points: ["Pasang sekali, langsung pakai", "Aplikasi tidak bisa diakses dari jaringan; hanya Anda yang memakainya", "Berkas dan data kerja tetap di komputer Anda"],
     status: "Aktif",
-    doc: "/docs/pengantar",
+    doc: "/docs/ikhtisar",
   },
   {
     icon: FolderLock,
@@ -34,7 +34,7 @@ const FEATURES: Feature[] = [
     text: "Anda memilih folder yang boleh diakses, dengan mode baca saja atau baca dan tulis. Di luar itu MiB tidak bisa menyentuh apa pun.",
     points: ["Jalur ../ dan pintasan keluar folder ditolak", "Mencabut izin kapan saja", "Perubahan folder tercatat di log audit"],
     status: "Aktif",
-    doc: "/docs/folder-izin",
+    doc: "/docs/konfigurasi",
   },
   {
     icon: FileText,
@@ -42,7 +42,7 @@ const FEATURES: Feature[] = [
     text: "Baca dokumen yang ada, atau minta MiB menyusun yang baru: surat, laporan, tabel, dan presentasi lengkap dengan catatan pembicara.",
     points: ["Membaca .docx, .pptx, dan PDF", "Membuat .docx (judul, paragraf, butir, tabel) dan .pptx", "Mengganti teks di dokumen yang ada tanpa merusak format", "Membuka hasilnya di Word atau PowerPoint Anda"],
     status: "Aktif",
-    doc: "/docs/dokumen",
+    doc: "/docs/ikhtisar",
   },
   {
     icon: MousePointerClick,
@@ -50,7 +50,7 @@ const FEATURES: Feature[] = [
     text: "MiB melihat layar, menggerakkan mouse, dan mengetik sendiri di Word, Excel, PowerPoint, Outlook, atau aplikasi kantor lain, langsung di depan Anda.",
     points: ["Hanya setelah Anda memberi izin per sesi", "Hentikan seketika dengan Esc atau menggerakkan mouse", "Tidak mengetik kata sandi, kartu, atau OTP", "Tersedia di Windows, monitor utama"],
     status: "Aktif",
-    doc: "/docs/kendali-layar",
+    doc: "/docs/konfigurasi",
   },
   {
     icon: Terminal,
@@ -58,7 +58,7 @@ const FEATURES: Feature[] = [
     text: "Untuk tugas teknis seperti merapikan ratusan berkas. Anda melihat perintah persisnya sebelum menekan Izinkan.",
     points: ["Dibatasi ke folder izin tulis", "Batas waktu dan batas keluaran", "Rahasia MiB tidak diwariskan ke perintah"],
     status: "Aktif",
-    doc: "/docs/perintah-shell",
+    doc: "/docs/konfigurasi",
   },
   {
     icon: ScrollText,
@@ -66,7 +66,7 @@ const FEATURES: Feature[] = [
     text: "Undang rekan dengan peran masing-masing, dan lihat siapa meminta apa, kapan, dan apa yang akhirnya dilakukan agen.",
     points: ["Peran Pemilik, Admin, Anggota", "Log audit yang bisa disaring", "Setiap izin tercatat: disetujui, ditolak, atau kedaluwarsa"],
     status: "Aktif",
-    doc: "/docs/tim-audit",
+    doc: "/docs/konfigurasi",
   },
 ];
 

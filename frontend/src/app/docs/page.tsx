@@ -6,8 +6,7 @@ export default function DocsIndex() {
     <article>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Dokumentasi MiB</h1>
       <p className="mt-3 hidden max-w-2xl text-muted sm:block">
-        Semua yang perlu Anda ketahui untuk memasang MiB, memberinya akses ke komputer Anda dengan aman, dan memakainya
-        untuk pekerjaan sehari-hari.
+        Cara memasang dan memakai MiB.
       </p>
       <div className="mt-10 space-y-10">
         {GROUPS.map((g) => (
