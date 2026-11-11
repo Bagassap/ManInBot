@@ -17,6 +17,7 @@ interface Feature {
   points: string[];
   status: "Aktif" | "Terbatas";
   doc: string;
+  anchor?: string;
 }
 
 const FEATURES: Feature[] = [
@@ -67,6 +68,7 @@ const FEATURES: Feature[] = [
     points: ["Peran Pemilik, Admin, Anggota", "Log audit yang bisa disaring", "Setiap izin tercatat: disetujui, ditolak, atau kedaluwarsa"],
     status: "Aktif",
     doc: "/docs/konfigurasi",
+    anchor: "tim",
   },
 ];
 
@@ -102,7 +104,7 @@ export default function FiturPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {FEATURES.map((f) => (
             <Reveal key={f.title}>
-              <article className="flex h-full flex-col rounded-2xl border border-line bg-surface p-6">
+              <article id={f.anchor} className="flex h-full scroll-mt-24 flex-col rounded-2xl border border-line bg-surface p-6">
                 <div className="flex items-center justify-between">
                   <span className="flex size-11 items-center justify-center rounded-xl bg-accent/12 text-accent-strong">
                     <f.icon className="size-5" />

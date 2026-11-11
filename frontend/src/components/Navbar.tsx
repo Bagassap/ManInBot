@@ -1,11 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import MobileMenu from "./MobileMenu";
-import NavLinks from "./NavLinks";
+import NavLinks, { type NavItem } from "./NavLinks";
 
-const links = [
-  { href: "/fitur", label: "Fitur" },
-  { href: "/docs", label: "Dokumentasi" },
+const items: NavItem[] = [
+  { label: "Install", href: "/docs/instalasi" },
+  {
+    label: "Produk",
+    children: [
+      { label: "Ikhtisar", href: "/fitur", desc: "Yang bisa dikerjakan MiB" },
+      { label: "Integrasi", href: "/#integrasi", desc: "Dokumen, folder, dan aplikasi kantor" },
+      { label: "Showcase", href: "/#contoh", desc: "Contoh tugas yang bisa Anda minta" },
+      { label: "Enterprise", href: "/fitur#tim", desc: "Tim, peran, dan jejak audit" },
+    ],
+  },
+  { label: "Dokumentasi", href: "/docs", arrow: true },
 ];
 
 export default function Navbar() {
@@ -18,7 +27,7 @@ export default function Navbar() {
         </Link>
 
         <div className="ml-auto flex items-center gap-4 sm:gap-8">
-          <NavLinks links={links} />
+          <NavLinks items={items} />
           <div className="flex items-center gap-3">
             <Link
               href="/unduh"
@@ -26,7 +35,7 @@ export default function Navbar() {
             >
               Unduh
             </Link>
-            <MobileMenu links={links} />
+            <MobileMenu items={items} />
           </div>
         </div>
       </nav>

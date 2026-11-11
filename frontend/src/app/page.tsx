@@ -105,7 +105,7 @@ export default function Home() {
             ))}
           </div>
           <Reveal>
-            <h3 className="mt-12 text-xl font-semibold">Contoh yang bisa Anda minta</h3>
+            <h3 id="contoh" className="mt-12 scroll-mt-24 text-xl font-semibold">Contoh yang bisa Anda minta</h3>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
                 "“Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen.”",
@@ -189,7 +189,7 @@ export default function Home() {
         </div>
 
         {/* Terhubung ke */}
-        <section className="mx-auto max-w-6xl px-5 py-16">
+        <section id="integrasi" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Bekerja dengan</h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
