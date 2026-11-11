@@ -1,18 +1,18 @@
 "use client";
 
 import {
-  Bot,
   Check,
   ChevronDown,
-  Database,
-  KeyRound,
-  ServerCog,
+  FolderLock,
+  MousePointerClick,
+  ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useId, useState } from "react";
 import Reveal from "./Reveal";
 
-/* Hanya klaim yang benar-benar sudah ada di kode backend MiB. */
+/* Hanya klaim yang benar-benar berlaku pada aplikasi MiB yang dipasang. */
 const layers: {
   icon: LucideIcon;
   title: string;
@@ -20,43 +20,43 @@ const layers: {
   points: string[];
 }[] = [
   {
-    icon: KeyRound,
-    title: "Akun & sesi",
-    summary: "Identitas Anda dijaga sejak masuk.",
+    icon: FolderLock,
+    title: "Di komputer Anda",
+    summary: "Berkas Anda tidak ke mana-mana.",
     points: [
-      "Kata sandi di-hash dengan Argon2, tidak pernah disimpan polos.",
-      "Sesi disimpan di cookie HttpOnly yang tidak bisa dibaca skrip halaman, berlaku 1 hari.",
-      "Pesan galat login sama untuk email tak terdaftar dan sandi salah, agar akun tidak bisa ditebak.",
+      "Berkas, riwayat percakapan, dan pengaturan disimpan di komputer Anda, bukan di server MiB.",
+      "MiB hanya bisa menyentuh folder yang Anda daftarkan, dengan mode baca saja atau baca dan tulis.",
+      "Jalur dan pintasan yang mengarah keluar dari folder izin ditolak.",
     ],
   },
   {
-    icon: Database,
-    title: "Data Anda",
-    summary: "Percakapan adalah milik Anda sendiri.",
+    icon: ShieldCheck,
+    title: "Persetujuan Anda",
+    summary: "Tidak ada tindakan penting tanpa izin.",
     points: [
-      "Percakapan hanya bisa dibuka pemiliknya; akses orang lain dijawab “tidak ditemukan”.",
-      "Anda dapat menghapus percakapan kapan saja.",
-      "Database memakai akun khusus MiB dengan hak terbatas, terpisah dari aplikasi lain.",
+      "Menulis berkas, membuat dokumen, menjalankan perintah, dan mengendalikan layar selalu menunggu Izinkan dari Anda.",
+      "Permintaan yang tidak dijawab dalam 5 menit otomatis ditolak.",
+      "Setiap tindakan tercatat di log audit yang bisa Anda lihat.",
     ],
   },
   {
-    icon: ServerCog,
-    title: "Perlindungan server",
-    summary: "Setiap permintaan diperiksa sebelum diproses.",
+    icon: MousePointerClick,
+    title: "Khusus aplikasi kantor",
+    summary: "Kendali layar dibatasi ke Microsoft Office.",
     points: [
-      "Pembatasan laju: masuk 8×, daftar 5×, dan perintah 20× per menit untuk menahan penyalahgunaan.",
-      "Header keamanan aktif, dan hanya situs MiB yang diizinkan memanggil API.",
-      "Semua input divalidasi ketat; kolom yang tidak dikenal langsung ditolak.",
+      "MiB hanya menggerakkan mouse dan keyboard di Word, Excel, PowerPoint, Outlook, OneNote, dan Publisher.",
+      "Klik atau ketikan ke jendela lain, seperti browser atau pengaturan Windows, diblokir.",
+      "Hentikan seketika dengan menekan Esc atau menggerakkan mouse.",
     ],
   },
   {
-    icon: Bot,
-    title: "Agen yang terkendali",
-    summary: "MiB bekerja di dalam batas yang jelas.",
+    icon: UserRound,
+    title: "Akun dan privasi",
+    summary: "Yang disimpan di server dibatasi seperlunya.",
     points: [
-      "Hanya alat yang terdaftar yang dapat dijalankan; perhitungan tanpa eval kode.",
-      "Kunci layanan AI hanya ada di server MiB; aplikasi Anda hanya memegang token akun MiB.",
-      "Satu perintah dibatasi 8 langkah, sehingga agen tidak berputar tanpa henti.",
+      "Server MiB menyimpan email akun, kata sandi terenkripsi, jumlah pemakaian, dan riwayat pembayaran.",
+      "Isi percakapan, berkas, dan tangkapan layar tidak disimpan di server MiB.",
+      "Batas perintah harian per akun mencegah penyalahgunaan.",
     ],
   },
 ];

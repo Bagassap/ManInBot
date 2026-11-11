@@ -12,21 +12,21 @@ export const metadata: Metadata = {
 const STEPS: { title: string; body: string; extra?: string; href?: [string, string] }[] = [
   {
     title: "Unduh pemasang",
-    body: "Buka halaman Unduh dan klik Unduh MiB. Ukurannya sekitar 170 MB.",
+    body: "Buka halaman Unduh dan klik Unduh MiB. Berkas MiB-Setup.exe (±170 MB) tersimpan di folder Unduhan Anda.",
     href: ["/unduh", "Ke halaman Unduh"],
   },
   {
     title: "Jalankan pemasang",
-    body: "Buka berkas MiB Setup yang terunduh dan ikuti wizard. Bila Windows SmartScreen muncul, pilih Info lainnya, lalu Tetap jalankan.",
+    body: "Klik dua kali MiB-Setup.exe, lalu klik Next, Install, dan Finish. Bila muncul layar biru Windows protected your PC, klik Info lainnya, lalu Tetap jalankan.",
     extra: "Pemasang belum ditandatangani, jadi peringatan itu wajar. Cocokkan SHA-256 di halaman Unduh bila ingin memastikan keasliannya.",
   },
   {
-    title: "Buat akun",
-    body: "Buka MiB dan buat akun. Akun pertama di komputer ini otomatis menjadi admin.",
+    title: "Buat akun di komputer",
+    body: "Di layar pertama MiB, klik Daftar. Akun ini hanya ada di komputer Anda, dan akun pertama otomatis menjadi admin.",
   },
   {
     title: "Masuk ke akun MiB",
-    body: "Buka Pengaturan, daftar dengan email, lalu masukkan kode verifikasi. Gratis 3 perintah per hari; paket berbayar membuka 30 perintah per hari. Tidak ada kunci atau akun lain yang perlu disiapkan.",
+    body: "Buka Pengaturan, panel Akun MiB. Daftar dengan email, lalu tempel kode 6 angka yang dikirim ke email Anda (cek Spam bila belum ada). Gratis 3 perintah per hari; paket berbayar membuka 30 perintah per hari. Tidak ada kunci atau akun lain yang perlu disiapkan.",
     href: ["/docs/pengaturan-awal", "Akun dan paket"],
   },
   {

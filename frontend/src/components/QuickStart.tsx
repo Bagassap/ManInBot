@@ -14,8 +14,13 @@ export default function QuickStart() {
       "",
       "# lalu buka MiB dari Start Menu",
     ].join("\n"),
-    Aplikasi: ["# Unduh pemasang .exe, jalankan, selesai.", "# Daftar -> akun pertama otomatis admin", "# Pengaturan -> masuk akun MiB (gratis 3 perintah/hari)"].join("\n"),
-    "Dari sumber": ["git clone <repo-mib> && cd mib/backend", "npm install", "npm run build && npm run start:prod", "# antarmuka di http://127.0.0.1:4000"].join("\n"),
+    Aplikasi: [
+      "1. Unduh MiB-Setup.exe dari halaman Unduh",
+      "2. Jalankan, klik Next lalu Install",
+      "3. Buka MiB, buat akun di komputer",
+      "4. Pengaturan -> Akun MiB -> daftar dengan email",
+      "   (gratis 3 perintah per hari)",
+    ].join("\n"),
   } as const;
   type Tab = keyof typeof tabs;
   const [tab, setTab] = useState<Tab>("Satu baris");

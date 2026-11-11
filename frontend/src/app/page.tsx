@@ -82,7 +82,7 @@ export default function Home() {
           </Reveal>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
-              ["1", "Unduh dan pasang", "Satu pemasang untuk Windows. Tanpa server, tanpa pengaturan rumit."],
+              ["1", "Unduh dan pasang", "Satu pemasang untuk Windows. Tanpa pengaturan rumit."],
               ["2", "Beri izin", "Pilih folder yang boleh diakses MiB. Setiap tindakan penting meminta persetujuan Anda."],
               ["3", "Beri perintah", "Ketik tugasnya di chat. MiB membuka aplikasi dan mengerjakannya sendiri di layar."],
             ].map(([n, t, d]) => (
@@ -115,8 +115,8 @@ export default function Home() {
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Mulai cepat</h2>
             <p className="mt-2 text-muted">
-              Satu perintah, atau unduh aplikasinya. Tanpa server, tanpa database
-              yang perlu Anda atur.
+              Satu perintah, atau unduh aplikasinya. Tanpa pengaturan teknis
+              yang perlu Anda lakukan.
             </p>
             <QuickStart />
           </Reveal>
@@ -156,7 +156,7 @@ export default function Home() {
           </Reveal>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["Berjalan di komputer Anda", "Aplikasi desktop dengan database lokal. Berkas dan percakapan tidak meninggalkan mesin Anda."],
+              ["Berjalan di komputer Anda", "Aplikasi desktop. Berkas dan data kerja Anda tetap disimpan di komputer Anda sendiri."],
               ["Akses folder terpilih", "Anda menentukan folder yang boleh dibaca atau ditulis. Di luar itu, MiB tidak bisa menyentuh apa pun."],
               ["Semua dokumen kantor", "Membaca, membuat, dan mengubah dokumen Word dan PowerPoint, mengolah Excel, membaca PDF, lalu membukanya di aplikasi Anda."],
               ["Perintah shell", "Menjalankan perintah PowerShell untuk tugas teknis. Selalu menunggu Izinkan dari Anda."],
@@ -185,7 +185,7 @@ export default function Home() {
             <h2 className="text-3xl font-semibold tracking-tight">Bekerja dengan</h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["Model AI", "Otak agen, sudah termasuk di akun MiB"],
+                ["Kecerdasan AI", "Sudah termasuk di akun MiB"],
                 ["Dokumen", "Word, PowerPoint, Excel"],
                 ["Folder lokal", "Berkas dan dokumen kantor"],
                 ["PowerShell", "Otomasi di Windows"],

@@ -92,13 +92,19 @@ export default function DownloadApp() {
       <section className="mt-8 space-y-3 text-sm text-muted">
         <h2 className="text-base font-medium text-foreground">Setelah terpasang</h2>
         <ol className="list-decimal space-y-1 pl-5">
-          <li>Buka MiB, lalu daftar. Akun pertama otomatis menjadi admin.</li>
-          <li>Buka Pengaturan dan masuk ke akun MiB Anda.</li>
+          <li>Buka MiB, lalu klik Daftar. Akun ini hanya ada di komputer Anda, dan akun pertama otomatis menjadi admin.</li>
+          <li>Buka Pengaturan, panel Akun MiB: daftar dengan email, lalu tempel kode 6 angka dari email Anda. Gratis 3 perintah per hari.</li>
           <li>Di Pengaturan → Folder lokal, pilih folder yang boleh diakses MiB.</li>
+          <li>Kembali ke chat dan beri tugas pertama.</li>
         </ol>
         <p>
-          Windows SmartScreen bisa memperingatkan karena pemasang belum ditandatangani. Pilih
-          “Info lainnya” → “Tetap jalankan” bila Anda memercayai sumbernya.
+          Bila muncul layar biru “Windows protected your PC” (SmartScreen), itu wajar karena pemasang belum
+          ditandatangani secara digital. Klik “Info lainnya”, lalu tombol “Tetap jalankan”. Panduan
+          lengkap dengan gambaran tiap langkah ada di{" "}
+          <a href="/panduan" className="text-accent-strong underline underline-offset-2 hover:no-underline">
+            panduan instalasi
+          </a>
+          .
         </p>
       </section>
     </div>
