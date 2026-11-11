@@ -65,7 +65,7 @@ export default function PanduanPage() {
               <div className="min-w-0 pt-0.5">
                 <h2 className="text-lg font-semibold">{s.title}</h2>
                 <p className="mt-1.5 text-muted">{s.body}</p>
-                {s.extra && <p className="mt-2 text-sm text-muted">{s.extra}</p>}
+                {s.extra && <p className="mt-2 hidden text-sm text-muted sm:block">{s.extra}</p>}
                 {s.href && (
                   <Link href={s.href[0]} className="mt-2 inline-block text-sm text-accent-strong hover:underline">
                     {s.href[1]} →
@@ -78,7 +78,7 @@ export default function PanduanPage() {
 
         <section className="mt-16">
           <h2 className="text-2xl font-semibold tracking-tight">Cara cepat lewat PowerShell</h2>
-          <p className="mt-2 text-muted">Bila Anda lebih suka terminal, satu perintah sudah cukup.</p>
+          <p className="mt-2 hidden text-muted sm:block">Bila Anda lebih suka terminal, satu perintah sudah cukup.</p>
           <QuickStart />
         </section>
 

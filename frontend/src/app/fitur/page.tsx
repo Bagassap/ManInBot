@@ -84,7 +84,7 @@ export default function FiturPage() {
     <SiteShell>
       <section className="mx-auto max-w-4xl px-5 pb-6 pt-14 text-center sm:pt-20">
         <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">Yang bisa dikerjakan MiB</h1>
-        <p className="mx-auto mt-4 max-w-2xl text-pretty text-lg text-muted">
+        <p className="mx-auto mt-4 hidden max-w-2xl text-pretty text-lg text-muted sm:block">
           Satu agen khusus pekerjaan kantor yang memakai komputer Anda seperti staf di depan layar yang sama, dengan
           Anda tetap memegang kendali.
         </p>
@@ -110,8 +110,8 @@ export default function FiturPage() {
                   <span className="rounded-md border border-accent/40 bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent-strong">{f.status}</span>
                 </div>
                 <h2 className="mt-5 text-xl font-semibold">{f.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{f.text}</p>
-                <ul className="mt-4 space-y-1.5 text-sm text-muted">
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted sm:line-clamp-none">{f.text}</p>
+                <ul className="mt-4 hidden space-y-1.5 text-sm text-muted sm:block">
                   {f.points.map((p) => (
                     <li key={p} className="flex gap-2">
                       <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-accent-strong" />
@@ -131,7 +131,7 @@ export default function FiturPage() {
       <section className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-14 md:grid-cols-2">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight">Anda yang memutuskan</h2>
-          <p className="mt-3 text-muted">
+          <p className="mt-3 hidden text-muted sm:block">
             Sebelum MiB menulis berkas, membuat dokumen, menjalankan perintah, atau mengambil alih layar, Anda melihat
             persis apa yang akan dilakukan dan memilih Izinkan atau Tolak. Tidak dijawab dalam 5 menit, permintaan
             otomatis ditolak.
@@ -146,7 +146,7 @@ export default function FiturPage() {
       <section className="mx-auto max-w-6xl px-5 pb-20 pt-6">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight">Sedang disiapkan</h2>
-          <p className="mt-2 text-muted">Belum tersedia hari ini, dan kami tidak akan berpura-pura sebaliknya.</p>
+          <p className="mt-2 hidden text-muted sm:block">Belum tersedia hari ini, dan kami tidak akan berpura-pura sebaliknya.</p>
         </Reveal>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {ROADMAP.map(([t, d]) => (
@@ -155,7 +155,7 @@ export default function FiturPage() {
                 <span className="font-medium">{t}</span>
                 <span className="rounded-md border border-line px-2 py-0.5 text-xs text-muted">Segera</span>
               </div>
-              <p className="mt-1 text-sm text-muted">{d}</p>
+              <p className="mt-1 hidden text-sm text-muted sm:block">{d}</p>
             </div>
           ))}
         </div>

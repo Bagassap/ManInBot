@@ -30,16 +30,25 @@ export default function Home() {
           <div className="relative mx-auto flex max-w-4xl flex-col items-center px-5 pb-12 pt-12 text-center sm:pb-20 sm:pt-24 lg:pb-24 lg:pt-28">
             <FloatingMark />
             <p className="mt-8 rounded-full border border-line px-4 py-1.5 text-xs text-muted">
-              Berjalan di komputer Anda · Data tetap milik Anda · Setiap tindakan atas izin Anda
+              <span className="sm:hidden">Berjalan di komputer Anda · Atas izin Anda</span>
+              <span className="hidden sm:inline">
+                Berjalan di komputer Anda · Data tetap milik Anda · Setiap tindakan atas izin Anda
+              </span>
             </p>
             <HeroTitle />
             <Reveal delay={0.55} variant="blur" afterSplash>
-              <p className="mt-6 max-w-2xl text-pretty text-lg text-muted">
-                Khusus pekerjaan kantor: menyusun surat, laporan, dan
-                presentasi, mengolah data, merapikan berkas, hingga membuka
-                dan mengoperasikan Word, Excel, dan PowerPoint di komputer
-                Anda. Semua dari satu chat, dan setiap tindakan penting
-                menunggu persetujuan Anda.
+              <p className="mt-6 max-w-2xl text-pretty text-base text-muted sm:text-lg">
+                <span className="sm:hidden">
+                  Surat, laporan, presentasi, dan data kantor, dikerjakan dari
+                  satu chat.
+                </span>
+                <span className="hidden sm:inline">
+                  Khusus pekerjaan kantor: menyusun surat, laporan, dan
+                  presentasi, mengolah data, merapikan berkas, hingga membuka
+                  dan mengoperasikan Word, Excel, dan PowerPoint di komputer
+                  Anda. Semua dari satu chat, dan setiap tindakan penting
+                  menunggu persetujuan Anda.
+                </span>
               </p>
             </Reveal>
             <Reveal
@@ -74,7 +83,7 @@ export default function Home() {
         <section id="cara-kerja" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Pasang sekali, MiB bekerja di komputer Anda</h2>
-            <p className="mt-2 max-w-2xl text-muted">
+            <p className="mt-2 hidden max-w-2xl text-muted sm:block">
               MiB bukan aplikasi web. Ia terpasang di komputer Anda, memakai
               aplikasi dan berkas yang sudah ada di sana, lalu mengerjakan
               tugas seperti asisten yang duduk di depan layar yang sama.
@@ -103,8 +112,8 @@ export default function Home() {
                 "“Rapikan semua berkas di folder Unduhan berdasarkan jenisnya.”",
                 "“Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint.”",
                 "“Olah data penjualan di Excel dan buat tabel rekap per bulan.”",
-              ].map((q) => (
-                <li key={q} className="rounded-xl border border-line px-4 py-3 text-sm text-muted">{q}</li>
+              ].map((q, i) => (
+                <li key={q} className={`rounded-xl border border-line px-4 py-3 text-sm text-muted ${i >= 2 ? "hidden sm:block" : ""}`}>{q}</li>
               ))}
             </ul>
           </Reveal>
@@ -114,7 +123,7 @@ export default function Home() {
         <section id="mulai" className="mx-auto max-w-3xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Mulai cepat</h2>
-            <p className="mt-2 text-muted">
+            <p className="mt-2 hidden text-muted sm:block">
               Satu perintah, atau unduh aplikasinya. Tanpa pengaturan teknis
               yang perlu Anda lakukan.
             </p>
@@ -166,7 +175,7 @@ export default function Home() {
               <Reveal key={t}>
                 <div className="h-full rounded-2xl border border-line bg-surface p-6">
                   <h3 className="text-lg font-medium">{t}</h3>
-                  <p className="mt-2 text-sm text-muted">{d}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-muted sm:line-clamp-none">{d}</p>
                 </div>
               </Reveal>
             ))}

@@ -41,9 +41,12 @@ export default function DownloadApp() {
         Pasang MiB di komputer Anda
       </h1>
       <p className="mt-3 text-muted">
-        MiB berjalan di komputer Anda sendiri: data dan folder tetap di sana, dan setiap
-        tindakan yang mengubah berkas atau menjalankan perintah menunggu persetujuan Anda.
-        Anda hanya perlu akun MiB; 3 perintah per hari gratis.
+        <span className="sm:hidden">Pasang sekali, lalu bekerja dari komputer Anda. 3 perintah per hari gratis.</span>
+        <span className="hidden sm:inline">
+          MiB berjalan di komputer Anda sendiri: data dan folder tetap di sana, dan setiap
+          tindakan yang mengubah berkas atau menjalankan perintah menunggu persetujuan Anda.
+          Anda hanya perlu akun MiB; 3 perintah per hari gratis.
+        </span>
       </p>
 
       <section className="mt-10 rounded-2xl border border-line bg-surface p-6">

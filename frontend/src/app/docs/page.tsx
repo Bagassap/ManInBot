@@ -5,7 +5,7 @@ export default function DocsIndex() {
   return (
     <article>
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Dokumentasi MiB</h1>
-      <p className="mt-3 max-w-2xl text-muted">
+      <p className="mt-3 hidden max-w-2xl text-muted sm:block">
         Semua yang perlu Anda ketahui untuk memasang MiB, memberinya akses ke komputer Anda dengan aman, dan memakainya
         untuk pekerjaan sehari-hari.
       </p>
@@ -21,7 +21,7 @@ export default function DocsIndex() {
                   className="rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-accent/50"
                 >
                   <h3 className="font-medium">{d.title}</h3>
-                  <p className="mt-1.5 text-sm text-muted">{d.summary}</p>
+                  <p className="mt-1.5 hidden text-sm text-muted sm:block">{d.summary}</p>
                 </Link>
               ))}
             </div>

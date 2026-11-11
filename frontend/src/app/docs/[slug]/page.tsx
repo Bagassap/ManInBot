@@ -24,7 +24,7 @@ export default async function DocPage(props: PageProps<"/docs/[slug]">) {
     <article>
       <p className="text-sm text-accent-strong">{doc.group}</p>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{doc.title}</h1>
-      <p className="mt-3 max-w-2xl text-muted">{doc.summary}</p>
+      <p className="mt-3 hidden max-w-2xl text-muted sm:block">{doc.summary}</p>
       <div className="mt-8">
         <DocBlocks blocks={doc.blocks} />
       </div>
