@@ -66,7 +66,7 @@ export class ConversationsController {
   ) {
     const conv = await this.conversations.getOwned(ws.workspaceId, user.id, id);
     if (!this.agent.enabled) {
-      throw new ServiceUnavailableException('Agen belum aktif: kunci API Claude belum diatur. Buka Pengaturan untuk memasukkannya.');
+      throw new ServiceUnavailableException('Agen belum aktif: kunci API AI belum diatur. Buka Pengaturan untuk memasukkannya.');
     }
 
     const userMessage = await this.conversations.addUserMessage(
@@ -125,7 +125,7 @@ export class ConversationsController {
         this.logger.error(err instanceof Error ? err.stack : String(err));
         const message =
           err instanceof Anthropic.AuthenticationError
-            ? 'Kunci API Anthropic di server tidak valid.'
+            ? 'Kunci API AI tidak valid.'
             : err instanceof Anthropic.RateLimitError
               ? 'Layanan AI sedang sibuk, coba lagi sebentar lagi.'
               : 'Terjadi kesalahan saat menjalankan agen.';

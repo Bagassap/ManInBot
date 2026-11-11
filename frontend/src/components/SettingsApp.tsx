@@ -116,7 +116,7 @@ export default function SettingsApp() {
       <section className="rounded-2xl border border-line bg-surface p-5">
         <div className="flex items-center gap-2.5">
           <KeyRound className="size-5 text-accent-strong" />
-          <h2 className="font-medium">Kunci API Claude</h2>
+          <h2 className="font-medium">Kunci API AI</h2>
           {settings && (
             <span
               className={`ml-auto flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ${settings.agentReady ? "bg-emerald-400/15 text-emerald-300" : "bg-amber-400/15 text-amber-200"}`}
@@ -132,11 +132,11 @@ export default function SettingsApp() {
           )}
         </div>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          MiB memakai Claude sebagai otaknya, dengan kunci API milik Anda
+          MiB memakai model AI sebagai otaknya, dengan kunci API milik Anda
           sendiri. Kunci disimpan hanya di komputer ini (di folder data
-          aplikasi, bukan di database) dan dikirim hanya ke Anthropic. Buat
-          kunci di console.anthropic.com. Biaya pemakaian ditagih Anthropic ke
-          akun Anda.
+          aplikasi, bukan di database) dan dikirim hanya ke layanan AI untuk
+          memproses permintaan Anda. Biaya pemakaian ditagih ke akun pemilik
+          kunci.
         </p>
 
         {!settings ? (
@@ -148,7 +148,7 @@ export default function SettingsApp() {
         ) : !settings.canSaveKey ? (
           <p className="mt-4 text-sm text-muted">
             Penyimpanan kunci lewat layar ini hanya tersedia pada aplikasi
-            terpasang. Pada mode pengembangan, isi ANTHROPIC_API_KEY di
+            terpasang. Pada mode pengembangan, isi kunci API di
             backend/.env.
           </p>
         ) : (
@@ -162,8 +162,8 @@ export default function SettingsApp() {
               spellCheck={false}
               value={key}
               onChange={(e) => setKey(e.target.value)}
-              placeholder="sk-ant-…"
-              aria-label="Kunci API Claude"
+              placeholder="Tempel kunci API"
+              aria-label="Kunci API AI"
               className="h-10 min-w-0 flex-1 rounded-xl border border-line bg-transparent px-3 font-mono text-sm outline-none focus:border-accent"
             />
             <button
@@ -184,9 +184,6 @@ export default function SettingsApp() {
               </button>
             )}
           </form>
-        )}
-        {settings && (
-          <p className="mt-3 text-xs text-muted">Model: {settings.model}</p>
         )}
       </section>
 

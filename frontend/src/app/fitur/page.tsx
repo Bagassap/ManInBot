@@ -24,7 +24,7 @@ const FEATURES: Feature[] = [
     icon: Laptop,
     title: "Berjalan di komputer Anda",
     text: "MiB adalah aplikasi desktop, bukan layanan web. Database, pengaturan, dan berkas tetap di komputer Anda.",
-    points: ["Pasang sekali, tanpa server", "Layanan lokal hanya bisa diakses dari komputer itu", "Kunci API Claude disimpan di komputer Anda"],
+    points: ["Pasang sekali, tanpa server", "Layanan lokal hanya bisa diakses dari komputer itu", "Kunci API disimpan di komputer Anda"],
     status: "Aktif",
     doc: "/docs/pengantar",
   },

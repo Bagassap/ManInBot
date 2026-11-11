@@ -30,7 +30,7 @@ export const DOCS: DocPage[] = [
       { t: "h2", text: "Bagaimana ia bekerja" },
       { t: "ul", items: [
         "Aplikasi desktop MiB menjalankan layanan kecil di komputer Anda (hanya bisa diakses dari komputer itu).",
-        "Otak agen adalah Claude. MiB mengirim percakapan dan hasil alat ke Claude lewat kunci API Anda, lalu menjalankan langkah yang diminta.",
+        "Otak agen adalah model AI. MiB mengirim percakapan dan hasil alat ke layanan AI lewat kunci API Anda, lalu menjalankan langkah yang diminta.",
         "Berkas, database, dan pengaturan disimpan di komputer Anda, bukan di server MiB.",
         "Tindakan yang mengubah sesuatu (menulis berkas, menjalankan perintah, mengendalikan layar) selalu meminta persetujuan Anda lebih dulu.",
       ] },
@@ -56,8 +56,8 @@ export const DOCS: DocPage[] = [
       { t: "ul", items: [
         "Windows 10 atau 11 (64-bit).",
         "Sekitar 500 MB ruang kosong (pemasang ±170 MB).",
-        "Koneksi internet saat memakai agen (untuk menghubungi Claude).",
-        "Kunci API Claude milik Anda untuk dipakai setelah terpasang.",
+        "Koneksi internet saat memakai agen (untuk menghubungi layanan AI).",
+        "Kunci API AI milik Anda untuk dipakai setelah terpasang.",
       ] },
       { t: "h2", text: "Cara 1: pemasang .exe" },
       { t: "ol", items: [
@@ -82,15 +82,15 @@ export const DOCS: DocPage[] = [
     slug: "pengaturan-awal",
     group: "Memulai",
     title: "Pengaturan awal",
-    summary: "Langkah setelah MiB terpasang: akun pertama, kunci Claude, dan folder yang boleh diakses.",
+    summary: "Langkah setelah MiB terpasang: akun pertama, kunci API, dan folder yang boleh diakses.",
     blocks: [
       { t: "ol", items: [
         "Buka MiB. Pada pembukaan pertama, buat akun. Akun pertama otomatis menjadi admin di komputer ini.",
-        "Buka Pengaturan, lalu masukkan kunci API Claude Anda dan simpan. MiB memeriksa kuncinya ke Anthropic sebelum menyimpan.",
+        "Buka Pengaturan, lalu masukkan kunci API Anda dan simpan. MiB memeriksa kuncinya sebelum menyimpan.",
         "Buka Pengaturan, Folder lokal, lalu tambahkan folder yang boleh diakses MiB dan pilih modenya.",
         "Kembali ke chat dan beri tugas pertama, misalnya: tolong lihat isi folder Dokumen.",
       ] },
-      { t: "note", kind: "info", text: "Kunci API Claude adalah kunci dari console.anthropic.com. Langganan Claude.ai (Pro/Max) bukan kunci API dan tidak bisa dipakai di MiB. Pemakaian ditagih oleh Anthropic ke pemilik kunci." },
+      { t: "note", kind: "info", text: "Kunci API adalah kunci akses ke layanan AI. Langganan aplikasi chat AI (berbayar bulanan) bukan kunci API dan tidak bisa dipakai di MiB. Pemakaian ditagih oleh penyedia layanan AI ke pemilik kunci." },
       { t: "h2", text: "Di mana kunci disimpan" },
       { t: "p", text: "Kunci disimpan di folder data MiB di komputer Anda, bukan di database dan tidak dikirim ke server MiB. Tampilan di Pengaturan hanya menunjukkan 4 karakter terakhir." },
     ],
@@ -163,7 +163,7 @@ export const DOCS: DocPage[] = [
       { t: "p", text: "Hanya Microsoft Office: Word, Excel, PowerPoint, Outlook, OneNote, dan Publisher. Aplikasi lain, termasuk Notepad, Kalkulator, dan peramban, tidak bisa dioperasikan. Ini ditegakkan oleh pemeriksa di pengendali, bukan hanya instruksi ke agen: sebelum setiap klik atau ketikan, MiB memeriksa jendela sasarannya. Bila bukan aplikasi kantor (peramban, terminal, Pengaturan, bilah tugas), aksi itu tidak dikirim dan dicatat di log audit sebagai diblokir. Tombol Windows juga tidak diizinkan." },
       { t: "h2", text: "Yang perlu Anda ketahui" },
       { t: "ul", items: [
-        "Tangkapan layar dikirim ke Claude agar agen bisa melihat. Tutup jendela yang menampilkan data rahasia sebelum memulai.",
+        "Tangkapan layar dikirim ke layanan AI agar agen bisa melihat. Tutup jendela yang menampilkan data rahasia sebelum memulai.",
         "MiB tidak akan mengetik kata sandi, nomor kartu, atau kode OTP, dan berhenti bila layar menampilkan login atau pembayaran.",
         "Teks yang muncul di layar (pop-up, dokumen, halaman web) diperlakukan sebagai data, bukan perintah.",
         "Hanya monitor utama yang dikendalikan.",
@@ -191,21 +191,21 @@ export const DOCS: DocPage[] = [
     slug: "keamanan",
     group: "Keamanan & tim",
     title: "Keamanan dan privasi",
-    summary: "Apa yang tetap di komputer Anda, apa yang dikirim ke Claude, dan bagaimana tindakan dijaga.",
+    summary: "Apa yang tetap di komputer Anda, apa yang dikirim ke layanan AI, dan bagaimana tindakan dijaga.",
     blocks: [
       { t: "h2", text: "Tetap di komputer Anda" },
       { t: "ul", items: [
         "Database percakapan, akun, dan log audit.",
-        "Kunci API Claude Anda.",
+        "Kunci API Anda.",
         "Seluruh berkas Anda. MiB tidak mengunggahnya ke server MiB.",
       ] },
-      { t: "h2", text: "Dikirim ke Claude (Anthropic)" },
+      { t: "h2", text: "Dikirim ke layanan AI" },
       { t: "ul", items: [
         "Pesan Anda dan balasan percakapan.",
         "Hasil alat yang dibaca agen, misalnya isi berkas atau dokumen yang diminta untuk dibaca.",
         "Tangkapan layar, hanya selama sesi kendali layar.",
       ] },
-      { t: "p", text: "Pemrosesan di sisi Claude tunduk pada kebijakan Anthropic untuk pemakaian API." },
+      { t: "p", text: "Pemrosesan di sisi layanan AI tunduk pada kebijakan penyedianya untuk pemakaian API." },
       { t: "h2", text: "Lapisan pengaman" },
       { t: "ol", items: [
         "Layanan lokal hanya mendengarkan di 127.0.0.1, tidak bisa dijangkau dari jaringan.",
@@ -249,7 +249,7 @@ export const DOCS: DocPage[] = [
         "Folder data ada di %APPDATA%\\mib-desktop\\data.",
       ] },
       { t: "h2", text: "Agen menjawab bahwa kunci belum diatur" },
-      { t: "p", text: "Buka Pengaturan dan masukkan kunci API Claude. Kunci harus berawalan sk-ant- dan akunnya perlu punya saldo di console.anthropic.com." },
+      { t: "p", text: "Buka Pengaturan dan masukkan kunci API. Pastikan kunci benar dan akun layanan AI Anda masih punya saldo." },
       { t: "h2", text: "Agen tidak bisa melihat atau menulis di folder tertentu" },
       { t: "p", text: "Periksa Pengaturan, Folder lokal: folder harus terdaftar, dan untuk menulis atau menjalankan perintah modenya harus Baca dan tulis. Pintasan yang menuju keluar folder izin sengaja ditolak." },
       { t: "h2", text: "Kendali layar berhenti sendiri" },

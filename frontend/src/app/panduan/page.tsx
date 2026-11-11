@@ -25,8 +25,8 @@ const STEPS: { title: string; body: string; extra?: string; href?: [string, stri
     body: "Buka MiB dan buat akun. Akun pertama di komputer ini otomatis menjadi admin.",
   },
   {
-    title: "Masukkan kunci API Claude",
-    body: "Buka Pengaturan dan tempel kunci dari console.anthropic.com. MiB memeriksanya ke Anthropic sebelum menyimpan, dan menyimpannya hanya di komputer Anda.",
+    title: "Masukkan kunci API",
+    body: "Buka Pengaturan dan tempel kunci API Anda. MiB memeriksanya sebelum menyimpan, dan menyimpannya hanya di komputer Anda.",
     href: ["/docs/pengaturan-awal", "Cara mendapatkan dan memasang kunci"],
   },
   {
@@ -48,7 +48,7 @@ export default function PanduanPage() {
         <p className="mt-4 text-lg text-muted">Dari unduhan sampai tugas pertama, sekitar sepuluh menit.</p>
 
         <div className="mt-8 flex flex-wrap gap-2 text-sm">
-          {["Windows 10 / 11 (64-bit)", "±500 MB ruang kosong", "Koneksi internet", "Kunci API Claude"].map((r) => (
+          {["Windows 10 / 11 (64-bit)", "±500 MB ruang kosong", "Koneksi internet", "Kunci API AI"].map((r) => (
             <span key={r} className="rounded-full border border-line px-3 py-1 text-muted">
               {r}
             </span>

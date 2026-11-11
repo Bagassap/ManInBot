@@ -459,7 +459,7 @@ export default function ChatApp() {
 
             {!agentReady && (
               <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
-                MiB belum punya kunci API Claude.{" "}
+                MiB belum punya kunci API.{" "}
                 <Link href="/app/settings" className="underline">
                   Masukkan di Pengaturan
                 </Link>{" "}

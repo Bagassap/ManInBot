@@ -167,7 +167,7 @@ export class AgentService {
     ctx?: RunContext,
   ): Promise<{ text: string; steps: AgentStep[] }> {
     const client = this.client;
-    if (!client) throw new Error('Kunci API Claude belum diatur');
+    if (!client) throw new Error('Kunci API AI belum diatur');
 
     const messages = [...history];
     const steps: AgentStep[] = [];

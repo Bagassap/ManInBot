@@ -9,7 +9,7 @@ import { SettingsService } from './settings.service.js';
 class KeyDto {
   @IsString()
   @MaxLength(300)
-  @Matches(/^sk-ant-[A-Za-z0-9_-]{20,}$/, { message: 'Format kunci tidak dikenali. Kunci Anthropic berawalan sk-ant-' })
+  @Matches(/^sk-ant-[A-Za-z0-9_-]{20,}$/, { message: 'Format kunci tidak dikenali. Periksa kembali kunci Anda.' })
   key!: string;
 }
 
@@ -41,7 +41,7 @@ export class SettingsController {
       await new Anthropic({ apiKey: dto.key, maxRetries: 0, timeout: 10_000 }).models.list({ limit: 1 });
     } catch (e) {
       if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
-        throw new BadRequestException('Kunci ditolak oleh Anthropic. Periksa kembali kunci Anda.');
+        throw new BadRequestException('Kunci ditolak oleh layanan AI. Periksa kembali kunci Anda.');
       }
       verified = false; // mis. tidak ada internet: simpan saja, akan terbukti saat dipakai
     }
