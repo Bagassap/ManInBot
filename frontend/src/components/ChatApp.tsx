@@ -3,6 +3,7 @@
 import {
   Check,
   LogOut,
+  RefreshCw,
   Settings,
   Menu,
   Plus,
@@ -23,6 +24,7 @@ import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
 import { useWorkspace, wsPath } from "@/lib/workspace";
 import {
   api,
+  API_URL,
   ApiError,
   streamMessage,
   type ChatMessage,
@@ -32,10 +34,10 @@ import {
 } from "@/lib/api";
 
 const SUGGESTIONS = [
-  "Jelaskan konsep inflasi dengan contoh sehari-hari",
-  "Buat rencana belajar Python selama 4 minggu",
-  "Hitung (12500 × 3) + 4000 ÷ 8 dan tunjukkan langkahnya",
-  "Tulis email permohonan maaf atas keterlambatan pengiriman",
+  "Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen",
+  "Buka Excel dan buat tabel rekap penjualan per bulan lengkap dengan totalnya",
+  "Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint",
+  "Buka Word dan tulis notulen rapat mingguan dengan daftar tindak lanjut",
 ];
 
 function StepList({ steps }: { steps: Step[] }) {
@@ -373,13 +375,25 @@ export default function ChatApp() {
           <span className="min-w-0 truncate text-muted">
             {user?.name || user?.email}
           </span>
-          <button
-            onClick={logout}
-            aria-label="Keluar"
-            className="text-muted hover:text-foreground"
-          >
-            <LogOut className="size-4" />
-          </button>
+          {API_URL === "" ? (
+            // Aplikasi desktop: masuk otomatis, jadi tidak ada "Keluar"; sediakan muat ulang.
+            <button
+              onClick={() => window.location.reload()}
+              aria-label="Muat ulang"
+              title="Muat ulang (F5)"
+              className="text-muted hover:text-foreground"
+            >
+              <RefreshCw className="size-4" />
+            </button>
+          ) : (
+            <button
+              onClick={logout}
+              aria-label="Keluar"
+              className="text-muted hover:text-foreground"
+            >
+              <LogOut className="size-4" />
+            </button>
+          )}
         </div>
       </aside>
       {sidebar && (

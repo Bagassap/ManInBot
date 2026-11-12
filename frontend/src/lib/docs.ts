@@ -46,7 +46,7 @@ export const DOCS: DocPage[] = [
     blocks: [
       { t: "ol", items: [
         "Unduh MiB-Setup.exe dari halaman Unduh, jalankan, lalu klik Next, Install, dan Finish.",
-        "Buka MiB, klik Daftar, lalu di Pengaturan masuk ke akun MiB dengan email Anda.",
+        "Buka MiB, lalu di Pengaturan daftar ke akun MiB dengan email Anda.",
         "Pilih folder kerja di Pengaturan, Folder lokal, lalu beri tugas di chat.",
       ] },
       { t: "p", text: "Lebih suka terminal? Buka PowerShell dan jalankan:" },
@@ -87,7 +87,7 @@ export const DOCS: DocPage[] = [
     summary: "Tiga langkah sebelum tugas pertama.",
     blocks: [
       { t: "ol", items: [
-        "Buka MiB dan klik Daftar untuk membuat akun di komputer ini (hanya untuk masuk ke aplikasi).",
+        "Buka MiB. Aplikasi langsung terbuka, tanpa membuat akun di komputer.",
         "Buka Pengaturan, panel Akun MiB: daftar dengan email, lalu tempel kode 6 angka yang dikirim ke email Anda.",
         "Buka Pengaturan, Folder lokal, lalu pilih folder kerja Anda dan modenya.",
       ] },

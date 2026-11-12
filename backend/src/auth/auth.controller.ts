@@ -47,6 +47,30 @@ export class AuthController {
     return user;
   }
 
+  /**
+   * Masuk otomatis aplikasi desktop. Hanya aktif bila MIB_LOCAL=1 dan token rahasia (dibuat
+   * aplikasi desktop tiap dijalankan, tidak pernah ke jaringan) cocok.
+   */
+  @Get('local-start')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  async localStart(@Query('t') t: string | undefined, @Res() res: Response) {
+    const secret = process.env.MIB_LOCAL_TOKEN ?? '';
+    const a = Buffer.from(t ?? '');
+    const b = Buffer.from(secret);
+    if (process.env.MIB_LOCAL !== '1' || !secret || a.length !== b.length || !timingSafeEqual(a, b)) {
+      throw new ForbiddenException();
+    }
+    const { token } = await this.auth.localStart();
+    res.cookie(AUTH_COOKIE, token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: this.secureCookies,
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+    return res.redirect('/app');
+  }
+
   @Post('login')
   @HttpCode(200)
   @Throttle({ default: { limit: 8, ttl: 60_000 } })

@@ -12,6 +12,8 @@ let backendLog = null;
 let mainWindow = null;
 let origin = '';
 let quitting = false;
+// Rahasia sekali-jalan untuk masuk otomatis; hanya diketahui proses ini dan backend lokalnya.
+const localToken = require('node:crypto').randomBytes(24).toString('hex');
 
 const resources = () => (app.isPackaged ? path.join(process.resourcesPath, 'app-data') : path.join(__dirname, 'stage'));
 
@@ -64,6 +66,7 @@ function startBackend(port) {
     HOST: '127.0.0.1',
     PORT: String(port),
     MIB_LOCAL: '1',
+    MIB_LOCAL_TOKEN: localToken,
     MIB_AUTO_MIGRATE: '1',
     MIB_DATA_DIR: dataDir,
     MIB_MIGRATIONS_DIR: path.join(res, 'backend', 'prisma', 'migrations'),
@@ -112,7 +115,46 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  mainWindow.loadURL(`${origin}/app`);
+  const startUrl = `${origin}/auth/local-start?t=${localToken}`;
+  mainWindow.loadURL(startUrl);
+
+  // Masuk otomatis: jika sesi habis dan halaman jatuh ke layar masuk/daftar, masuk ulang secara diam-diam.
+  const relogin = (_e, url) => {
+    try {
+      const p = new URL(url).pathname.replace(/\/$/, '');
+      if (p === '/masuk' || p === '/daftar') mainWindow && mainWindow.loadURL(startUrl);
+    } catch {
+      /* abaikan */
+    }
+  };
+  mainWindow.webContents.on('did-navigate', relogin);
+  mainWindow.webContents.on('did-navigate-in-page', relogin);
+
+  // Muat ulang: F5, Ctrl+R, Ctrl+Shift+R (menu aplikasi dimatikan, jadi pintasan dipasang di sini).
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return;
+    const k = input.key.toLowerCase();
+    if (k === 'f5' || ((input.control || input.meta) && k === 'r')) {
+      event.preventDefault();
+      if (input.shift) mainWindow.webContents.reloadIgnoringCache();
+      else mainWindow.webContents.reload();
+    }
+  });
+
+  // Klik kanan: salin/tempel dan muat ulang.
+  mainWindow.webContents.on('context-menu', (_e, params) => {
+    const wc = mainWindow.webContents;
+    const items = [];
+    if (params.isEditable) {
+      items.push({ label: 'Urungkan', role: 'undo' }, { label: 'Ulangi', role: 'redo' }, { type: 'separator' });
+      items.push({ label: 'Potong', role: 'cut' });
+    }
+    if (params.isEditable || params.selectionText) items.push({ label: 'Salin', role: 'copy' });
+    if (params.isEditable) items.push({ label: 'Tempel', role: 'paste' });
+    if (params.isEditable || params.selectionText) items.push({ label: 'Pilih semua', role: 'selectAll' }, { type: 'separator' });
+    items.push({ label: 'Muat ulang', accelerator: 'F5', click: () => wc.reload() });
+    Menu.buildFromTemplate(items).popup({ window: mainWindow });
+  });
 
   // Hanya halaman MiB sendiri yang boleh dimuat di jendela ini; tautan luar dibuka di browser.
   const external = (url) => {

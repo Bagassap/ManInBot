@@ -1,6 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { LoginDto, RegisterDto } from './auth.dto.js';
 import { WorkspacesService } from '../workspaces/workspaces.service.js';
@@ -28,6 +29,26 @@ export class AuthService {
       data: { email, name: dto.name?.trim() || null, passwordHash: await argon2.hash(dto.password), role: first ? 'ADMIN' : 'USER' },
     });
     await this.workspaces.provisionFor(user);
+    return this.issue(user);
+  }
+
+  /**
+   * Masuk otomatis untuk aplikasi desktop (MIB_LOCAL=1): memakai pengguna pertama di komputer ini,
+   * atau membuat pemilik lokal bila belum ada. Pengguna tidak perlu membuat akun lokal sendiri.
+   */
+  async localStart() {
+    let user = await this.prisma.user.findFirst({ where: { blockedAt: null }, orderBy: { createdAt: 'asc' } });
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: 'pemilik@mib.local',
+          name: 'Pemilik',
+          passwordHash: await argon2.hash(randomBytes(32).toString('hex')),
+          role: 'ADMIN',
+        },
+      });
+      await this.workspaces.provisionFor(user);
+    }
     return this.issue(user);
   }
 

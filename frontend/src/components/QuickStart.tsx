@@ -17,7 +17,7 @@ export default function QuickStart() {
     Aplikasi: [
       "1. Unduh MiB-Setup.exe dari halaman Unduh",
       "2. Jalankan, klik Next lalu Install",
-      "3. Buka MiB, buat akun di komputer",
+      "3. Buka MiB (langsung terbuka)",
       "4. Pengaturan -> Akun MiB -> daftar dengan email",
       "   (gratis 3 perintah per hari)",
     ].join("\n"),
