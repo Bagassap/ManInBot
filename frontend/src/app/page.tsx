@@ -39,15 +39,12 @@ export default function Home() {
             <Reveal delay={0.55} variant="blur" afterSplash>
               <p className="mt-6 max-w-2xl text-pretty text-base text-muted sm:text-lg">
                 <span className="sm:hidden">
-                  Surat, laporan, presentasi, dan data kantor, dikerjakan dari
-                  satu chat.
+                  Buat dan edit documents, spreadsheet, dan slides lewat
+                  percakapan.
                 </span>
                 <span className="hidden sm:inline">
-                  Khusus pekerjaan kantor: menyusun surat, laporan, dan
-                  presentasi, mengolah data, merapikan berkas, hingga membuka
-                  dan mengoperasikan Word, Excel, dan PowerPoint di komputer
-                  Anda. Semua dari satu chat, dan setiap tindakan penting
-                  menunggu persetujuan Anda.
+                  Buat dan edit documents, spreadsheet, dan slides lewat
+                  percakapan, didukung kecerdasan AI yang bekerja untuk Anda.
                 </span>
               </p>
             </Reveal>
@@ -93,7 +90,7 @@ export default function Home() {
             {[
               ["1", "Unduh dan pasang", "Satu pemasang untuk Windows. Tanpa pengaturan rumit."],
               ["2", "Beri izin", "Pilih folder yang boleh diakses MiB. Setiap tindakan penting meminta persetujuan Anda."],
-              ["3", "Beri perintah", "Ketik tugasnya di chat. MiB membuka aplikasi dan mengerjakannya sendiri di layar."],
+              ["3", "Beri perintah", "Mulai percakapan, MiB membuka aplikasi dan mengerjakannya sendiri di layarmu."],
             ].map(([n, t, d]) => (
               <Reveal key={n}>
                 <div className="h-full rounded-2xl border border-line bg-surface p-6">
@@ -105,17 +102,13 @@ export default function Home() {
             ))}
           </div>
           <Reveal>
-            <h3 id="contoh" className="mt-12 scroll-mt-24 text-xl font-semibold">Contoh yang bisa Anda minta</h3>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-              {[
-                "“Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen.”",
-                "“Rapikan semua berkas di folder Unduhan berdasarkan jenisnya.”",
-                "“Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint.”",
-                "“Olah data penjualan di Excel dan buat tabel rekap per bulan.”",
-              ].map((q, i) => (
-                <li key={q} className={`rounded-xl border border-line px-4 py-3 text-sm text-muted ${i >= 2 ? "hidden sm:block" : ""}`}>{q}</li>
-              ))}
-            </ul>
+            <h3 id="contoh" className="mt-12 scroll-mt-24 text-xl font-semibold">Keterbatasan adalah kesempurnaan untuk kami</h3>
+            <p className="mt-3 max-w-2xl text-sm text-muted sm:text-base">
+              Demi menjaga privasi Anda, MiB hanya diprogram untuk bisa berkomunikasi dengan Anda dan tidak diizinkan mengirim dokumen ke luar komputer Anda.
+            </p>
+            <p className="mt-3 max-w-2xl text-sm text-muted sm:text-base">
+              MiB hanya diprogram untuk menjalankan Spreadsheet, Documents, dan Slides, sehingga tidak perlu khawatir MiB melakukan sesuatu dengan aplikasi lain di komputer Anda.
+            </p>
           </Reveal>
         </section>
 
@@ -199,7 +192,6 @@ export default function Home() {
                 ["Folder lokal", "Berkas dan dokumen kantor"],
                 ["PowerShell", "Otomasi di Windows"],
                 ["Kontrol layar", "Mouse & keyboard (Windows)"],
-                ["WhatsApp & Telegram", "Segera"],
                 ["Email & Kalender", "Segera"],
                 ["Skills & plugin", "Segera"],
               ].map(([n, d]) => (

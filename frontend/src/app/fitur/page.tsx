@@ -76,7 +76,6 @@ const ROADMAP: [string, string][] = [
   ["Skills dan plugin", "Kemampuan tambahan yang bisa dipasang sesuai kebutuhan."],
   ["Memori jangka panjang", "MiB mengingat preferensi dan konteks pekerjaan Anda."],
   ["Jadwal otomatis", "Tugas berkala yang berjalan sendiri, dengan batas yang Anda tentukan."],
-  ["WhatsApp dan Telegram", "Beri tugas dari aplikasi chat yang sudah Anda pakai."],
   ["Edit dokumen lanjutan", "Menambah paragraf, slide, dan gambar ke dokumen yang sudah ada, serta OCR untuk PDF hasil pindai."],
   ["macOS dan Linux", "Versi untuk sistem operasi lain."],
 ];

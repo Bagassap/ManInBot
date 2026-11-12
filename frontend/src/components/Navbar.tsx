@@ -10,7 +10,7 @@ const items: NavItem[] = [
     children: [
       { label: "Ikhtisar", href: "/fitur", desc: "Yang bisa dikerjakan MiB" },
       { label: "Integrasi", href: "/#integrasi", desc: "Dokumen, folder, dan aplikasi kantor" },
-      { label: "Showcase", href: "/#contoh", desc: "Contoh tugas yang bisa Anda minta" },
+      { label: "Showcase", href: "/#contoh", desc: "Batasan yang menjaga privasi Anda" },
       { label: "Enterprise", href: "/fitur#tim", desc: "Tim, peran, dan jejak audit" },
     ],
   },

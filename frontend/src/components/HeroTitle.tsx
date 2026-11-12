@@ -26,7 +26,7 @@ function Line({ children, delay }: { children: ReactNode; delay: number }) {
 export default function HeroTitle() {
   return (
     <h1 className="mt-10 text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
-      <Line delay={0.15}>Agen AI kantor yang</Line>
+      <Line delay={0.15}>Asisten interaktif yang</Line>
       <Line delay={0.35}>
         <span className="text-accent-strong">
           <Script>benar-benar</Script> bekerja.
