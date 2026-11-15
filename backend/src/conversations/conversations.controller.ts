@@ -66,7 +66,7 @@ export class ConversationsController {
   ) {
     const conv = await this.conversations.getOwned(ws.workspaceId, user.id, id);
     if (!this.agent.enabled) {
-      throw new ServiceUnavailableException('Agen belum aktif: Anda belum masuk ke akun MiB. Buka Pengaturan untuk masuk.');
+      throw new ServiceUnavailableException('Masuk ke akun MiB di Pengaturan untuk mulai bekerja.');
     }
 
     const userMessage = await this.conversations.addUserMessage(

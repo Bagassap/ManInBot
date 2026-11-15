@@ -119,6 +119,7 @@ export default function ChatApp() {
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [agentReady, setAgentReady] = useState(true);
+  const [needAccount, setNeedAccount] = useState(false);
   const ws = useWorkspace();
   const wsId = ws.current?.id ?? null;
 
@@ -199,6 +200,11 @@ export default function ChatApp() {
   async function send(text: string) {
     const content = text.trim();
     if (!content || busy || !wsId) return;
+    // Belum masuk ke akun MiB: jangan kirim, tampilkan ajakan masuk (teks tetap di kotak ketik).
+    if (!agentReady) {
+      setNeedAccount(true);
+      return;
+    }
     setError("");
     setInput("");
     setBusy(true);
@@ -471,14 +477,16 @@ export default function ChatApp() {
               </div>
             )}
 
-            {!agentReady && (
-              <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
-                Anda belum masuk ke akun MiB.{" "}
-                <Link href="/app/settings" className="underline">
-                  Masuk di Pengaturan
-                </Link>{" "}
-                agar bisa bekerja.
-              </p>
+            {needAccount && !agentReady && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+                <span className="text-muted">Masuk ke akun MiB untuk mulai bekerja.</span>
+                <Link
+                  href="/app/settings"
+                  className="rounded-lg bg-accent px-4 py-2 font-medium text-[#0d1417] transition-colors hover:bg-accent-strong"
+                >
+                  Masuk
+                </Link>
+              </div>
             )}
 
             {approval && wsId && (
