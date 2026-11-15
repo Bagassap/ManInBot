@@ -4,6 +4,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { Db } from './db.mjs';
 import { mailReady, sendCode } from './mail.mjs';
+import { createAdmin } from './admin.mjs';
 
 const env = process.env;
 const num = (k, d) => (Number.isFinite(Number(env[k])) && env[k] !== '' && env[k] !== undefined ? Number(env[k]) : d);
@@ -134,8 +135,9 @@ export function createGateway(db) {
     if (!allow(`reg:${ipOf(req)}`, 10, 3600_000) || !allow(`regm:${email}`, 5, 3600_000)) return fail(res, 429, 'Terlalu sering mendaftar. Coba lagi nanti.');
     const existing = db.userByEmail(email);
     if (existing?.verified) return fail(res, 409, 'Email ini sudah terdaftar. Silakan masuk.');
-    if (!mailReady()) return fail(res, 503, 'Pengiriman email belum diatur di server MiB.');
+    // Email langsung tercatat (belum terverifikasi) agar terlihat di dashboard admin, apa pun hasil pengiriman kodenya.
     db.upsertUnverified(email, b.password);
+    if (!mailReady()) return fail(res, 503, 'Pendaftaran sedang tidak tersedia. Coba lagi nanti.');
     try {
       await sendCode(email, 'verify', db.newCode(email, 'verify'));
     } catch (e) {
@@ -358,11 +360,14 @@ export function createGateway(db) {
     }
   }
 
+  const admin = createAdmin(db, { json, fail, ipOf, allow, readJson, cfg: CFG });
+
   // ---------------- router ----------------
   return async (req, res) => {
     const url = new URL(req.url || '/', 'http://x');
     const route = `${req.method} ${url.pathname}`;
     try {
+      if (admin.match(url.pathname)) return await admin.handle(req, res, url);
       switch (route) {
         case 'POST /v1/messages':
           return await proxyMessages(req, res);

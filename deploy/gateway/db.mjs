@@ -9,11 +9,11 @@ export const sha = (s) => createHash('sha256').update(s).digest('hex');
 /** Tanggal (YYYY-MM-DD) menurut WIB; batas harian kuota berganti pukul 00.00 WIB. */
 export const dayKey = (t = Date.now()) => new Date(t + 7 * 3600_000).toISOString().slice(0, 10);
 
-function hashPassword(pw) {
+export function hashPassword(pw) {
   const salt = randomBytes(16);
   return `s1$${salt.toString('hex')}$${scryptSync(pw, salt, 32).toString('hex')}`;
 }
-function checkPassword(pw, stored) {
+export function checkPassword(pw, stored) {
   const [v, salt, hash] = String(stored).split('$');
   if (v !== 's1') return false;
   const a = scryptSync(pw, Buffer.from(salt, 'hex'), 32);
@@ -84,6 +84,19 @@ export class Db {
     const until = base + days * 86_400_000;
     this.q('UPDATE users SET paid_until = ? WHERE id = ?').run(until, userId);
     return until;
+  }
+  /** Data dashboard admin: semua akun beserta ringkasan pembayaran dan pemakaian hari ini. */
+  adminUsers() {
+    return this.q(`SELECT u.id, u.email, u.verified, u.banned, u.paid_until, u.created_at,
+        (SELECT COUNT(*) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_count,
+        (SELECT COALESCE(SUM(amount), 0) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_total,
+        (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id AND c.day = ?) AS used_today,
+        (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id) AS used_40d
+      FROM users u ORDER BY u.id DESC`).all(dayKey());
+  }
+  adminPayments(limit = 1000) {
+    return this.q(`SELECT p.order_id, p.amount, p.days, p.status, p.created, p.paid_at, u.email
+      FROM payments p LEFT JOIN users u ON u.id = p.user_id ORDER BY p.created DESC LIMIT ?`).all(limit);
   }
   listUsers() {
     return this.q('SELECT id, email, verified, banned, paid_until, created_at FROM users ORDER BY id').all();

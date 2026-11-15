@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dijalankan DI SERVER sebagai root: memasang/memperbarui gateway MiB (akun, kuota harian, pembayaran, perantara AI).
-# Berkas server.mjs db.mjs mail.mjs main.mjs cli.mjs package.json harus ada di direktori yang sama dengan skrip ini.
+# Berkas server.mjs db.mjs mail.mjs main.mjs cli.mjs admin.mjs package.json harus ada di direktori yang sama dengan skrip ini.
 set -euo pipefail
 SRC="$(cd "$(dirname "$0")" && pwd)"
 NODE_VER="${NODE_VER:-v22.23.4}"
@@ -17,7 +17,7 @@ export PATH="$NODE_DIR/bin:$PATH"
 id mibgw >/dev/null 2>&1 || useradd --system --home /var/lib/mib-gateway --shell /usr/sbin/nologin mibgw
 install -d -o mibgw -g mibgw -m 700 /var/lib/mib-gateway
 install -d -m 755 /opt/mib-gateway
-for f in server.mjs db.mjs mail.mjs main.mjs cli.mjs package.json; do install -m 644 "$SRC/$f" /opt/mib-gateway/; done
+for f in server.mjs db.mjs mail.mjs main.mjs cli.mjs admin.mjs package.json; do install -m 644 "$SRC/$f" /opt/mib-gateway/; done
 rm -f /opt/mib-gateway/store.mjs
 (cd /opt/mib-gateway && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1)
 
@@ -40,6 +40,9 @@ add SMTP_SECURE 0
 add SMTP_USER ""
 add SMTP_PASS ""
 add MAIL_FROM ""
+add ADMIN_PATH ""
+add ADMIN_PASS_HASH ""
+add ADMIN_IPS ""
 chmod 600 /etc/mib-gateway.env
 
 cat > /etc/systemd/system/mib-gateway.service <<UNIT
@@ -99,6 +102,33 @@ chmod 755 /usr/local/bin/mib-set
 printf '#!/bin/sh\nexec /usr/local/bin/mib-set ANTHROPIC_API_KEY\n' > /usr/local/bin/mib-set-key
 chmod 755 /usr/local/bin/mib-set-key
 
+# Dashboard admin: membuat alamat rahasia acak (sekali) dan mengatur kata sandi admin.
+#   mib-admin-setup            atur/ganti kata sandi (alamat tetap)
+#   mib-admin-setup --new-url  buat alamat rahasia baru (alamat lama langsung mati)
+cat > /usr/local/bin/mib-admin-setup <<SETUP
+#!/bin/bash
+set -e
+[ "\$(id -u)" -eq 0 ] || exec sudo "\$0" "\$@"
+ENVF=/etc/mib-gateway.env
+umask 077
+setv() { grep -v "^\$1=" \$ENVF > \$ENVF.new || true; printf '%s=%s\n' "\$1" "\$2" >> \$ENVF.new; mv \$ENVF.new \$ENVF; }
+P=\$(grep '^ADMIN_PATH=' \$ENVF | cut -d= -f2- || true)
+if [ -z "\$P" ] || [ "\${1:-}" = "--new-url" ]; then
+  P="ops-\$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  setv ADMIN_PATH "\$P"
+fi
+read -r -s -p "Kata sandi admin baru (min. 12 karakter): " A; echo
+read -r -s -p "Ulangi kata sandi: " B; echo
+[ "\$A" = "\$B" ] || { echo "Tidak sama; dibatalkan."; exit 1; }
+H=\$(printf '%s' "\$A" | $NODE_DIR/bin/node --disable-warning=ExperimentalWarning /opt/mib-gateway/cli.mjs hash-stdin)
+setv ADMIN_PASS_HASH "\$H"
+systemctl restart mib-gateway
+sleep 1
+systemctl is-active mib-gateway >/dev/null && echo "Dashboard admin aktif. Simpan alamat ini baik-baik (jangan dibagikan):"
+echo "  https://maninbot.id/ai/\$P/"
+SETUP
+chmod 755 /usr/local/bin/mib-admin-setup
+
 # nginx: pembatas laju + /ai/ diteruskan ke gateway (tanpa buffer agar aliran SSE langsung sampai)
 cat > /etc/nginx/conf.d/mib-gateway-limit.conf <<'LIM'
 limit_req_zone $binary_remote_addr zone=mibai:10m rate=30r/s;
@@ -135,11 +165,7 @@ fi
 nginx -t
 systemctl reload nginx
 
-if grep -q '^ANTHROPIC_API_KEY=.\+' /etc/mib-gateway.env; then
-  systemctl restart mib-gateway
-  sleep 1
-  systemctl is-active mib-gateway
-  journalctl -u mib-gateway -n 3 --no-pager | tail -2
-else
-  echo "[gateway] belum dijalankan: isi dulu kunci layanan AI dengan  mib-set ANTHROPIC_API_KEY"
-fi
+systemctl restart mib-gateway
+sleep 1
+systemctl is-active mib-gateway
+journalctl -u mib-gateway -n 3 --no-pager | tail -2

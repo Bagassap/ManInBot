@@ -3,7 +3,20 @@
 //   mib-admin users                      daftar akun
 //   mib-admin grant <email> --days 30    beri/perpanjang paket berbayar (mis. transfer manual atau hadiah)
 //   mib-admin ban <email> | unban <email>
-import { Db, dayKey } from './db.mjs';
+import { Db, dayKey, hashPassword } from './db.mjs';
+
+// Dipakai mib-admin-setup: membaca kata sandi dari stdin, mencetak hash-nya. Tidak menyentuh database.
+if (process.argv[2] === 'hash-stdin') {
+  let pw = '';
+  for await (const c of process.stdin) pw += c;
+  pw = pw.trimEnd(); // buang baris baru di akhir
+  if (pw.length < 12) {
+    console.error('Kata sandi admin minimal 12 karakter.');
+    process.exit(1);
+  }
+  console.log(hashPassword(pw));
+  process.exit(0);
+}
 
 const db = new Db(process.env.DATA_DIR || '/var/lib/mib-gateway');
 const [cmd, arg, ...rest] = process.argv.slice(2);
