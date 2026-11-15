@@ -19,3 +19,4 @@ env.*.bak
 coverage/
 .DS_Store
 backend/src/generated/
+release-build/
