@@ -8,7 +8,8 @@ import { WorkspacesService } from '../workspaces/workspaces.service.js';
 import type { GoogleProfile } from './google.service.js';
 
 // Hash asli untuk email yang tidak terdaftar, agar waktu respons login seragam.
-const DUMMY_HASH = await argon2.hash('mib-dummy-password');
+let dummyHash: Promise<string> | null = null;
+const DUMMY_HASH = () => (dummyHash ??= argon2.hash('mib-dummy-password'));
 
 @Injectable()
 export class AuthService {
@@ -55,7 +56,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const email = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({ where: { email } });
-    const ok = await argon2.verify(user?.passwordHash ?? DUMMY_HASH, dto.password).catch(() => false);
+    const ok = await argon2.verify(user?.passwordHash ?? (await DUMMY_HASH()), dto.password).catch(() => false);
     if (!user || !ok) throw new UnauthorizedException('Email atau kata sandi salah');
     // Diperiksa setelah kata sandi benar, agar status blokir tidak bisa ditebak oleh orang lain.
     if (user.blockedAt) throw new ForbiddenException('Akun diblokir. Hubungi admin.');

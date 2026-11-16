@@ -3,7 +3,6 @@ import path from 'node:path';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
@@ -75,6 +74,7 @@ async function bootstrap() {
   }
 
   if (process.env.NODE_ENV !== 'production' && !frontendDir) {
+    const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger');
     const doc = SwaggerModule.createDocument(
       app,
       new DocumentBuilder().setTitle('MIB API').setVersion('0.1').addBearerAuth().build(),

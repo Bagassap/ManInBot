@@ -1,4 +1,7 @@
-import ExcelJS from 'exceljs';
+import type ExcelJS from 'exceljs';
+
+/** ExcelJS berat; dimuat saat pertama kali dibutuhkan, bukan saat aplikasi dibuka. */
+const loadExcel = async () => (await import('exceljs')).default;
 import { inflateRawSync } from 'node:zlib';
 import {
   colToLetters,
@@ -134,7 +137,7 @@ export async function importXlsx(buf: Buffer, fileName: string): Promise<ImportR
   if (buf.length > MAX_UPLOAD_BYTES) throw new SheetError('Berkas terlalu besar (maks. 5 MB)');
   inspectZip(buf);
 
-  const book = new ExcelJS.Workbook();
+  const book = new (await loadExcel()).Workbook();
   try {
     await book.xlsx.load(buf as unknown as ExcelJS.Buffer);
   } catch {
@@ -200,7 +203,7 @@ export async function importXlsx(buf: Buffer, fileName: string): Promise<ImportR
 const toArgb = (hex: string) => `FF${hex.slice(1).toUpperCase()}`;
 
 export async function exportXlsx(wb: Workbook, computed: ComputedBook): Promise<Buffer> {
-  const book = new ExcelJS.Workbook();
+  const book = new (await loadExcel()).Workbook();
   book.creator = 'MiB';
   book.created = new Date();
 

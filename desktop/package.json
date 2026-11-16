@@ -19,7 +19,7 @@
     "appId": "id.mib.agent",
     "productName": "MiB",
     "directories": { "output": "release", "buildResources": "build" },
-    "files": ["main.cjs", "preload.cjs", "build/icon.png", "package.json"],
+    "files": ["main.cjs", "preload.cjs", "loading.html", "build/icon.png", "package.json"],
     "extraResources": [{ "from": "stage", "to": "app-data" }],
     "asar": true,
     "win": { "target": ["nsis"], "icon": "build/icon.png" },

@@ -99,6 +99,12 @@ function stopBackend() {
   }
 }
 
+const startUrl = () => `${origin}/auth/local-start?t=${localToken}`;
+
+function openApp() {
+  if (mainWindow) mainWindow.loadURL(startUrl());
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -115,14 +121,14 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  const startUrl = `${origin}/auth/local-start?t=${localToken}`;
-  mainWindow.loadURL(startUrl);
+  // Jendela tampil seketika dengan layar memuat; aplikasi dibuka begitu layanan lokal siap (openApp).
+  mainWindow.loadFile(path.join(__dirname, 'loading.html'));
 
   // Masuk otomatis: jika sesi habis dan halaman jatuh ke layar masuk/daftar, masuk ulang secara diam-diam.
   const relogin = (_e, url) => {
     try {
       const p = new URL(url).pathname.replace(/\/$/, '');
-      if (p === '/masuk' || p === '/daftar') mainWindow && mainWindow.loadURL(startUrl);
+      if (p === '/masuk' || p === '/daftar') mainWindow && mainWindow.loadURL(startUrl());
     } catch {
       /* abaikan */
     }
@@ -204,6 +210,7 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   app.whenReady().then(async () => {
     if (process.platform !== 'darwin') Menu.setApplicationMenu(null);
+    createWindow(); // tampil dulu, jangan tunggu layanan lokal
     try {
       const port = await freePort();
       origin = `http://127.0.0.1:${port}`;
@@ -217,7 +224,7 @@ if (!app.requestSingleInstanceLock()) {
     }
     // Mikrofon hanya untuk halaman MiB sendiri (Mode Meeting).
     session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(permission === 'media' && wc.getURL().startsWith(origin)));
-    createWindow();
+    openApp();
   });
   app.on('window-all-closed', () => app.quit());
   app.on('before-quit', () => {
