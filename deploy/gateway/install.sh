@@ -28,6 +28,7 @@ add() { grep -q "^$1=" /etc/mib-gateway.env || printf '%s=%s\n' "$1" "$2" >> /et
 add ANTHROPIC_API_KEY ""
 add PORT 4100
 add ALLOWED_MODELS "claude-opus-5-5,claude-sonnet-5-5"
+add FORCE_MODEL "claude-sonnet-5-5"
 add FREE_PER_DAY 3
 add PAID_PER_DAY 30
 add PLAN_DAYS 30

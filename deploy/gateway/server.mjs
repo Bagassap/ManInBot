@@ -13,6 +13,8 @@ export const CFG = {
   aiKey: env.ANTHROPIC_API_KEY,
   upstream: env.UPSTREAM || 'https://api.anthropic.com',
   models: (env.ALLOWED_MODELS || 'claude-opus-5-5,claude-sonnet-5-5').split(',').map((s) => s.trim()),
+  // Bila diisi, semua permintaan memakai model ini apa pun yang diminta aplikasi (ganti model tanpa pasang ulang aplikasi).
+  forceModel: (env.FORCE_MODEL || '').trim(),
   maxTokensCap: num('MAX_TOKENS_CAP', 64000),
   maxConcurrent: num('MAX_CONCURRENT', 3),
   rpm: num('RPM', 90),
@@ -319,7 +321,8 @@ export function createGateway(db) {
     } catch {
       return aiError(res, 400, 'invalid_request_error', 'Isi permintaan bukan JSON.');
     }
-    if (!CFG.models.includes(body.model)) return aiError(res, 400, 'invalid_request_error', 'Model tidak tersedia.');
+    if (CFG.forceModel) body.model = CFG.forceModel;
+    else if (!CFG.models.includes(body.model)) return aiError(res, 400, 'invalid_request_error', 'Model tidak tersedia.');
     body.max_tokens = Math.min(Number(body.max_tokens) || CFG.maxTokensCap, CFG.maxTokensCap);
 
     const perDay = paid ? CFG.paidPerDay : CFG.freePerDay;

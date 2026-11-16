@@ -121,7 +121,7 @@ export class AgentService {
     private readonly local: LocalToolsService,
     private readonly settings: SettingsService,
   ) {
-    this.model = config.get<string>('ANTHROPIC_MODEL') || 'claude-opus-5-5';
+    this.model = config.get<string>('ANTHROPIC_MODEL') || 'claude-sonnet-5-5';
     const effort = config.get<string>('AGENT_EFFORT') as Effort | undefined;
     this.effort = effort && EFFORTS.includes(effort) ? effort : 'high';
     const turns = Number(config.get<string>('AGENT_MAX_TURNS'));
