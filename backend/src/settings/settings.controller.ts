@@ -15,6 +15,13 @@ class CredsDto {
   @MaxLength(100)
   password!: string;
 }
+class RegisterDto extends CredsDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  name?: string;
+}
+
 class VerifyDto {
   @IsEmail()
   @MaxLength(120)
@@ -117,8 +124,11 @@ export class SettingsController {
   @Post('account/register')
   @UseGuards(AdminGuard)
   @Throttle({ default: { limit: 8, ttl: 60_000 } })
-  async register(@Body() dto: CredsDto) {
-    return ok(await gw('/v1/account/register', { body: dto }));
+  async register(@Body() dto: RegisterDto) {
+    const b = ok(await gw<{ token?: string; needVerify?: boolean }>('/v1/account/register', { body: dto }));
+    // Tanpa verifikasi email, server langsung memberi token: pengguna langsung masuk.
+    if (typeof b.token === 'string') this.settings.setAccountToken(b.token);
+    return { ok: true, needVerify: b.needVerify !== false && typeof b.token !== 'string' };
   }
 
   @Post('account/verify')

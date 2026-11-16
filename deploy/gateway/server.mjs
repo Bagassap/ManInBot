@@ -28,6 +28,8 @@ export const CFG = {
   midtransSnap: env.MIDTRANS_SNAP_URL || (env.MIDTRANS_PRODUCTION === '1' ? 'https://app.midtrans.com/snap/v1/transactions' : 'https://app.sandbox.midtrans.com/snap/v1/transactions'),
   midtransApi: env.MIDTRANS_API_URL || (env.MIDTRANS_PRODUCTION === '1' ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com'),
   maxBody: 25 * 1024 * 1024,
+  // 1 = wajib verifikasi kode email saat daftar (butuh SMTP). 0 = akun langsung aktif.
+  requireVerify: env.REQUIRE_EMAIL_VERIFY === '1',
 };
 
 export function createGateway(db) {
@@ -98,12 +100,15 @@ export function createGateway(db) {
     days: CFG.planDays,
     priceIdr: CFG.priceIdr,
     canPay: !!(CFG.midtransKey && CFG.priceIdr > 0),
+    needVerify: CFG.requireVerify,
+    emailReset: mailReady(),
   });
   const isPaid = (u) => u.paid_until > Date.now();
   const accountView = (u) => {
     const paid = isPaid(u);
     return {
       email: u.email,
+      name: u.name || null,
       paid,
       paidUntil: paid ? new Date(u.paid_until).toISOString() : null,
       usedToday: db.usedToday(u.id),
@@ -134,9 +139,16 @@ export function createGateway(db) {
     const email = normEmail(b.email);
     if (!EMAIL_RE.test(email)) return fail(res, 400, 'Alamat email tidak valid.');
     if (!validPassword(b.password)) return fail(res, 400, 'Kata sandi minimal 8 karakter.');
+    const name = typeof b.name === 'string' ? b.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
     if (!allow(`reg:${ipOf(req)}`, 10, 3600_000) || !allow(`regm:${email}`, 5, 3600_000)) return fail(res, 429, 'Terlalu sering mendaftar. Coba lagi nanti.');
     const existing = db.userByEmail(email);
     if (existing?.verified) return fail(res, 409, 'Email ini sudah terdaftar. Silakan masuk.');
+    if (!CFG.requireVerify) {
+      // Tanpa verifikasi email: batasi jumlah akun baru per alamat IP agar kuota gratis tidak disalahgunakan.
+      if (!allow(`regd:${ipOf(req)}`, 5, 86_400_000)) return fail(res, 429, 'Terlalu banyak pendaftaran dari jaringan ini hari ini. Coba lagi besok.');
+      const id = db.createActive(email, b.password, name);
+      return json(res, 200, { ok: true, needVerify: false, token: db.newSession(id), account: accountView(db.userById(id)) });
+    }
     // Email langsung tercatat (belum terverifikasi) agar terlihat di dashboard admin, apa pun hasil pengiriman kodenya.
     db.upsertUnverified(email, b.password);
     if (!mailReady()) return fail(res, 503, 'Pendaftaran sedang tidak tersedia. Coba lagi nanti.');
@@ -168,7 +180,8 @@ export function createGateway(db) {
     const u = db.userByEmail(email);
     if (!u || typeof b.password !== 'string' || !db.verifyPassword(u, b.password)) return fail(res, 401, 'Email atau kata sandi salah.');
     if (u.banned) return fail(res, 403, 'Akun ini dinonaktifkan.');
-    if (!u.verified) {
+    if (!u.verified && !CFG.requireVerify) db.markVerified(u.id); // verifikasi dimatikan: akun lama langsung aktif
+    else if (!u.verified) {
       if (mailReady()) await sendCode(email, 'verify', db.newCode(email, 'verify')).catch(() => {});
       return fail(res, 403, 'Email belum diverifikasi. Kode baru sudah dikirim ke email Anda.', { needVerify: true });
     }
@@ -180,6 +193,7 @@ export function createGateway(db) {
     if (!b) return;
     const email = normEmail(b.email);
     if (!allow(`fg:${ipOf(req)}`, 10, 3600_000) || !allow(`fgm:${email}`, 3, 3600_000)) return fail(res, 429, 'Terlalu sering. Coba lagi nanti.');
+    if (!mailReady()) return fail(res, 503, 'Atur ulang kata sandi lewat email belum tersedia. Hubungi admin MiB.');
     const u = db.userByEmail(email);
     if (u?.verified && mailReady()) await sendCode(email, 'reset', db.newCode(email, 'reset')).catch((e) => console.error('email gagal', e?.message));
     json(res, 200, { ok: true }); // jawaban sama untuk email yang tidak terdaftar

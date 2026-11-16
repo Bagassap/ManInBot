@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 process.env.DEV_LOG_CODES = '1';
+process.env.REQUIRE_EMAIL_VERIFY = '1';
 process.env.ANTHROPIC_API_KEY = 'sk-ant-REAL-SECRET';
 process.env.UPSTREAM = 'http://127.0.0.1:4391';
 process.env.MIDTRANS_SERVER_KEY = 'SB-Mid-server-TEST';

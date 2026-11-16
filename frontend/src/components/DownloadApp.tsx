@@ -97,7 +97,7 @@ export default function DownloadApp() {
         <h2 className="text-base font-medium text-foreground">Setelah terpasang</h2>
         <ol className="list-decimal space-y-1 pl-5">
           <li>Buka MiB. Aplikasi langsung terbuka tanpa perlu membuat akun di komputer.</li>
-          <li>Buka Pengaturan, panel Akun MiB: daftar dengan email, lalu tempel kode 6 angka dari email Anda. Gratis 3 perintah per hari.</li>
+          <li>Buka Pengaturan, panel Akun MiB: daftar dengan nama, email, dan kata sandi. Gratis 3 perintah per hari.</li>
           <li>Di Pengaturan → Folder lokal, pilih folder yang boleh diakses MiB.</li>
           <li>Kembali ke chat dan beri tugas pertama.</li>
         </ol>

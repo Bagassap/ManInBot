@@ -10,9 +10,14 @@ export interface PlanView {
   days: number;
   priceIdr: number;
   canPay: boolean;
+  /** Server mewajibkan kode verifikasi email saat daftar. */
+  needVerify?: boolean;
+  /** Atur ulang kata sandi lewat email tersedia. */
+  emailReset?: boolean;
 }
 export interface AccountView {
   email: string;
+  name?: string | null;
   paid: boolean;
   paidUntil: string | null;
   usedToday: number;
@@ -43,6 +48,7 @@ interface Props {
 
 export default function AccountPanel({ isAdmin, loggedIn, account, problem, plan, canSave, reload }: Props) {
   const [step, setStep] = useState<Step>("masuk");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -89,9 +95,14 @@ export default function AccountPanel({ isAdmin, loggedIn, account, problem, plan
   const submitDaftar = (e: React.FormEvent) => {
     e.preventDefault();
     void run(async () => {
-      await api("/settings/account/register", { method: "POST", body: JSON.stringify({ email, password }) });
-      setNotice(`Kode verifikasi 6 angka sudah dikirim ke ${email}.`);
-      setStep("verifikasi");
+      const r = await api<{ needVerify: boolean }>("/settings/account/register", { method: "POST", body: JSON.stringify({ name: name.trim(), email, password }) });
+      if (r.needVerify) {
+        setNotice(`Kode verifikasi 6 angka sudah dikirim ke ${email}.`);
+        setStep("verifikasi");
+        return;
+      }
+      setPassword("");
+      await reload();
     });
   };
   const submitVerifikasi = (e: React.FormEvent) => {
@@ -271,6 +282,9 @@ export default function AccountPanel({ isAdmin, loggedIn, account, problem, plan
 
           {(step === "masuk" || step === "daftar") && (
             <form onSubmit={step === "masuk" ? submitMasuk : submitDaftar} className="mt-3 space-y-2">
+              {step === "daftar" && (
+                <input required maxLength={80} autoComplete="name" placeholder="Nama lengkap" aria-label="Nama lengkap" value={name} onChange={(e) => setName(e.target.value)} className={input} />
+              )}
               <input type="email" required autoComplete="email" placeholder="Email" aria-label="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
               <input
                 type="password"
@@ -285,13 +299,16 @@ export default function AccountPanel({ isAdmin, loggedIn, account, problem, plan
               />
               <button disabled={busy} className={`${primary} w-full`}>
                 {busy && <Loader2 className="size-4 animate-spin" />}
-                {step === "masuk" ? "Masuk" : "Daftar dan kirim kode"}
+                {step === "masuk" ? "Masuk" : plan?.needVerify ? "Daftar dan kirim kode" : "Daftar"}
               </button>
-              {step === "masuk" && (
-                <button type="button" onClick={() => setStep("lupa")} className={`${link} text-xs`}>
-                  Lupa kata sandi?
-                </button>
-              )}
+              {step === "masuk" &&
+                (plan?.emailReset ? (
+                  <button type="button" onClick={() => setStep("lupa")} className={`${link} text-xs`}>
+                    Lupa kata sandi?
+                  </button>
+                ) : (
+                  <p className="text-xs text-muted">Lupa kata sandi? Hubungi admin MiB untuk dibuatkan kata sandi sementara.</p>
+                ))}
             </form>
           )}
 

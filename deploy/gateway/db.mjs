@@ -45,6 +45,9 @@ export class Db {
         order_id TEXT PRIMARY KEY, user_id INTEGER NOT NULL, amount INTEGER NOT NULL, days INTEGER NOT NULL,
         status TEXT NOT NULL, created INTEGER NOT NULL, paid_at INTEGER);
     `);
+    // Kolom nama ditambahkan belakangan; database lama diperbarui di tempat.
+    const cols = this.db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+    if (!cols.includes('name')) this.db.exec('ALTER TABLE users ADD COLUMN name TEXT');
   }
 
   q(sql) {
@@ -67,6 +70,15 @@ export class Db {
     }
     return Number(this.q('INSERT INTO users (email, pass_hash, created_at) VALUES (?, ?, ?)').run(email, hashPassword(password), Date.now()).lastInsertRowid);
   }
+  /** Pendaftaran tanpa verifikasi email: akun langsung aktif. Akun lama yang belum terverifikasi ikut diaktifkan. */
+  createActive(email, password, name) {
+    const u = this.userByEmail(email);
+    if (u) {
+      this.q('UPDATE users SET pass_hash = ?, name = ?, verified = 1 WHERE id = ?').run(hashPassword(password), name || null, u.id);
+      return u.id;
+    }
+    return Number(this.q('INSERT INTO users (email, pass_hash, name, verified, created_at) VALUES (?, ?, ?, 1, ?)').run(email, hashPassword(password), name || null, Date.now()).lastInsertRowid);
+  }
   verifyPassword(user, password) {
     return checkPassword(password, user.pass_hash);
   }
@@ -87,7 +99,7 @@ export class Db {
   }
   /** Data dashboard admin: semua akun beserta ringkasan pembayaran dan pemakaian hari ini. */
   adminUsers() {
-    return this.q(`SELECT u.id, u.email, u.verified, u.banned, u.paid_until, u.created_at,
+    return this.q(`SELECT u.id, u.email, u.name, u.verified, u.banned, u.paid_until, u.created_at,
         (SELECT COUNT(*) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_count,
         (SELECT COALESCE(SUM(amount), 0) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_total,
         (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id AND c.day = ?) AS used_today,

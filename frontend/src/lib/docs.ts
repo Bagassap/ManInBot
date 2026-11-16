@@ -88,11 +88,11 @@ export const DOCS: DocPage[] = [
     blocks: [
       { t: "ol", items: [
         "Buka MiB. Aplikasi langsung terbuka, tanpa membuat akun di komputer.",
-        "Buka Pengaturan, panel Akun MiB: daftar dengan email, lalu tempel kode 6 angka yang dikirim ke email Anda.",
+        "Buka Pengaturan, panel Akun MiB: daftar dengan nama, email, dan kata sandi. Akun langsung aktif.",
         "Buka Pengaturan, Folder lokal, lalu pilih folder kerja Anda dan modenya.",
       ] },
       { t: "p", text: "Selesai. Kembali ke chat dan beri tugas, misalnya: tolong lihat isi folder Dokumen." },
-      { t: "note", kind: "info", text: "Kode tidak sampai? Periksa folder Spam, lalu masuk lagi di panel Akun MiB untuk meminta kode baru." },
+      { t: "note", kind: "info", text: "Lupa kata sandi akun MiB? Hubungi admin MiB untuk dibuatkan kata sandi sementara." },
     ],
   },
   {
