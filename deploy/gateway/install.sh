@@ -130,6 +130,39 @@ echo "  https://maninbot.id/ai/\$P/"
 SETUP
 chmod 755 /usr/local/bin/mib-admin-setup
 
+# Email kode verifikasi lewat Gmail (App Password). Menanyakan alamat + sandi aplikasi, mematikan mode uji,
+# lalu mengirim email percobaan ke alamat itu sendiri.
+cat > /usr/local/bin/mib-email-gmail <<GMAIL
+#!/bin/bash
+set -e
+[ "\$(id -u)" -eq 0 ] || exec sudo "\$0" "\$@"
+ENVF=/etc/mib-gateway.env
+umask 077
+setv() { grep -v "^\$1=" \$ENVF > \$ENVF.new || true; printf '%s=%s\n' "\$1" "\$2" >> \$ENVF.new; mv \$ENVF.new \$ENVF; }
+read -r -p "Alamat Gmail pengirim: " G
+case "\$G" in *@gmail.com|*@googlemail.com) ;; *) echo "Harus alamat Gmail; dibatalkan."; exit 1;; esac
+read -r -s -p "App Password Gmail (16 huruf, tidak tampil): " P; echo
+P=\$(printf '%s' "\$P" | tr -d ' ')
+[ \${#P} -eq 16 ] || { echo "App Password harus 16 huruf; dibatalkan."; exit 1; }
+setv SMTP_HOST smtp.gmail.com
+setv SMTP_PORT 587
+setv SMTP_SECURE 0
+setv SMTP_USER "\$G"
+setv SMTP_PASS "\$P"
+setv MAIL_FROM "MiB <\$G>"
+setv DEV_LOG_CODES 0
+echo "Mengirim email percobaan ke \$G ..."
+if env SMTP_HOST=smtp.gmail.com SMTP_PORT=587 SMTP_SECURE=0 SMTP_USER="\$G" SMTP_PASS="\$P" MAIL_FROM="MiB <\$G>" DATA_DIR=/tmp \\
+     $NODE_DIR/bin/node --disable-warning=ExperimentalWarning /opt/mib-gateway/cli.mjs test-mail "\$G"; then
+  systemctl restart mib-gateway; sleep 1
+  systemctl is-active mib-gateway >/dev/null && echo "Selesai. Kode verifikasi MiB kini dikirim lewat email."
+else
+  echo "Pengaturan tersimpan tetapi email gagal terkirim. Periksa alamat dan App Password, lalu jalankan lagi."
+  exit 1
+fi
+GMAIL
+chmod 755 /usr/local/bin/mib-email-gmail
+
 # nginx: pembatas laju + /ai/ diteruskan ke gateway (tanpa buffer agar aliran SSE langsung sampai)
 cat > /etc/nginx/conf.d/mib-gateway-limit.conf <<'LIM'
 limit_req_zone $binary_remote_addr zone=mibai:10m rate=30r/s;

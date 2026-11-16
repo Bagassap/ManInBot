@@ -18,6 +18,19 @@ if (process.argv[2] === 'hash-stdin') {
   process.exit(0);
 }
 
+// Dipakai mib-email-gmail: kirim satu email percobaan dengan pengaturan SMTP saat ini.
+if (process.argv[2] === 'test-mail') {
+  const { sendCode } = await import('./mail.mjs');
+  try {
+    await sendCode(String(process.argv[3] || ''), 'verify', '123456');
+    console.log('Email percobaan terkirim.');
+    process.exit(0);
+  } catch (e) {
+    console.error(`Gagal mengirim: ${e?.message || e}`);
+    process.exit(1);
+  }
+}
+
 const db = new Db(process.env.DATA_DIR || '/var/lib/mib-gateway');
 const [cmd, arg, ...rest] = process.argv.slice(2);
 const opt = (name) => {
