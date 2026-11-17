@@ -14,6 +14,8 @@ export interface PlanView {
   needVerify?: boolean;
   /** Atur ulang kata sandi lewat email tersedia. */
   emailReset?: boolean;
+  /** Masa uji coba: perintah per hari tidak dibatasi. */
+  unlimited?: boolean;
 }
 export interface AccountView {
   email: string;
@@ -22,6 +24,7 @@ export interface AccountView {
   paidUntil: string | null;
   usedToday: number;
   limitToday: number;
+  unlimited?: boolean;
   plan: PlanView;
 }
 
@@ -203,16 +206,19 @@ export default function AccountPanel({ isAdmin, loggedIn, account, problem, plan
         <div className="mt-4">
           <div className="flex justify-between text-xs text-muted">
             <span>
-              Perintah hari ini: {account.usedToday} dari {account.limitToday}
+              Perintah hari ini: {account.usedToday}
+              {account.unlimited ? " · tanpa batas (masa uji coba)" : ` dari ${account.limitToday}`}
             </span>
             <span>{account.paid && account.paidUntil ? `Berlaku s.d. ${new Date(account.paidUntil).toLocaleDateString("id-ID")}` : "Diperbarui 00.00 WIB"}</span>
           </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
-            <div className={`h-full rounded-full ${full ? "bg-amber-400" : "bg-accent"}`} style={{ width: `${pct}%` }} />
-          </div>
+          {!account.unlimited && (
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
+              <div className={`h-full rounded-full ${full ? "bg-amber-400" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+            </div>
+          )}
         </div>
 
-        {!account.paid && (
+        {!account.paid && !account.unlimited && (
           <div className="mt-4 rounded-xl border border-line p-4 text-sm">
             <p className="font-medium">Akses penuh</p>
             <p className="mt-1 text-muted">
@@ -249,9 +255,15 @@ export default function AccountPanel({ isAdmin, loggedIn, account, problem, plan
     <section className="rounded-2xl border border-line bg-surface p-5">
       {header}
       <p className="mt-3 text-sm leading-relaxed text-muted">
-        Masuk ke akun MiB untuk mengaktifkan agen. Gratis {plan?.freePerDay ?? 3} perintah per hari
-        {plan?.canPay ? `, atau ${plan.paidPerDay} perintah per hari dengan paket berbayar (${rupiah(plan.priceIdr)} / ${plan.days} hari)` : ""}
-        . Layanan AI sudah termasuk; tidak ada kunci yang perlu Anda siapkan.
+        {plan?.unlimited ? (
+          <>Masuk ke akun MiB untuk mengaktifkan agen. Selama masa uji coba, perintah tidak dibatasi. Layanan AI sudah termasuk; tidak ada kunci yang perlu Anda siapkan.</>
+        ) : (
+          <>
+            Masuk ke akun MiB untuk mengaktifkan agen. Gratis {plan?.freePerDay ?? 3} perintah per hari
+            {plan?.canPay ? `, atau ${plan.paidPerDay} perintah per hari dengan paket berbayar (${rupiah(plan.priceIdr)} / ${plan.days} hari)` : ""}
+            . Layanan AI sudah termasuk; tidak ada kunci yang perlu Anda siapkan.
+          </>
+        )}
       </p>
       {problem && <p className="mt-3 text-sm text-amber-200">{problem}</p>}
 

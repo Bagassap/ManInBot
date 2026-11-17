@@ -30,6 +30,8 @@ export const CFG = {
   maxBody: 25 * 1024 * 1024,
   // 1 = wajib verifikasi kode email saat daftar (butuh SMTP). 0 = akun langsung aktif.
   requireVerify: env.REQUIRE_EMAIL_VERIFY === '1',
+  // 1 = masa uji coba: perintah per hari tidak dibatasi (batas token per perintah dan laju tetap berlaku).
+  unlimited: env.UNLIMITED_TRIAL === '1',
 };
 
 export function createGateway(db) {
@@ -101,6 +103,7 @@ export function createGateway(db) {
     priceIdr: CFG.priceIdr,
     canPay: !!(CFG.midtransKey && CFG.priceIdr > 0),
     needVerify: CFG.requireVerify,
+    unlimited: CFG.unlimited,
     emailReset: mailReady(),
   });
   const isPaid = (u) => u.paid_until > Date.now();
@@ -112,7 +115,8 @@ export function createGateway(db) {
       paid,
       paidUntil: paid ? new Date(u.paid_until).toISOString() : null,
       usedToday: db.usedToday(u.id),
-      limitToday: paid ? CFG.paidPerDay : CFG.freePerDay,
+      limitToday: CFG.unlimited ? 99999 : paid ? CFG.paidPerDay : CFG.freePerDay,
+      unlimited: CFG.unlimited,
       plan: planInfo(),
     };
   };
@@ -339,7 +343,7 @@ export function createGateway(db) {
     else if (!CFG.models.includes(body.model)) return aiError(res, 400, 'invalid_request_error', 'Model tidak tersedia.');
     body.max_tokens = Math.min(Number(body.max_tokens) || CFG.maxTokensCap, CFG.maxTokensCap);
 
-    const perDay = paid ? CFG.paidPerDay : CFG.freePerDay;
+    const perDay = CFG.unlimited ? Infinity : paid ? CFG.paidPerDay : CFG.freePerDay;
     const gate = db.beginCommand(u.id, cmdId, perDay, paid ? CFG.paidCmdTokens : CFG.freeCmdTokens);
     if (!gate.ok) {
       return gate.reason === 'daily'

@@ -132,6 +132,7 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
         priceIdr: cfg.priceIdr,
         freePerDay: cfg.freePerDay,
         paidPerDay: cfg.paidPerDay,
+        unlimited: cfg.unlimited,
       },
       users,
       payments,
@@ -276,7 +277,7 @@ function render() {
   ].map(([k, v]) => '<div class="card stat"><span>' + k + '</span><b>' + esc(v) + '</b></div>').join('');
   const pill = (ok, t) => '<span class="pill ' + (ok ? 'ok' : 'no') + '">' + (ok ? '● ' : '○ ') + t + '</span>';
   $('cfg').innerHTML = pill(c.ai, 'Layanan AI') + pill(c.email, 'Email verifikasi') + pill(c.payment, 'Pembayaran' + (c.priceIdr ? ' ' + rp(c.priceIdr) : '')) +
-    '<span class="pill">Gratis ' + c.freePerDay + '/hari · Berbayar ' + c.paidPerDay + '/hari</span>';
+    (c.unlimited ? '<span class="pill ok">● Uji coba: perintah tanpa batas</span>' : '<span class="pill">Gratis ' + c.freePerDay + '/hari · Berbayar ' + c.paidPerDay + '/hari</span>');
   const q = $('q').value.trim().toLowerCase();
   const users = DATA.users.filter((u) => !q || u.email.includes(q));
   $('ut').innerHTML = users.length ? users.map((u) =>

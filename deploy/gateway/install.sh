@@ -43,6 +43,7 @@ add SMTP_PASS ""
 add MAIL_FROM ""
 add ADMIN_PATH ""
 add REQUIRE_EMAIL_VERIFY 0
+add UNLIMITED_TRIAL 0
 add ADMIN_PASS_HASH ""
 add ADMIN_IPS ""
 chmod 600 /etc/mib-gateway.env
