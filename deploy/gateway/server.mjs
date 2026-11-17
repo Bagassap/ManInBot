@@ -20,8 +20,9 @@ export const CFG = {
   rpm: num('RPM', 90),
   freePerDay: num('FREE_PER_DAY', 3),
   paidPerDay: num('PAID_PER_DAY', 30),
-  freeCmdTokens: num('FREE_CMD_TOKENS', 150_000),
-  paidCmdTokens: num('PAID_CMD_TOKENS', 600_000),
+  // Batas pemrosesan per perintah, dalam "token setara input" (lihat usageTracker): ±US$2 / ±US$4 per perintah di Sonnet.
+  freeCmdTokens: num('FREE_CMD_TOKENS', 1_000_000),
+  paidCmdTokens: num('PAID_CMD_TOKENS', 2_000_000),
   planDays: num('PLAN_DAYS', 30),
   priceIdr: num('PLAN_PRICE_IDR', 0),
   midtransKey: env.MIDTRANS_SERVER_KEY || '',
@@ -284,8 +285,9 @@ export function createGateway(db) {
     let output = 0;
     const take = (u) => {
       if (!u) return;
-      if (typeof u.input_tokens === 'number') input = Math.max(input, u.input_tokens + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0));
-      if (typeof u.output_tokens === 'number') output = Math.max(output, u.output_tokens);
+      // Dibobot sesuai harga: tulis cache 1,25x, baca cache 0,1x, keluaran 5x harga token masukan.
+      if (typeof u.input_tokens === 'number') input = Math.max(input, u.input_tokens + 1.25 * (u.cache_creation_input_tokens || 0) + 0.1 * (u.cache_read_input_tokens || 0));
+      if (typeof u.output_tokens === 'number') output = Math.max(output, 5 * u.output_tokens);
     };
     return {
       feed(chunk) {
@@ -308,7 +310,7 @@ export function createGateway(db) {
         try {
           take(JSON.parse(tail).usage); // respons non-stream: satu objek JSON
         } catch {}
-        return input + output;
+        return Math.round(input + output);
       },
     };
   }
@@ -348,7 +350,7 @@ export function createGateway(db) {
     if (!gate.ok) {
       return gate.reason === 'daily'
         ? aiError(res, 429, 'rate_limit_error', `Batas ${perDay} perintah hari ini sudah habis${paid ? '' : ' (paket gratis)'}. Kuota diperbarui besok pukul 00.00 WIB.${paid ? '' : PLAN_HINT()}`)
-        : aiError(res, 429, 'rate_limit_error', 'Perintah ini sudah memakai batas pemrosesan maksimum. Pecah menjadi perintah yang lebih kecil.');
+        : aiError(res, 429, 'rate_limit_error', 'Perintah ini sudah mencapai batas pemrosesan untuk satu perintah. Ketik "lanjutkan" agar MiB meneruskan dari langkah terakhir, atau pecah tugasnya menjadi bagian yang lebih kecil.');
     }
 
     const headers = { 'content-type': 'application/json', 'x-api-key': CFG.aiKey, 'anthropic-version': req.headers['anthropic-version'] || '2023-06-01' };

@@ -192,6 +192,8 @@ export class AgentService {
           max_tokens: MAX_OUTPUT_TOKENS,
           thinking: { type: 'adaptive' },
           output_config: { effort: this.effort },
+          // Riwayat yang sama dikirim ulang di setiap langkah agen; cache membuat bagian itu ~90% lebih murah.
+          cache_control: { type: 'ephemeral' },
           system,
           tools: toolsFor(),
           messages,

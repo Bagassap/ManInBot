@@ -86,7 +86,7 @@ ok('perintah ke-4 tidak tercatat', db.usedToday(1) === 3);
 for (let i = 0; i < 8; i++) await (await msg('cmd-aaaaaaaa')).text();
 const rcap = await msg('cmd-aaaaaaaa');
 const bcap = await rcap.json();
-ok('batas token per perintah', rcap.status === 429 && /pemrosesan maksimum/.test(bcap.error.message), bcap.error.message);
+ok('batas token per perintah', rcap.status === 429 && /batas pemrosesan/.test(bcap.error.message) && /lanjutkan/.test(bcap.error.message), bcap.error.message);
 
 // --- bayar
 const co = await jr(await post('/v1/account/checkout', {}, A));
