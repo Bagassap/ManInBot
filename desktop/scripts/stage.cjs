@@ -20,6 +20,15 @@ const dist = path.join(root, 'backend', 'dist');
 if (!fs.existsSync(path.join(dist, 'main.js'))) throw new Error('backend/dist belum dibangun (npx tsc -p tsconfig.build.json)');
 fs.cpSync(dist, path.join(stage, 'backend', 'dist'), { recursive: true, filter: skip });
 
+// tsc hanya menyalin .js; mesin database Prisma (.node) dan skemanya harus ikut, kalau tidak
+// aplikasi hanya jalan di komputer pengembang (Prisma jatuh ke path absolut folder sumber).
+log('menyalin mesin database Prisma');
+const genSrc = path.join(root, 'backend', 'src', 'generated', 'prisma');
+const genDst = path.join(stage, 'backend', 'dist', 'generated', 'prisma');
+const engines = fs.readdirSync(genSrc).filter((n) => /^query_engine-windows.*\.node$/.test(n));
+if (!engines.length) throw new Error('mesin Prisma untuk Windows tidak ditemukan di backend/src/generated/prisma (jalankan npx prisma generate)');
+for (const n of [...engines, 'schema.prisma']) if (fs.existsSync(path.join(genSrc, n))) fs.copyFileSync(path.join(genSrc, n), path.join(genDst, n));
+
 log('menyalin migrasi database');
 fs.cpSync(path.join(root, 'backend', 'prisma', 'migrations'), path.join(stage, 'backend', 'prisma', 'migrations'), { recursive: true });
 

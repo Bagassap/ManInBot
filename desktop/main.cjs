@@ -82,11 +82,26 @@ function startBackend(port) {
   backend.stdout.pipe(backendLog, { end: false });
   backend.stderr.pipe(backendLog, { end: false });
   backend.on('exit', (code) => {
+    // Beri waktu sebentar agar catatan terakhir sempat tertulis ke berkas log.
+    if (!quitting) setTimeout(() => showStopped(code), 400);
+  });
+  const showStopped = (code) => {
     if (!quitting) {
-      dialog.showErrorBox('MiB berhenti', `Layanan MiB di komputer ini berhenti (kode ${code}). Lihat log di ${path.join(dataDir, 'logs')}.`);
+      // Sertakan potongan akhir log supaya pengguna cukup memotret jendela ini untuk melapor.
+      let tail = '';
+      try {
+        const txt = fs.readFileSync(path.join(dataDir, 'logs', 'backend.log'), 'utf8').replace(/\x1b\[[0-9;]*m/g, '');
+        tail = txt.trim().split(/\r?\n/).slice(-8).join('\n').slice(-1200);
+      } catch {
+        /* log belum ada */
+      }
+      dialog.showErrorBox(
+        'MiB berhenti',
+        `Layanan MiB di komputer ini berhenti (kode ${code}). Log lengkap: ${path.join(dataDir, 'logs', 'backend.log')}${tail ? `\n\nCatatan terakhir:\n${tail}` : ''}`,
+      );
       app.quit();
     }
-  });
+  };
 }
 
 function stopBackend() {
