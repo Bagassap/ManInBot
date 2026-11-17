@@ -106,7 +106,13 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
       paidTotal: u.paid_total,
       usedToday: u.used_today,
       used40d: u.used_40d,
+      tokens40d: u.tokens_40d,
+      tokensToday: u.tokens_today,
+      tokensMax: u.tokens_max,
+      firstCmd: u.first_cmd ? new Date(u.first_cmd).toISOString() : null,
+      lastCmd: u.last_cmd ? new Date(u.last_cmd).toISOString() : null,
     }));
+    const daily = db.adminDaily();
     const payments = db.adminPayments().map((p) => ({
       orderId: p.order_id,
       email: p.email,
@@ -133,8 +139,12 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
         freePerDay: cfg.freePerDay,
         paidPerDay: cfg.paidPerDay,
         unlimited: cfg.unlimited,
+        // Perkiraan biaya: token tercatat sudah setara harga token masukan (lihat usageTracker di server.mjs).
+        priceUsdPerMTok: Number(process.env.PRICE_USD_PER_MTOK) || 2,
+        usdIdr: Number(process.env.USD_IDR) || 16500,
       },
       users,
+      daily,
       payments,
     });
   }
@@ -240,6 +250,11 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln);white-s
     <h2>Pengguna</h2>
     <div class="tools"><input id="q" placeholder="Cari email…"><button class="ghost" id="csv">Unduh CSV</button></div>
     <div class="card tw"><table><thead><tr><th>Nama</th><th>Email</th><th>Daftar</th><th>Status</th><th>Paket</th><th>Hari ini</th><th>40 hari</th><th>Total bayar</th><th>Aksi</th></tr></thead><tbody id="ut"></tbody></table></div>
+    <h2>Pemakaian per akun</h2>
+    <p class="muted" style="margin:-4px 0 10px;font-size:12px">Diambil langsung dari database server MiB (data perintah disimpan 40 hari). Biaya adalah perkiraan; angka pasti ada di Claude Console.</p>
+    <div class="card tw"><table><thead><tr><th>Akun</th><th>Nama</th><th>Perintah</th><th>Token tercatat</th><th>Hari ini</th><th>Perintah terbesar</th><th>Perkiraan biaya</th><th>Pertama</th><th>Terakhir</th></tr></thead><tbody id="ust"></tbody></table></div>
+    <h2>Pemakaian per hari</h2>
+    <div class="card tw"><table><thead><tr><th>Tanggal (WIB)</th><th>Akun aktif</th><th>Perintah</th><th>Token tercatat</th><th>Perkiraan biaya</th></tr></thead><tbody id="dt"></tbody></table></div>
     <h2>Pembayaran</h2>
     <div class="card tw"><table><thead><tr><th>Waktu</th><th>Email</th><th>Order</th><th>Jumlah</th><th>Hari</th><th>Status</th><th>Lunas</th></tr></thead><tbody id="pt"></tbody></table></div>
   </div>
@@ -255,6 +270,11 @@ const dt = (s) => (s ? new Date(s).toLocaleString('id-ID', { dateStyle: 'medium'
 const d = (s) => (s ? new Date(s).toLocaleDateString('id-ID', { dateStyle: 'medium' }) : '-');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 let DATA = null;
+const num = (n) => Number(n || 0).toLocaleString('id-ID');
+const cost = (tokens) => {
+  const usd = (Number(tokens || 0) / 1e6) * DATA.config.priceUsdPerMTok;
+  return '±US$' + usd.toFixed(2) + ' (' + rp(Math.round((usd * DATA.config.usdIdr) / 100) * 100) + ')';
+};
 
 async function post(p, body) {
   const r = await fetch('api/' + p, { method: 'POST', headers: H, body: JSON.stringify(body || {}), credentials: 'same-origin' });
@@ -274,6 +294,8 @@ function render() {
   $('stats').innerHTML = [
     ['Akun terdaftar', s.users], ['Terverifikasi', s.verified], ['Berbayar aktif', s.paidActive],
     ['Pembayaran lunas', s.paymentsPaid], ['Total pendapatan', rp(s.revenue)],
+    ['Token 40 hari', num(DATA.users.reduce((a, u) => a + u.tokens40d, 0))],
+    ['Perkiraan biaya AI', cost(DATA.users.reduce((a, u) => a + u.tokens40d, 0))],
   ].map(([k, v]) => '<div class="card stat"><span>' + k + '</span><b>' + esc(v) + '</b></div>').join('');
   const pill = (ok, t) => '<span class="pill ' + (ok ? 'ok' : 'no') + '">' + (ok ? '● ' : '○ ') + t + '</span>';
   $('cfg').innerHTML = pill(c.ai, 'Layanan AI') + pill(c.email, 'Email verifikasi') + pill(c.payment, 'Pembayaran' + (c.priceIdr ? ' ' + rp(c.priceIdr) : '')) +
@@ -291,6 +313,15 @@ function render() {
     '<tr><td>' + dt(p.createdAt) + '</td><td>' + esc(p.email) + '</td><td class="muted">' + esc(p.orderId) + '</td><td>' + rp(p.amount) +
     '</td><td>' + p.days + '</td><td>' + (p.status === 'paid' ? '<span class="tag paid">Lunas</span>' : esc(p.status)) + '</td><td>' + dt(p.paidAt) + '</td></tr>'
   ).join('') : '<tr><td colspan="7" class="muted">Belum ada pembayaran.</td></tr>';
+  const byUse = users.slice().sort((a, b) => b.tokens40d - a.tokens40d);
+  $('ust').innerHTML = byUse.length ? byUse.map((u) =>
+    '<tr><td>' + esc(u.email) + '</td><td>' + (esc(u.name) || '<span class="muted">-</span>') + '</td><td>' + u.used40d + '</td><td>' + num(u.tokens40d) +
+    '</td><td>' + u.usedToday + ' perintah · ' + num(u.tokensToday) + '</td><td>' + (u.tokensMax ? num(u.tokensMax) : '-') + '</td><td>' + (u.tokens40d ? cost(u.tokens40d) : '-') +
+    '</td><td>' + (u.firstCmd ? dt(u.firstCmd) : '<span class="muted">belum ada</span>') + '</td><td>' + (u.lastCmd ? dt(u.lastCmd) : '-') + '</td></tr>'
+  ).join('') : '<tr><td colspan="9" class="muted">Belum ada akun.</td></tr>';
+  $('dt').innerHTML = DATA.daily.length ? DATA.daily.map((x) =>
+    '<tr><td>' + esc(x.day) + '</td><td>' + x.users + '</td><td>' + x.commands + '</td><td>' + num(x.tokens) + '</td><td>' + cost(x.tokens) + '</td></tr>'
+  ).join('') : '<tr><td colspan="5" class="muted">Belum ada pemakaian.</td></tr>';
 }
 $('lf').addEventListener('submit', async (e) => {
   e.preventDefault(); $('lerr').textContent = '';

@@ -103,8 +103,18 @@ export class Db {
         (SELECT COUNT(*) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_count,
         (SELECT COALESCE(SUM(amount), 0) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_total,
         (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id AND c.day = ?) AS used_today,
-        (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id) AS used_40d
-      FROM users u ORDER BY u.id DESC`).all(dayKey());
+        (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id) AS used_40d,
+        (SELECT COALESCE(SUM(tokens), 0) FROM commands c WHERE c.user_id = u.id) AS tokens_40d,
+        (SELECT COALESCE(SUM(tokens), 0) FROM commands c WHERE c.user_id = u.id AND c.day = ?) AS tokens_today,
+        (SELECT COALESCE(MAX(tokens), 0) FROM commands c WHERE c.user_id = u.id) AS tokens_max,
+        (SELECT MIN(created) FROM commands c WHERE c.user_id = u.id) AS first_cmd,
+        (SELECT MAX(created) FROM commands c WHERE c.user_id = u.id) AS last_cmd
+      FROM users u ORDER BY u.id DESC`).all(dayKey(), dayKey());
+  }
+  /** Ringkasan pemakaian per hari (WIB) selama data perintah tersimpan (40 hari). */
+  adminDaily() {
+    return this.q(`SELECT day, COUNT(*) AS commands, COUNT(DISTINCT user_id) AS users, COALESCE(SUM(tokens), 0) AS tokens
+      FROM commands GROUP BY day ORDER BY day DESC`).all();
   }
   adminPayments(limit = 1000) {
     return this.q(`SELECT p.order_id, p.amount, p.days, p.status, p.created, p.paid_at, u.email
