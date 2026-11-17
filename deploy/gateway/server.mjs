@@ -15,6 +15,10 @@ export const CFG = {
   models: (env.ALLOWED_MODELS || 'claude-opus-5-5,claude-sonnet-5-5').split(',').map((s) => s.trim()),
   // Bila diisi, semua permintaan memakai model ini apa pun yang diminta aplikasi (ganti model tanpa pasang ulang aplikasi).
   forceModel: (env.FORCE_MODEL || '').trim(),
+  // Bila diisi (low|medium|high|xhigh|max), tingkat "berpikir" agen dipaksa ke nilai ini. Lebih rendah = lebih hemat.
+  forceEffort: ['low', 'medium', 'high', 'xhigh', 'max'].includes((env.FORCE_EFFORT || '').trim()) ? env.FORCE_EFFORT.trim() : '',
+  // Rem biaya: batas "token setara input" per akun per hari (0 = tanpa batas). Berlaku juga di masa uji coba.
+  dailyTokenBudget: num('DAILY_TOKEN_BUDGET', 0),
   maxTokensCap: num('MAX_TOKENS_CAP', 64000),
   maxConcurrent: num('MAX_CONCURRENT', 3),
   rpm: num('RPM', 90),
@@ -283,8 +287,15 @@ export function createGateway(db) {
     let tail = '';
     let input = 0;
     let output = 0;
+    const raw = { in: 0, cw: 0, cr: 0, out: 0 };
     const take = (u) => {
       if (!u) return;
+      if (typeof u.input_tokens === 'number') {
+        raw.in = Math.max(raw.in, u.input_tokens);
+        raw.cw = Math.max(raw.cw, u.cache_creation_input_tokens || 0);
+        raw.cr = Math.max(raw.cr, u.cache_read_input_tokens || 0);
+      }
+      if (typeof u.output_tokens === 'number') raw.out = Math.max(raw.out, u.output_tokens);
       // Dibobot sesuai harga: tulis cache 1,25x, baca cache 0,1x, keluaran 5x harga token masukan.
       if (typeof u.input_tokens === 'number') input = Math.max(input, u.input_tokens + 1.25 * (u.cache_creation_input_tokens || 0) + 0.1 * (u.cache_read_input_tokens || 0));
       if (typeof u.output_tokens === 'number') output = Math.max(output, 5 * u.output_tokens);
@@ -312,6 +323,7 @@ export function createGateway(db) {
         } catch {}
         return Math.round(input + output);
       },
+      raw,
     };
   }
 
@@ -344,6 +356,11 @@ export function createGateway(db) {
     if (CFG.forceModel) body.model = CFG.forceModel;
     else if (!CFG.models.includes(body.model)) return aiError(res, 400, 'invalid_request_error', 'Model tidak tersedia.');
     body.max_tokens = Math.min(Number(body.max_tokens) || CFG.maxTokensCap, CFG.maxTokensCap);
+    if (CFG.forceEffort) body.output_config = { ...(body.output_config && typeof body.output_config === 'object' ? body.output_config : {}), effort: CFG.forceEffort };
+
+    if (CFG.dailyTokenBudget > 0 && db.tokensToday(u.id) >= CFG.dailyTokenBudget) {
+      return aiError(res, 429, 'rate_limit_error', 'Batas pemakaian MiB untuk akun ini hari ini sudah tercapai. Kuota diperbarui besok pukul 00.00 WIB.');
+    }
 
     const perDay = CFG.unlimited ? Infinity : paid ? CFG.paidPerDay : CFG.freePerDay;
     const gate = db.beginCommand(u.id, cmdId, perDay, paid ? CFG.paidCmdTokens : CFG.freeCmdTokens);
@@ -379,6 +396,9 @@ export function createGateway(db) {
     } finally {
       const used = tracker.finish();
       if (used > 0) db.addTokens(u.id, cmdId, used);
+      // Rincian per langkah (tanpa isi percakapan) untuk memantau efektivitas cache dan biaya.
+      const r = tracker.raw;
+      if (used > 0) console.log(`[pakai] akun=${u.id} perintah=${cmdId.slice(0, 8)} masuk=${r.in} tulis-cache=${r.cw} baca-cache=${r.cr} keluar=${r.out} setara=${used}`);
       active.set(u.id, Math.max(0, (active.get(u.id) || 1) - 1));
     }
   }

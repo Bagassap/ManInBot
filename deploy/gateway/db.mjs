@@ -195,6 +195,9 @@ export class Db {
       throw e;
     }
   }
+  tokensToday(userId) {
+    return this.q('SELECT COALESCE(SUM(tokens), 0) AS t FROM commands WHERE user_id = ? AND day = ?').get(userId, dayKey()).t;
+  }
   addTokens(userId, cmdId, tokens) {
     this.q('UPDATE commands SET tokens = tokens + ? WHERE user_id = ? AND cmd_id = ?').run(tokens, userId, cmdId);
   }

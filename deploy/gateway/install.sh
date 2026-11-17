@@ -44,6 +44,8 @@ add MAIL_FROM ""
 add ADMIN_PATH ""
 add REQUIRE_EMAIL_VERIFY 0
 add UNLIMITED_TRIAL 0
+add FORCE_EFFORT medium
+add DAILY_TOKEN_BUDGET 2000000
 add ADMIN_PASS_HASH ""
 add ADMIN_IPS ""
 chmod 600 /etc/mib-gateway.env
