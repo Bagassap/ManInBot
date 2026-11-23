@@ -48,8 +48,8 @@ const FEATURES: Feature[] = [
   {
     icon: MousePointerClick,
     title: "Mengoperasikan aplikasi kantor di layar",
-    text: "MiB melihat layar, menggerakkan mouse, dan mengetik sendiri di Word, Excel, PowerPoint, Outlook, atau aplikasi kantor lain, langsung di depan Anda.",
-    points: ["Hanya setelah Anda memberi izin per sesi", "Hentikan seketika dengan Esc atau menggerakkan mouse", "Tidak mengetik kata sandi, kartu, atau OTP", "Tersedia di Windows, monitor utama"],
+    text: "MiB membaca tombol dan menu lalu mengetik sendiri di Word, Excel, PowerPoint, Outlook, atau aplikasi kantor lain, langsung di depan Anda.",
+    points: ["Hanya setelah Anda memberi izin per sesi", "Hentikan seketika dengan Esc atau tombol stop", "Tidak mengetik kata sandi, kartu, atau OTP", "Tersedia di Windows, monitor utama"],
     status: "Aktif",
     doc: "/docs/konfigurasi",
   },
@@ -91,7 +91,7 @@ export default function FiturPage() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/unduh" className="fx-btn rounded-xl bg-accent px-6 py-3 font-medium text-[#0d1417] transition-colors hover:bg-accent-strong">
-            Unduh untuk Windows
+            Unduh gratis untuk Windows
           </Link>
           <Link href="/docs" className="rounded-xl border border-line px-6 py-3 font-medium transition-colors hover:bg-surface">
             Baca dokumentasi

@@ -3,7 +3,7 @@ import { createInterface } from 'node:readline';
 import { Injectable } from '@nestjs/common';
 import { AuditService } from '../workspaces/audit.service.js';
 import { ApprovalsService } from './approvals.service.js';
-import { DRIVER_SCRIPT } from './computer-driver.js';
+import { DRIVER_LOADER, DRIVER_SCRIPT } from './computer-driver.js';
 import { LocalToolError } from './paths.js';
 import { cleanEnv } from './shell.js';
 import type { LocalCtx } from './types.js';
@@ -14,23 +14,22 @@ export const computerEnabled = () => process.platform === 'win32' && process.env
 export interface ComputerOutput {
   content: string;
   isError?: boolean;
-  image?: { mediaType: 'image/jpeg'; data: string };
 }
 
 interface DriverReply {
   ok: boolean;
   ready?: boolean;
-  stop?: 'esc' | 'mouse';
+  stop?: 'esc';
   blocked?: boolean;
   error?: string;
-  w?: number;
-  h?: number;
-  img?: string;
+  txt?: string;
 }
 
 const MAX_ACTIONS = 300;
 const TYPE_MAX = 4000;
 const START_TIMEOUT_MS = 30_000;
+/** Jumlah elemen layar yang dikirim ke otak per langkah; dijaga kecil agar model lokal tetap cepat. */
+const MAX_ELEMENTS = 90;
 
 /** Aplikasi yang boleh diluncurkan agen: nama tetap -> perintah tetap (tidak pernah dari teks bebas). */
 const APPS: Record<string, string> = {
@@ -41,19 +40,10 @@ const APPS: Record<string, string> = {
 };
 
 /**
- * Penjaga "khusus kantor" yang ditegakkan di pengendali: masukan mouse/papan ketik hanya dikirim bila jendela sasarannya
- * milik salah satu proses ini. Jendela lain (peramban, terminal, Pengaturan, bilah tugas, dialog Jalankan) ditolak.
- * `t` = pola judul jendela .
+ * Penjaga "khusus kantor" yang ditegakkan di pengendali: pembacaan layar dan masukan hanya untuk jendela proses ini.
+ * Jendela lain (peramban, terminal, Pengaturan, bilah tugas, dialog Jalankan) ditolak.
  */
-export const OFFICE_WINDOWS: { p: string; t?: string }[] = [
-  { p: 'WINWORD' },
-  { p: 'EXCEL' },
-  { p: 'POWERPNT' },
-  { p: 'OUTLOOK' },
-  { p: 'olk' },
-  { p: 'ONENOTE' },
-  { p: 'MSPUB' },
-];
+export const OFFICE_PROCESSES = ['WINWORD', 'EXCEL', 'POWERPNT', 'OUTLOOK', 'olk', 'ONENOTE', 'MSPUB'];
 
 class Driver {
   private proc: ChildProcessWithoutNullStreams | null = null;
@@ -61,14 +51,17 @@ class Driver {
   private ready: Promise<void> | null = null;
 
   private start(): Promise<void> {
-    const encoded = Buffer.from(DRIVER_SCRIPT, 'utf16le').toString('base64');
-    const proc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', encoded], {
+    // Skrip melebihi batas panjang baris perintah Windows, jadi hanya pemuat kecil yang lewat argumen; isinya lewat stdin.
+    const loader = Buffer.from(DRIVER_LOADER, 'utf16le').toString('base64');
+    const proc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', loader], {
       env: cleanEnv(),
       windowsHide: true,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     this.proc = proc;
     proc.stderr.resume();
+    proc.stdin.write(`${Buffer.from(DRIVER_SCRIPT, 'utf8').toString('base64')}
+`);
     createInterface({ input: proc.stdout }).on('line', (line) => {
       let r: DriverReply;
       try {
@@ -144,13 +137,6 @@ interface Session {
 }
 
 const int = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : undefined);
-const needXY = (i: Record<string, unknown>) => {
-  const x = int(i.x);
-  const y = int(i.y);
-  if (x === undefined || y === undefined) throw new LocalToolError('Aksi ini membutuhkan koordinat x dan y (dalam piksel tangkapan layar)');
-  return { x, y };
-};
-
 @Injectable()
 export class ComputerService {
   private readonly driver = new Driver();
@@ -174,14 +160,14 @@ export class ComputerService {
 
     const ok = await this.approvals.request(ctx, {
       tool: 'computer_start',
-      summary: 'MiB ingin mengendalikan mouse dan keyboard komputer Anda',
-      detail: `Tugas: ${task}\n\nMiB akan melihat layar, menggerakkan mouse, dan mengetik sendiri. Untuk menghentikan kapan saja: tekan Esc, gerakkan mouse sendiri, atau tekan tombol ■ di kolom chat MiB. Jangan biarkan layar menampilkan data rahasia yang tidak terkait.`,
+      summary: 'MiB ingin mengoperasikan Microsoft Office di komputer Anda',
+      detail: `Tugas: ${task}\n\nMiB akan membaca daftar tombol dan kolom di jendela Microsoft Office (tanpa tangkapan layar), lalu mengklik dan mengetik sendiri. Untuk menghentikan kapan saja: tekan Esc atau tombol ■ di kolom chat MiB.`,
     });
     if (!ok) return { content: 'Pengguna menolak memberi kendali komputer. Jangan meminta lagi tanpa bertanya; tawarkan membuat berkas dengan doc_create.', isError: true };
 
     this.sessions.set(ctx.conversationId, { task, actions: 0 });
     await this.audit.log({ workspaceId: ctx.workspaceId, actorId: ctx.userId, actorEmail: ctx.userEmail, action: 'computer.start', detail: task });
-    const out = await this.act({ action: 'screenshot' }, ctx, false);
+    const out = await this.act({ action: 'read' }, ctx, false);
     return { ...out, content: `Sesi kendali dimulai. ${out.content}` };
   }
 
@@ -210,8 +196,22 @@ export class ComputerService {
     let label = action;
     let timeout = 20_000;
 
+    const needId = () => {
+      const id = int(i.id);
+      if (id === undefined) throw new LocalToolError('Aksi ini membutuhkan id: nomor elemen dari daftar layar terakhir');
+      return id;
+    };
+    const needText = () => {
+      const text = typeof i.text === 'string' ? i.text : '';
+      if (!text) throw new LocalToolError(`${action} membutuhkan text`);
+      if (text.length > TYPE_MAX) throw new LocalToolError(`Teks terlalu panjang (maks. ${TYPE_MAX} karakter per panggilan); bagi menjadi beberapa panggilan`);
+      const delay = Math.min(Math.max(int(i.delay_ms) ?? 15, 0), 100);
+      timeout = 20_000 + text.length * (delay + 25);
+      return { text, delay };
+    };
+
     switch (action) {
-      case 'screenshot':
+      case 'read':
         cmd = { action };
         break;
       case 'launch': {
@@ -221,51 +221,32 @@ export class ComputerService {
         await this.launch(exe);
         label = `launch ${name}`;
         await new Promise((r) => setTimeout(r, 2500)); // beri waktu aplikasi muncul
-        cmd = { action: 'wait', seconds: 1, rebase: true }; // Windows bisa menggeser kursor saat jendela baru muncul
+        cmd = { action: 'wait', seconds: 1 };
         break;
       }
-      case 'move':
-        cmd = { action, ...needXY(i) };
-        label = `move ${i.x},${i.y}`;
-        break;
       case 'click':
-      case 'double_click':
-      case 'triple_click':
-      case 'right_click':
-      case 'middle_click': {
-        const hasXY = i.x !== undefined || i.y !== undefined;
-        cmd = { action, ...(hasXY ? needXY(i) : {}) };
-        label = `${action}${hasXY ? ` ${i.x},${i.y}` : ''}`;
+      case 'focus': {
+        const id = needId();
+        cmd = { action, id };
+        label = `${action} [${id}]`;
         break;
       }
-      case 'drag': {
-        const to_x = int(i.to_x);
-        const to_y = int(i.to_y);
-        if (to_x === undefined || to_y === undefined) throw new LocalToolError('drag membutuhkan x, y, to_x, to_y');
-        cmd = { action, ...needXY(i), to_x, to_y };
-        label = `drag ${i.x},${i.y} → ${to_x},${to_y}`;
-        break;
-      }
-      case 'scroll': {
-        const amount = int(i.amount);
-        if (amount === undefined || amount === 0 || Math.abs(amount) > 50) throw new LocalToolError('scroll membutuhkan amount bukan nol (maks. 50; positif = ke bawah)');
-        cmd = { action, amount, ...(i.x !== undefined ? needXY(i) : {}) };
-        label = `scroll ${amount}`;
+      case 'set_text': {
+        const id = needId();
+        const { text, delay } = needText();
+        cmd = { action, id, text_b64: Buffer.from(text, 'utf8').toString('base64'), delay_ms: delay };
+        label = `set_text [${id}] (${text.length} karakter)`;
         break;
       }
       case 'type': {
-        const text = typeof i.text === 'string' ? i.text : '';
-        if (!text) throw new LocalToolError('type membutuhkan text');
-        if (text.length > TYPE_MAX) throw new LocalToolError(`Teks terlalu panjang (maks. ${TYPE_MAX} karakter per panggilan); bagi menjadi beberapa panggilan`);
-        const delay = Math.min(Math.max(int(i.delay_ms) ?? 15, 0), 100);
+        const { text, delay } = needText();
         cmd = { action, text_b64: Buffer.from(text, 'utf8').toString('base64'), delay_ms: delay };
         label = `type "${text.slice(0, 60)}${text.length > 60 ? '…' : ''}" (${text.length} karakter)`;
-        timeout = 20_000 + text.length * (delay + 25);
         break;
       }
       case 'key': {
         const keys = typeof i.keys === 'string' ? i.keys.trim() : '';
-        if (!keys || keys.length > 60) throw new LocalToolError('key membutuhkan keys, mis. "ctrl+s", "enter", "alt+f4"');
+        if (!keys || keys.length > 60) throw new LocalToolError('key membutuhkan keys, mis. "ctrl+s", "enter"');
         if (/(^|\+)\s*(win|meta)\s*(\+|$)/i.test(keys)) throw new LocalToolError('Tombol Windows tidak diizinkan (membuka menu Start/jendela di luar aplikasi kantor)');
         cmd = { action, keys };
         label = `key ${keys}`;
@@ -279,14 +260,14 @@ export class ComputerService {
         break;
       }
       default:
-        throw new LocalToolError(`Aksi tidak dikenal: ${action}. Pilihan: screenshot, launch, move, click, double_click, triple_click, right_click, middle_click, drag, scroll, type, key, wait`);
+        throw new LocalToolError(`Aksi tidak dikenal: ${action}. Pilihan: read, launch, click, focus, set_text, type, key, wait`);
     }
 
-    const r = await this.driver.send({ ...cmd, allow: OFFICE_WINDOWS }, timeout, ctx.signal);
+    const r = await this.driver.send({ ...cmd, allow: OFFICE_PROCESSES, max: MAX_ELEMENTS }, timeout, ctx.signal);
     if (r.blocked) {
       await this.audit.log({ workspaceId: ctx.workspaceId, actorId: ctx.userId, actorEmail: ctx.userEmail, action: 'computer.blocked', detail: `${label} -> ${r.error ?? ''}`.slice(0, 200) });
       return {
-        content: `DIBLOKIR: aksi "${label}" tidak dikirim karena jendela sasarannya (${r.error}) bukan aplikasi kantor. MiB hanya boleh mengoperasikan Microsoft Office (Word, Excel, PowerPoint, Outlook, OneNote, Publisher). Jangan mencoba mengakalinya; beri tahu pengguna.`,
+        content: `DIBLOKIR: aksi "${label}" tidak dikirim karena sasarannya (${r.error}) bukan aplikasi kantor. MiB hanya boleh mengoperasikan Microsoft Office. Jangan mencoba mengakalinya; beri tahu pengguna.`,
         isError: true,
       };
     }
@@ -294,17 +275,11 @@ export class ComputerService {
 
     if (r.stop) {
       this.endRun(ctx.conversationId);
-      await this.audit.log({ workspaceId: ctx.workspaceId, actorId: ctx.userId, actorEmail: ctx.userEmail, action: 'computer.interrupted', detail: `${r.stop} ${r.error ?? ''}`.trim() });
-      return {
-        content: `Pengguna menghentikan kendali (${r.stop === 'esc' ? 'menekan Esc' : 'menggerakkan mouse sendiri'}). Sesi diakhiri. Jangan melanjutkan mengendalikan komputer; tanyakan pengguna apa yang ingin dilakukan.`,
-        isError: true,
-      };
+      await this.audit.log({ workspaceId: ctx.workspaceId, actorId: ctx.userId, actorEmail: ctx.userEmail, action: 'computer.interrupted', detail: r.stop });
+      return { content: 'Pengguna menghentikan kendali (menekan Esc). Sesi diakhiri. Jangan melanjutkan; tanyakan pengguna apa yang ingin dilakukan.', isError: true };
     }
-    if (!r.ok || !r.img) throw new LocalToolError(r.error ?? 'Aksi gagal');
-    return {
-      content: `Selesai: ${label}. Layar sekarang ${r.w}×${r.h} piksel (koordinat dalam ukuran gambar ini; lingkaran merah = posisi kursor).`,
-      image: { mediaType: 'image/jpeg', data: r.img },
-    };
+    if (!r.ok || r.txt === undefined) throw new LocalToolError(r.error ?? 'Aksi gagal');
+    return { content: `Selesai: ${label}.\n${Buffer.from(r.txt, 'base64').toString('utf8')}` };
   }
 
   private launch(exe: string): Promise<void> {

@@ -17,8 +17,6 @@ import type { LocalCtx } from './types.js';
 export interface LocalOutput {
   content: string;
   isError?: boolean;
-  /** Tangkapan layar yang dikirim ke model (tidak disimpan ke riwayat). */
-  image?: { mediaType: 'image/jpeg'; data: string };
 }
 
 const READ_MAX = 200_000;

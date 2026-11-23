@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import {
   Body,
   Controller,
@@ -17,6 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AgentService, type AgentStep, type RunUsage } from '../agent/agent.service.js';
 import { AuthGuard, CurrentUser, type AuthUser } from '../auth/auth.guard.js';
+import { SettingsService } from '../settings/settings.service.js';
 import { AuditService } from '../workspaces/audit.service.js';
 import { CurrentWorkspace, WorkspaceGuard, type WorkspaceAccess } from '../workspaces/workspace.guard.js';
 import { SendMessageDto } from './conversations.dto.js';
@@ -31,6 +31,7 @@ export class ConversationsController {
     private readonly conversations: ConversationsService,
     private readonly agent: AgentService,
     private readonly audit: AuditService,
+    private readonly settings: SettingsService,
   ) {}
 
   @Get()
@@ -65,8 +66,11 @@ export class ConversationsController {
     @Res() res: Response,
   ) {
     const conv = await this.conversations.getOwned(ws.workspaceId, user.id, id);
+    if (!this.settings.accountReady) {
+      throw new ServiceUnavailableException('Masuk ke akun MiB dan lengkapi data diri untuk mulai bekerja.');
+    }
     if (!this.agent.enabled) {
-      throw new ServiceUnavailableException('Masuk ke akun MiB di Pengaturan untuk mulai bekerja.');
+      throw new ServiceUnavailableException('Otak MiB belum dipasang. Buka Pengaturan untuk memasangnya.');
     }
 
     const userMessage = await this.conversations.addUserMessage(
@@ -123,12 +127,7 @@ export class ConversationsController {
         status = 'ERROR';
         failure = err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 300) : 'Galat tidak dikenal';
         this.logger.error(err instanceof Error ? err.stack : String(err));
-        // Pesan dari gateway MiB (kode salah, dicabut, kedaluwarsa, kuota habis) sudah berbahasa Indonesia dan aman ditampilkan.
-        const gateway =
-          err instanceof Anthropic.APIError && [401, 403, 429].includes(err.status ?? 0)
-            ? ((err.error as { error?: { message?: string } } | undefined)?.error?.message ?? null)
-            : null;
-        const message = gateway ?? 'Terjadi kesalahan saat menjalankan agen.';
+        const message = err instanceof Error && /Mesin AI|Otak MiB/.test(err.message) ? err.message : 'Terjadi kesalahan saat menjalankan agen.';
         send({ type: 'error', message });
       }
     }

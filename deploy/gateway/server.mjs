@@ -117,6 +117,10 @@ export function createGateway(db) {
     return {
       email: u.email,
       name: u.name || null,
+      phone: u.phone || null,
+      company: u.company || null,
+      jobTitle: u.job_title || null,
+      profileComplete: !!(u.name && u.phone),
       paid,
       paidUntil: paid ? new Date(u.paid_until).toISOString() : null,
       usedToday: db.usedToday(u.id),
@@ -218,6 +222,22 @@ export function createGateway(db) {
     if (!u || !db.consumeCode(email, 'reset', b.code)) return fail(res, 400, 'Kode salah atau sudah kedaluwarsa.');
     db.setPassword(u.id, b.password);
     json(res, 200, { ok: true });
+  }
+
+  /** Data diri: nama dan nomor HP wajib, kantor dan jabatan boleh kosong. */
+  async function profile(req, res) {
+    const u = sessionUser(req, res);
+    if (!u) return;
+    const b = await readJson(req, res);
+    if (!b) return;
+    const text = (v, max) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max) : '');
+    const name = text(b.name, 80);
+    const phone = text(b.phone, 20).replace(/[\s-]/g, '');
+    if (name.length < 2) return fail(res, 400, 'Nama lengkap wajib diisi.');
+    if (!/^(\+?62|0)8\d{7,12}$/.test(phone)) return fail(res, 400, 'Nomor HP tidak valid. Contoh: 081234567890.');
+    if (!allow(`prof:${u.id}`, 20, 3600_000)) return fail(res, 429, 'Terlalu sering. Coba lagi nanti.');
+    db.setProfile(u.id, { name, phone, company: text(b.company, 100), jobTitle: text(b.jobTitle, 80) });
+    json(res, 200, { ok: true, account: accountView(db.userById(u.id)) });
   }
 
   // ---------------- pembayaran ----------------
@@ -435,6 +455,8 @@ export function createGateway(db) {
           if (t) db.endSession(t);
           return json(res, 200, { ok: true });
         }
+        case 'POST /v1/account/profile':
+          return await profile(req, res);
         case 'POST /v1/account/checkout':
           return await checkout(req, res);
         case 'POST /v1/pay/notify':

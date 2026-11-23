@@ -9,6 +9,8 @@ import { WorkbooksModule } from './workbooks/workbooks.module.js';
 import { SettingsModule } from './settings/settings.module.js';
 import { LocalModule } from './local/local.module.js';
 import { WorkspacesModule } from './workspaces/workspaces.module.js';
+import { BrainModule } from './brain/brain.module.js';
+import { VoiceModule } from './voice/voice.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ConversationsModule } from './conversations/conversations.module.js';
 import { DownloadModule } from './download/download.module.js';
@@ -23,6 +25,8 @@ import { PrismaModule } from './prisma/prisma.module.js';
     WorkspacesModule,
     LocalModule,
     SettingsModule,
+    BrainModule,
+    VoiceModule,
     AuthModule,
     AdminModule,
     WorkbooksModule,

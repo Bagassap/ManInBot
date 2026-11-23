@@ -20,7 +20,7 @@
     "productName": "MiB",
     "directories": { "output": "release", "buildResources": "build" },
     "files": ["main.cjs", "preload.cjs", "loading.html", "build/icon.png", "package.json"],
-    "extraResources": [{ "from": "stage", "to": "app-data" }],
+    "extraResources": [{ "from": "stage", "to": "app-data" }, { "from": "build/setup-brain.ps1", "to": "brain/setup-brain.ps1" }, { "from": "build/setup-voice.ps1", "to": "brain/setup-voice.ps1" }],
     "asar": true,
     "win": { "target": ["nsis"], "icon": "build/icon.png" },
     "nsis": {
@@ -28,7 +28,8 @@
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": false,
-      "shortcutName": "MiB"
+      "shortcutName": "MiB",
+      "include": "build/installer.nsh"
     }
   }
 }

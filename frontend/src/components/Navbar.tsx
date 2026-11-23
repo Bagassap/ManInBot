@@ -9,6 +9,8 @@ const items: NavItem[] = [
     label: "Produk",
     children: [
       { label: "Ikhtisar", href: "/fitur", desc: "Yang bisa dikerjakan MiB" },
+      { label: "3 Model Offline", href: "/#model", desc: "Gratis, sesuai spesifikasi PC" },
+      { label: "MiB Online", href: "/#online", desc: "Akan tersedia" },
       { label: "Integrasi", href: "/#integrasi", desc: "Dokumen, folder, dan aplikasi kantor" },
       { label: "Showcase", href: "/#contoh", desc: "Batasan yang menjaga privasi Anda" },
       { label: "Enterprise", href: "/fitur#tim", desc: "Tim, peran, dan jejak audit" },

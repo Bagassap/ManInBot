@@ -3,7 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { IsEmail, IsOptional, IsString, Length, MaxLength, MinLength } from 'class-validator';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
-import { GATEWAY_URL, SettingsService } from './settings.service.js';
+import { GATEWAY_URL, SettingsService, type CachedAccount } from './settings.service.js';
 
 class CredsDto {
   @IsEmail()
@@ -20,6 +20,28 @@ class RegisterDto extends CredsDto {
   @IsString()
   @MaxLength(80)
   name?: string;
+}
+
+class ProfileDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  name!: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(20)
+  phone!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  company?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  jobTitle?: string;
 }
 
 class VerifyDto {
@@ -48,7 +70,7 @@ class OptionalDto {
   _?: string;
 }
 
-export interface AccountView {
+export interface AccountView extends CachedAccount {
   email: string;
   paid: boolean;
   paidUntil: string | null;
@@ -70,13 +92,13 @@ interface GwResult<T> {
 }
 
 /** Memanggil gateway MiB. Galat jaringan menjadi 503; galat dari gateway diteruskan apa adanya (pesannya sudah berbahasa Indonesia). */
-async function gw<T = Record<string, unknown>>(path: string, opts: { method?: string; body?: unknown; token?: string | null } = {}): Promise<GwResult<T>> {
+async function gw<T = Record<string, unknown>>(path: string, opts: { method?: string; body?: unknown; token?: string | null; timeoutMs?: number } = {}): Promise<GwResult<T>> {
   try {
     const r = await fetch(`${GATEWAY_URL}${path}`, {
       method: opts.method ?? (opts.body ? 'POST' : 'GET'),
       headers: { 'Content-Type': 'application/json', ...(opts.token ? { 'x-api-key': opts.token } : {}) },
       body: opts.body ? JSON.stringify(opts.body) : undefined,
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 20_000),
     });
     return { status: r.status, body: ((await r.json().catch(() => ({}))) as GwResult<T>['body']) ?? {} };
   } catch {
@@ -93,6 +115,11 @@ function ok<T>(r: GwResult<T>): GwResult<T>['body'] {
 export class SettingsController {
   constructor(private readonly settings: SettingsService) {}
 
+  private signedIn(token: string, account?: AccountView) {
+    this.settings.setAccountToken(token);
+    if (account) this.settings.setCachedAccount(account);
+  }
+
   /** Status akun MiB dari gateway. Sesi yang sudah berakhir dibersihkan agar pengguna diminta masuk lagi. */
   @Get()
   async status() {
@@ -101,21 +128,23 @@ export class SettingsController {
     let problem: string | null = null;
     if (token) {
       try {
-        const r = await gw<AccountView>('/v1/account', { token });
-        if (r.status === 200) account = r.body as AccountView;
-        else if (r.status === 401) this.settings.setAccountToken(null);
-        else problem = r.body.error ?? null;
+        // MiB bekerja offline: bila server tak terjangkau, data akun terakhir yang dipakai.
+        const r = await gw<AccountView>('/v1/account', { token, timeoutMs: 4000 });
+        if (r.status === 200) {
+          account = r.body as AccountView;
+          this.settings.setCachedAccount(account);
+        } else if (r.status === 401 || r.status === 403) this.settings.setAccountToken(null);
       } catch {
-        problem = 'Tidak bisa terhubung ke server MiB untuk memeriksa akun.';
+        /* offline */
       }
     }
     let plan: PlanView | null = account?.plan ?? null;
-    if (!plan) plan = await gw<PlanView>('/v1/plan').then((r) => (r.status === 200 ? (r.body as PlanView) : null)).catch(() => null);
+    if (!plan) plan = await gw<PlanView>('/v1/plan', { timeoutMs: 4000 }).then((r) => (r.status === 200 ? (r.body as PlanView) : null)).catch(() => null);
     return {
-      agentReady: this.settings.credentials !== null,
+      accountReady: this.settings.accountReady,
       canSaveKey: this.settings.canPersist,
       loggedIn: this.settings.accountToken !== null,
-      account,
+      account: this.settings.cachedAccount,
       accountProblem: problem,
       plan,
     };
@@ -125,9 +154,9 @@ export class SettingsController {
   @UseGuards(AdminGuard)
   @Throttle({ default: { limit: 8, ttl: 60_000 } })
   async register(@Body() dto: RegisterDto) {
-    const b = ok(await gw<{ token?: string; needVerify?: boolean }>('/v1/account/register', { body: dto }));
+    const b = ok(await gw<{ token?: string; needVerify?: boolean; account?: AccountView }>('/v1/account/register', { body: dto }));
     // Tanpa verifikasi email, server langsung memberi token: pengguna langsung masuk.
-    if (typeof b.token === 'string') this.settings.setAccountToken(b.token);
+    if (typeof b.token === 'string') this.signedIn(b.token, b.account);
     return { ok: true, needVerify: b.needVerify !== false && typeof b.token !== 'string' };
   }
 
@@ -135,8 +164,8 @@ export class SettingsController {
   @UseGuards(AdminGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async verify(@Body() dto: VerifyDto) {
-    const b = ok(await gw<{ token: string }>('/v1/account/verify', { body: dto }));
-    this.settings.setAccountToken(b.token as string);
+    const b = ok(await gw<{ token: string; account?: AccountView }>('/v1/account/verify', { body: dto }));
+    this.signedIn(b.token as string, b.account);
     return { ok: true };
   }
 
@@ -144,8 +173,19 @@ export class SettingsController {
   @UseGuards(AdminGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async login(@Body() dto: CredsDto) {
-    const b = ok(await gw<{ token: string }>('/v1/account/login', { body: dto }));
-    this.settings.setAccountToken(b.token as string);
+    const b = ok(await gw<{ token: string; account?: AccountView }>('/v1/account/login', { body: dto }));
+    this.signedIn(b.token as string, b.account);
+    return { ok: true };
+  }
+
+  @Post('account/profile')
+  @UseGuards(AdminGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async profile(@Body() dto: ProfileDto) {
+    const token = this.settings.accountToken;
+    if (!token) throw new HttpException('Masuk ke akun MiB terlebih dahulu.', 401);
+    const b = ok(await gw<{ account: AccountView }>('/v1/account/profile', { body: dto, token }));
+    this.settings.setCachedAccount(b.account as AccountView);
     return { ok: true };
   }
 

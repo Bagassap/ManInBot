@@ -97,6 +97,9 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
     const users = db.adminUsers().map((u) => ({
       email: u.email,
       name: u.name || '',
+      phone: u.phone || '',
+      company: u.company || '',
+      jobTitle: u.job_title || '',
       verified: !!u.verified,
       banned: !!u.banned,
       paid: u.paid_until > now,
@@ -249,7 +252,7 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln);white-s
     <div class="cfg" id="cfg"></div>
     <h2>Pengguna</h2>
     <div class="tools"><input id="q" placeholder="Cari email…"><button class="ghost" id="csv">Unduh CSV</button></div>
-    <div class="card tw"><table><thead><tr><th>Nama</th><th>Email</th><th>Daftar</th><th>Status</th><th>Paket</th><th>Hari ini</th><th>40 hari</th><th>Total bayar</th><th>Aksi</th></tr></thead><tbody id="ut"></tbody></table></div>
+    <div class="card tw"><table><thead><tr><th>Nama</th><th>Email</th><th>No. HP</th><th>Kantor</th><th>Jabatan</th><th>Daftar</th><th>Status</th><th>Paket</th><th>Hari ini</th><th>40 hari</th><th>Total bayar</th><th>Aksi</th></tr></thead><tbody id="ut"></tbody></table></div>
     <h2>Pemakaian per akun</h2>
     <p class="muted" style="margin:-4px 0 10px;font-size:12px">Diambil langsung dari database server MiB (data perintah disimpan 40 hari). Biaya adalah perkiraan; angka pasti ada di Claude Console.</p>
     <div class="card tw"><table><thead><tr><th>Akun</th><th>Nama</th><th>Perintah</th><th>Token tercatat</th><th>Hari ini</th><th>Perintah terbesar</th><th>Perkiraan biaya</th><th>Pertama</th><th>Terakhir</th></tr></thead><tbody id="ust"></tbody></table></div>
@@ -303,12 +306,12 @@ function render() {
   const q = $('q').value.trim().toLowerCase();
   const users = DATA.users.filter((u) => !q || u.email.includes(q));
   $('ut').innerHTML = users.length ? users.map((u) =>
-    '<tr><td>' + (esc(u.name) || '<span class="muted">-</span>') + '</td><td>' + esc(u.email) + '</td><td>' + d(u.createdAt) + '</td><td>' +
+    '<tr><td>' + (esc(u.name) || '<span class="muted">-</span>') + '</td><td>' + esc(u.email) + '</td><td>' + (esc(u.phone) || '-') + '</td><td>' + (esc(u.company) || '-') + '</td><td>' + (esc(u.jobTitle) || '-') + '</td><td>' + d(u.createdAt) + '</td><td>' +
     (u.banned ? '<span class="tag ban">Diblokir</span>' : u.verified ? 'Terverifikasi' : '<span class="muted">Belum verifikasi</span>') +
     '</td><td>' + (u.paid ? '<span class="tag paid">Berbayar</span> s.d. ' + d(u.paidUntil) : 'Gratis') +
     '</td><td>' + u.usedToday + '</td><td>' + u.used40d + '</td><td>' + rp(u.paidTotal) + (u.paidCount ? ' (' + u.paidCount + 'x)' : '') +
     '</td><td><button class="ghost" data-a="grant" data-e="' + esc(u.email) + '">+ Hari</button> <button class="ghost" data-a="' + (u.banned ? 'unban' : 'ban') + '" data-e="' + esc(u.email) + '">' + (u.banned ? 'Buka blokir' : 'Blokir') + '</button> <button class="ghost" data-a="resetpw" data-e="' + esc(u.email) + '">Sandi baru</button></td></tr>'
-  ).join('') : '<tr><td colspan="9" class="muted">Belum ada akun.</td></tr>';
+  ).join('') : '<tr><td colspan="12" class="muted">Belum ada akun.</td></tr>';
   $('pt').innerHTML = DATA.payments.length ? DATA.payments.map((p) =>
     '<tr><td>' + dt(p.createdAt) + '</td><td>' + esc(p.email) + '</td><td class="muted">' + esc(p.orderId) + '</td><td>' + rp(p.amount) +
     '</td><td>' + p.days + '</td><td>' + (p.status === 'paid' ? '<span class="tag paid">Lunas</span>' : esc(p.status)) + '</td><td>' + dt(p.paidAt) + '</td></tr>'
@@ -351,8 +354,8 @@ $('ut').addEventListener('click', async (e) => {
   } catch (err) { alert(err.message); }
 });
 $('csv').addEventListener('click', () => {
-  const rows = [['nama', 'email', 'daftar', 'terverifikasi', 'diblokir', 'berbayar_sampai', 'total_bayar']].concat(
-    DATA.users.map((u) => [u.name, u.email, u.createdAt, u.verified, u.banned, u.paidUntil || '', u.paidTotal]));
+  const rows = [['nama', 'email', 'no_hp', 'kantor', 'jabatan', 'daftar', 'terverifikasi', 'diblokir', 'berbayar_sampai', 'total_bayar']].concat(
+    DATA.users.map((u) => [u.name, u.email, u.phone, u.company, u.jobTitle, u.createdAt, u.verified, u.banned, u.paidUntil || '', u.paidTotal]));
   const csv = rows.map((r) => r.map((v) => { let t = String(v); if (/^[=+@-]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; }).join(',')).join('\\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));

@@ -60,6 +60,7 @@ function startBackend(port) {
     TEMP: process.env.TEMP,
     TMP: process.env.TMP,
     USERPROFILE: process.env.USERPROFILE,
+    LOCALAPPDATA: process.env.LOCALAPPDATA,
     HOME: process.env.HOME,
     ELECTRON_RUN_AS_NODE: '1',
     NODE_ENV: 'production',
@@ -67,6 +68,8 @@ function startBackend(port) {
     PORT: String(port),
     MIB_LOCAL: '1',
     MIB_LOCAL_TOKEN: localToken,
+    MIB_BRAIN_SCRIPT: app.isPackaged ? path.join(process.resourcesPath, 'brain', 'setup-brain.ps1') : path.join(__dirname, 'build', 'setup-brain.ps1'),
+    MIB_VOICE_SCRIPT: app.isPackaged ? path.join(process.resourcesPath, 'brain', 'setup-voice.ps1') : path.join(__dirname, 'build', 'setup-voice.ps1'),
     MIB_AUTO_MIGRATE: '1',
     MIB_DATA_DIR: dataDir,
     MIB_MIGRATIONS_DIR: path.join(res, 'backend', 'prisma', 'migrations'),
@@ -237,7 +240,7 @@ if (!app.requestSingleInstanceLock()) {
       app.quit();
       return;
     }
-    // Mikrofon hanya untuk halaman MiB sendiri (Mode Meeting).
+    // Mikrofon hanya untuk halaman MiB sendiri (perintah suara).
     session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(permission === 'media' && wc.getURL().startsWith(origin)));
     openApp();
   });

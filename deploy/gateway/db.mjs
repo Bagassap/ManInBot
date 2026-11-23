@@ -48,6 +48,7 @@ export class Db {
     // Kolom nama ditambahkan belakangan; database lama diperbarui di tempat.
     const cols = this.db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
     if (!cols.includes('name')) this.db.exec('ALTER TABLE users ADD COLUMN name TEXT');
+    for (const c of ['phone', 'company', 'job_title']) if (!cols.includes(c)) this.db.exec(`ALTER TABLE users ADD COLUMN ${c} TEXT`);
   }
 
   q(sql) {
@@ -79,6 +80,10 @@ export class Db {
     }
     return Number(this.q('INSERT INTO users (email, pass_hash, name, verified, created_at) VALUES (?, ?, ?, 1, ?)').run(email, hashPassword(password), name || null, Date.now()).lastInsertRowid);
   }
+  /** Data diri yang diisi pengguna setelah mendaftar. */
+  setProfile(id, { name, phone, company, jobTitle }) {
+    this.q('UPDATE users SET name = ?, phone = ?, company = ?, job_title = ? WHERE id = ?').run(name, phone, company || null, jobTitle || null, id);
+  }
   verifyPassword(user, password) {
     return checkPassword(password, user.pass_hash);
   }
@@ -99,7 +104,7 @@ export class Db {
   }
   /** Data dashboard admin: semua akun beserta ringkasan pembayaran dan pemakaian hari ini. */
   adminUsers() {
-    return this.q(`SELECT u.id, u.email, u.name, u.verified, u.banned, u.paid_until, u.created_at,
+    return this.q(`SELECT u.id, u.email, u.name, u.phone, u.company, u.job_title, u.verified, u.banned, u.paid_until, u.created_at,
         (SELECT COUNT(*) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_count,
         (SELECT COALESCE(SUM(amount), 0) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_total,
         (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id AND c.day = ?) AS used_today,

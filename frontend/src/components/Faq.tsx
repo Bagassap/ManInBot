@@ -2,9 +2,9 @@
 export const FAQ_ITEMS: [string, string][] = [
   ["Apakah MiB aplikasi web?", "Bukan. Situs ini hanya tempat Anda mengenal dan mengunduh MiB. Agennya berjalan sebagai aplikasi di komputer Anda sendiri, memakai berkas dan aplikasi yang ada di sana."],
   ["Apakah MiB bisa dipakai untuk hal selain pekerjaan kantor?", "Tidak. MiB dirancang khusus untuk pekerjaan kantor: dokumen, data, berkas, dan aplikasi perkantoran. Permintaan di luar itu ditolak dengan sopan."],
-  ["Apakah berkas saya disimpan di server MiB?", "Tidak. Berkas Anda tetap di komputer Anda. Agar agen bisa bekerja, isi percakapan dan bagian berkas yang Anda minta dibaca (serta tangkapan layar selama kendali layar) dikirim ke server MiB untuk diproses AI. Isinya tidak disimpan di server MiB."],
+  ["Apakah data saya dikirim ke internet?", "Isi pekerjaan tidak. Otak MiB berjalan offline, jadi percakapan dan berkas tetap di komputer Anda. Yang tersimpan di server MiB hanya data akun: email, kata sandi terenkripsi, dan data diri. Internet dibutuhkan saat memasang dan saat masuk ke akun."],
   ["Bisakah MiB bertindak tanpa izin saya?", "Membaca folder yang sudah Anda izinkan, ya. Untuk menulis berkas, menjalankan perintah, dan mengendalikan layar, MiB selalu meminta persetujuan Anda dulu, dan semuanya tercatat di log audit."],
-  ["Berapa biayanya?", "Gratis 3 perintah per hari; paket berbayar membuka 30 perintah per hari. Satu perintah adalah satu pesan yang Anda kirim ke agen. Harga dan sisa kuota terlihat di Pengaturan aplikasi."],
+  ["Apakah MiB gratis?", "Ya. Versi offline dengan tiga model (Ringan untuk i3, Sedang untuk i5, Kuat untuk i7) gratis; cukup daftar akun MiB. Kecepatannya mengikuti prosesor dan RAM Anda. MiB Online akan tersedia."],
 ];
 
 export default function Faq() {

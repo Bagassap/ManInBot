@@ -140,43 +140,37 @@ export const docToolDefinitions: Anthropic.Tool[] = [
   },
 ];
 
-/** Kendali komputer: agen melihat layar dan menggerakkan mouse/keyboard. Hanya di aplikasi lokal Windows. */
+/** Kendali komputer lewat UI Automation (tanpa tangkapan layar). Hanya di aplikasi lokal Windows. */
 export const computerToolDefinitions: Anthropic.Tool[] = [
   {
     name: 'computer_start',
-    description:
-      'Memulai sesi kendali komputer: setelah ini kamu bisa melihat layar pengguna dan menggerakkan mouse/keyboard lewat alat "computer", misalnya membuka Word lalu mengetik dokumen sendiri di layar. PENGGUNA AKAN DIMINTA IZIN sekali per sesi dan bisa menghentikan kapan saja (Esc / gerakkan mouse). Jelaskan tugasnya dengan jelas. Kembalian: tangkapan layar pertama.',
+    description: 'Memulai sesi mengoperasikan Microsoft Office di layar pengguna. PENGGUNA AKAN DIMINTA IZIN. Kembalian: daftar elemen layar bernomor.',
     input_schema: {
       type: 'object',
-      properties: { task: { type: 'string', description: 'Apa yang akan kamu kerjakan di layar, singkat dan jelas.' } },
+      properties: { task: { type: 'string', description: 'Apa yang akan dikerjakan, singkat.' } },
       required: ['task'],
     },
   },
   {
     name: 'computer',
     description:
-      'Mengendalikan layar, mouse, dan keyboard komputer pengguna (butuh computer_start dulu). Setiap aksi mengembalikan tangkapan layar terbaru; PERIKSA gambar itu sebelum aksi berikutnya, jangan menebak. Koordinat x,y dalam piksel gambar tangkapan layar (lingkaran merah = kursor). Satu aksi per panggilan. Aksi: screenshot; launch (app: word|excel|powerpoint|outlook; hanya aplikasi kantor); move; click / double_click / triple_click / right_click / middle_click (x,y); drag (x,y → to_x,to_y); scroll (amount, positif = ke bawah, opsional x,y); type (text, diketik karakter demi karakter seperti manusia, maks. 4000 karakter; fokus harus sudah ada di kolom/dokumen yang benar); key (keys, mis. "ctrl+s", "enter", "ctrl+shift+n", "alt+f4"); wait (seconds, maks. 10).',
+      'Mengoperasikan Word/Excel/PowerPoint/Outlook (butuh computer_start). Setiap aksi mengembalikan daftar elemen bernomor seperti: [2] Tombol "Simpan". Nomor berubah setelah setiap aksi, jadi selalu pakai daftar terbaru. Aksi: read; launch (app: word|excel|powerpoint|outlook); click (id); focus (id); set_text (id, text); type (text, di tempat kursor); key (keys, mis. "ctrl+s", "enter"); wait (seconds).',
     input_schema: {
       type: 'object',
       properties: {
-        action: { type: 'string', enum: ['screenshot', 'launch', 'move', 'click', 'double_click', 'triple_click', 'right_click', 'middle_click', 'drag', 'scroll', 'type', 'key', 'wait'] },
-        x: { type: 'integer' },
-        y: { type: 'integer' },
-        to_x: { type: 'integer' },
-        to_y: { type: 'integer' },
-        amount: { type: 'integer' },
+        action: { type: 'string', enum: ['read', 'launch', 'click', 'focus', 'set_text', 'type', 'key', 'wait'] },
+        id: { type: 'integer', description: 'Nomor elemen dari daftar terakhir.' },
         text: { type: 'string' },
         keys: { type: 'string' },
         app: { type: 'string' },
         seconds: { type: 'integer' },
-        delay_ms: { type: 'integer', description: 'Jeda antar karakter saat type (0–100, default 15).' },
       },
       required: ['action'],
     },
   },
   {
     name: 'computer_stop',
-    description: 'Mengakhiri sesi kendali komputer bila tugas di layar sudah selesai.',
+    description: 'Mengakhiri sesi bila tugas di layar sudah selesai.',
     input_schema: { type: 'object', properties: {} },
   },
 ];

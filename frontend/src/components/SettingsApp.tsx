@@ -5,16 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, type User } from "@/lib/api";
-import AccountPanel, { type AccountView, type PlanView } from "./AccountPanel";
-
-export interface AppSettings {
-  agentReady: boolean;
-  canSaveKey: boolean;
-  loggedIn: boolean;
-  account: AccountView | null;
-  accountProblem: string | null;
-  plan: PlanView | null;
-}
+import AccountPanel, { type AccountStatus } from "./AccountPanel";
+import BrainPanel from "./BrainPanel";
 
 const messageOf = (e: unknown) =>
   e instanceof Error ? e.message : "Terjadi kesalahan";
@@ -22,24 +14,24 @@ const messageOf = (e: unknown) =>
 export default function SettingsApp() {
   const router = useRouter();
   const [me, setMe] = useState<User | null>(null);
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [status, setStatus] = useState<AccountStatus | null>(null);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    setSettings(await api<AppSettings>("/settings"));
+  const reload = useCallback(async () => {
+    setStatus(await api<AccountStatus>("/settings"));
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
         setMe(await api<User>("/auth/me"));
-        await load();
+        setStatus(await api<AccountStatus>("/settings"));
       } catch (e) {
         if (e instanceof ApiError && e.status === 401) router.replace("/masuk");
         else setError(messageOf(e));
       }
     })();
-  }, [router, load]);
+  }, [router]);
 
   const isAdmin = me?.role === "ADMIN";
 
@@ -65,18 +57,14 @@ export default function SettingsApp() {
         </p>
       )}
 
-      {settings && (
-        <AccountPanel
-          isAdmin={isAdmin}
-          loggedIn={settings.loggedIn}
-          account={settings.account}
-          problem={settings.accountProblem}
-          plan={settings.plan}
-          canSave={settings.canSaveKey}
-          reload={load}
-        />
+      {me && status ? (
+        <div className="space-y-4">
+          <AccountPanel key={status.loggedIn ? "masuk" : "keluar"} isAdmin={isAdmin} status={status} reload={reload} />
+          <BrainPanel isAdmin={isAdmin} />
+        </div>
+      ) : (
+        !error && <p className="animate-pulse text-sm text-muted">Memuat…</p>
       )}
-      {!settings && !error && <p className="animate-pulse text-sm text-muted">Memuat…</p>}
 
       <section className="mt-4 rounded-2xl border border-line bg-surface p-5 text-sm leading-relaxed text-muted">
         <h2 className="mb-2 font-medium text-foreground">

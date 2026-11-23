@@ -1,4 +1,4 @@
-import type Anthropic from '@anthropic-ai/sdk';
+import type { ChatTurn } from '../agent/agent.service.js';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -98,7 +98,7 @@ export class ConversationsService {
   }
 
   /** Riwayat teks untuk dikirim ke model (tanpa blok alat; cukup konteks percakapan). */
-  async history(conversationId: string): Promise<Anthropic.MessageParam[]> {
+  async history(conversationId: string): Promise<ChatTurn[]> {
     const rows = await this.prisma.message.findMany({
       where: { conversationId, role: { in: ['USER', 'ASSISTANT'] } },
       orderBy: { createdAt: 'desc' },

@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Script from "@/components/Script";
 import ApprovalCard, { type ApprovalRequest } from "@/components/ApprovalCard";
+import VoiceControls from "@/components/VoiceControls";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
 import { useWorkspace, wsPath } from "@/lib/workspace";
 import {
@@ -118,8 +119,10 @@ export default function ChatApp() {
   const [sidebar, setSidebar] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [agentReady, setAgentReady] = useState(true);
   const [needAccount, setNeedAccount] = useState(false);
+  const [reply, setReply] = useState<{ id: string; text: string } | null>(null);
   const ws = useWorkspace();
   const wsId = ws.current?.id ?? null;
 
@@ -140,8 +143,8 @@ export default function ChatApp() {
   }, [router]);
 
   useEffect(() => {
-    api<{ agentReady: boolean }>("/settings").then(
-      (s) => setAgentReady(s.agentReady),
+    api<{ ready: boolean }>("/brain").then(
+      (s) => setAgentReady(s.ready),
       () => undefined,
     );
   }, []);
@@ -200,7 +203,7 @@ export default function ChatApp() {
   async function send(text: string) {
     const content = text.trim();
     if (!content || busy || !wsId) return;
-    // Belum masuk ke akun MiB: jangan kirim, tampilkan ajakan masuk (teks tetap di kotak ketik).
+    // Otak belum dipasang: jangan kirim, arahkan ke Pengaturan (teks tetap di kotak ketik).
     if (!agentReady) {
       setNeedAccount(true);
       return;
@@ -267,6 +270,8 @@ export default function ChatApp() {
           else if (e.type === "done") {
             finished = true;
             setMessages((m) => [...m, e.message]);
+            // Hanya jawaban baru yang dibacakan, bukan riwayat yang dibuka kembali.
+            setReply({ id: e.message.id, text: e.message.content });
             setLiveText("");
             setLiveSteps([]);
           } else if (e.type === "error") setError(e.message);
@@ -479,12 +484,12 @@ export default function ChatApp() {
 
             {needAccount && !agentReady && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-                <span className="text-muted">Masuk ke akun MiB untuk mulai bekerja.</span>
+                <span className="text-muted">Otak MiB belum dipasang.</span>
                 <Link
                   href="/app/settings"
                   className="rounded-lg bg-accent px-4 py-2 font-medium text-[#0d1417] transition-colors hover:bg-accent-strong"
                 >
-                  Masuk
+                  Pasang
                 </Link>
               </div>
             )}
@@ -526,8 +531,21 @@ export default function ChatApp() {
           }}
           className="border-t border-line px-4 py-4"
         >
-          <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-line bg-surface/70 p-2 focus-within:border-accent">
+          <div className="relative mx-auto flex max-w-3xl items-end gap-1 rounded-2xl border border-line bg-surface/70 p-2 focus-within:border-accent">
+            {API_URL === "" && (
+              <VoiceControls
+                disabled={busy}
+                reply={reply}
+                onText={(t) => {
+                  // Hasil dengar bisa keliru: ditaruh di kotak ketik untuk diperiksa, dikirim dengan Enter.
+                  setInput((v) => (v.trim() ? `${v.trim()} ${t}` : t).slice(0, 8000));
+                  inputRef.current?.focus();
+                }}
+                onError={setError}
+              />
+            )}
             <textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {

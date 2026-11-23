@@ -30,21 +30,22 @@ export default function Home() {
           <div className="relative mx-auto flex max-w-4xl flex-col items-center px-5 pb-12 pt-12 text-center sm:pb-20 sm:pt-24 lg:pb-24 lg:pt-28">
             <FloatingMark />
             <p className="mt-8 rounded-full border border-line px-4 py-1.5 text-xs text-muted">
-              <span className="sm:hidden">Berjalan di komputer Anda · Atas izin Anda</span>
+              <span className="sm:hidden">Gratis · Offline · Atas izin Anda</span>
               <span className="hidden sm:inline">
-                Berjalan di komputer Anda · Data tetap milik Anda · Setiap tindakan atas izin Anda
+                Gratis · Berjalan offline di komputer Anda · Setiap tindakan atas izin Anda
               </span>
             </p>
             <HeroTitle />
             <Reveal delay={0.55} variant="blur" afterSplash>
               <p className="mt-6 max-w-2xl text-pretty text-base text-muted sm:text-lg">
                 <span className="sm:hidden">
-                  Buat dan edit documents, spreadsheet, dan slides lewat
-                  percakapan.
+                  Buat dan edit documents, spreadsheet, dan slides. Gratis dan
+                  offline.
                 </span>
                 <span className="hidden sm:inline">
                   Buat dan edit documents, spreadsheet, dan slides lewat
-                  percakapan, didukung kecerdasan AI yang bekerja untuk Anda.
+                  percakapan. AI berjalan offline di komputer Anda, dengan tiga
+                  model gratis sesuai spesifikasi PC.
                 </span>
               </p>
             </Reveal>
@@ -58,13 +59,13 @@ export default function Home() {
                 href="/unduh"
                 className="fx-btn rounded-xl bg-accent px-6 py-3 font-medium text-[#0d1417] transition-colors hover:bg-accent-strong"
               >
-                Unduh untuk Windows
+                Unduh gratis untuk Windows
               </a>
               <a
-                href="#cara-kerja"
+                href="#model"
                 className="rounded-xl border border-line px-6 py-3 font-medium transition-colors hover:bg-surface"
               >
-                Lihat cara kerja
+                Lihat 3 model
               </a>
               <a
                 href="#keamanan"
@@ -74,6 +75,48 @@ export default function Home() {
               </a>
             </Reveal>
           </div>
+        </section>
+
+        {/* Model offline + versi online */}
+        <section id="model" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
+          <Reveal>
+            <h2 className="text-3xl font-semibold tracking-tight">Tiga model gratis, semuanya offline</h2>
+            <p className="mt-2 hidden max-w-2xl text-muted sm:block">
+              Pemasang memeriksa komputer Anda dan menyarankan model yang cocok. Setelah terpasang,
+              pekerjaan Anda tidak dikirim ke internet.
+            </p>
+          </Reveal>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              ["Ringan", "Core i3 / Ryzen 3", "RAM 4–8 GB", "Draf surat, ringkasan, dan merapikan teks.", "±3 GB"],
+              ["Sedang", "Core i5 / Ryzen 5", "RAM 8 GB ke atas", "Dokumen, tabel, dan pekerjaan kantor harian.", "±4 GB"],
+              ["Kuat", "Core i7 / Ryzen 7", "RAM 16 GB ke atas", "Tugas lebih panjang dan bertahap.", "±7 GB"],
+            ].map(([name, cpu, ram, use, size]) => (
+              <Reveal key={name}>
+                <div className="flex h-full flex-col rounded-2xl border border-line bg-surface p-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">{name}</h3>
+                    <span className="rounded-md bg-accent/15 px-2 py-1 text-xs text-accent-strong">Gratis</span>
+                  </div>
+                  <p className="mt-3 text-sm">{cpu}</p>
+                  <p className="text-sm text-muted">{ram} · unduh {size}</p>
+                  <p className="mt-3 flex-1 text-sm text-muted">{use}</p>
+                  <a href={`/unduh?model=${name.toLowerCase()}`} className="mt-5 inline-block rounded-lg border border-line px-4 py-2 text-center text-sm font-medium transition-colors hover:bg-background">
+                    Unduh
+                  </a>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal>
+            <div id="online" className="mt-4 flex scroll-mt-24 flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-line p-6">
+              <div>
+                <h3 className="text-lg font-medium">MiB Online</h3>
+                <p className="mt-1 text-sm text-muted">Versi dengan AI di cloud untuk tugas yang lebih berat.</p>
+              </div>
+              <span className="rounded-lg border border-line px-4 py-2 text-sm text-muted">Akan tersedia</span>
+            </div>
+          </Reveal>
         </section>
 
         {/* Cara kerja + contoh tugas */}
@@ -88,8 +131,8 @@ export default function Home() {
           </Reveal>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
-              ["1", "Unduh dan pasang", "Satu pemasang untuk Windows. Tanpa pengaturan rumit."],
-              ["2", "Beri izin", "Pilih folder yang boleh diakses MiB. Setiap tindakan penting meminta persetujuan Anda."],
+              ["1", "Unduh dan pilih model", "Pemasang memeriksa PC Anda dan menyiapkan otak MiB."],
+              ["2", "Daftar akun MiB", "Isi email, kata sandi, dan data diri, lalu pilih folder yang boleh diakses."],
               ["3", "Beri perintah", "Mulai percakapan, MiB membuka aplikasi dan mengerjakannya sendiri di layarmu."],
             ].map(([n, t, d]) => (
               <Reveal key={n}>
@@ -162,7 +205,7 @@ export default function Home() {
               ["Akses folder terpilih", "Anda menentukan folder yang boleh dibaca atau ditulis. Di luar itu, MiB tidak bisa menyentuh apa pun."],
               ["Semua dokumen kantor", "Membaca, membuat, dan mengubah dokumen Word dan PowerPoint, mengolah Excel, membaca PDF, lalu membukanya di aplikasi Anda."],
               ["Perintah shell", "Menjalankan perintah PowerShell untuk tugas teknis. Selalu menunggu Izinkan dari Anda."],
-              ["Mengoperasikan aplikasi kantor Anda", "MiB melihat layar, menggerakkan mouse, dan mengetik sendiri di Word, Excel, PowerPoint, atau Outlook, langsung di depan Anda. Hanya dengan izin, dan bisa dihentikan kapan saja dengan Esc."],
+              ["Mengoperasikan aplikasi kantor Anda", "MiB membaca tombol dan menu lalu mengetik sendiri di Word, Excel, PowerPoint, atau Outlook, langsung di depan Anda. Hanya dengan izin, dan bisa dihentikan kapan saja dengan Esc."],
               ["Tim & jejak audit", "Workspace per kantor, anggota dengan peran, dan log audit untuk setiap tindakan agen."],
             ].map(([t, d]) => (
               <Reveal key={t}>
@@ -187,13 +230,14 @@ export default function Home() {
             <h2 className="text-3xl font-semibold tracking-tight">Bekerja dengan</h2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["Kecerdasan AI", "Sudah termasuk di akun MiB"],
+                ["Kecerdasan AI", "Offline di komputer Anda"],
                 ["Dokumen", "Word, PowerPoint, Excel"],
                 ["Folder lokal", "Berkas dan dokumen kantor"],
                 ["PowerShell", "Otomasi di Windows"],
-                ["Kontrol layar", "Mouse & keyboard (Windows)"],
+                ["Kontrol Office", "Tombol, menu, dan keyboard"],
                 ["Email & Kalender", "Segera"],
                 ["Skills & plugin", "Segera"],
+                ["MiB Online", "Akan tersedia"],
               ].map(([n, d]) => (
                 <div key={n} className="rounded-xl border border-line px-4 py-3">
                   <div className="font-medium">{n}</div>

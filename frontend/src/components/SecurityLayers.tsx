@@ -24,7 +24,7 @@ const layers: {
     title: "Di komputer Anda",
     summary: "Berkas Anda tidak ke mana-mana.",
     points: [
-      "Berkas, riwayat percakapan, dan pengaturan disimpan di komputer Anda, bukan di server MiB.",
+      "Berkas, riwayat percakapan, dan pengaturan disimpan di komputer Anda.",
       "MiB hanya bisa menyentuh folder yang Anda daftarkan, dengan mode baca saja atau baca dan tulis.",
       "Jalur dan pintasan yang mengarah keluar dari folder izin ditolak.",
     ],
@@ -44,19 +44,19 @@ const layers: {
     title: "Khusus aplikasi kantor",
     summary: "Kendali layar dibatasi ke Microsoft Office.",
     points: [
-      "MiB hanya menggerakkan mouse dan keyboard di Word, Excel, PowerPoint, Outlook, OneNote, dan Publisher.",
+      "MiB hanya mengoperasikan Word, Excel, PowerPoint, Outlook, OneNote, dan Publisher, tanpa mengambil tangkapan layar.",
       "Klik atau ketikan ke jendela lain, seperti browser atau pengaturan Windows, diblokir.",
-      "Hentikan seketika dengan menekan Esc atau menggerakkan mouse.",
+      "Hentikan seketika dengan menekan Esc atau tombol stop di chat.",
     ],
   },
   {
     icon: UserRound,
-    title: "Akun dan privasi",
-    summary: "Yang disimpan di server dibatasi seperlunya.",
+    title: "Offline dan privat",
+    summary: "Pekerjaan Anda tidak keluar dari komputer.",
     points: [
-      "Server MiB menyimpan email akun, kata sandi terenkripsi, jumlah pemakaian, dan riwayat pembayaran.",
-      "Isi percakapan, berkas, dan tangkapan layar tidak disimpan di server MiB.",
-      "Batas perintah harian per akun mencegah penyalahgunaan.",
+      "Otak AI berjalan di komputer Anda; isi pekerjaan tidak dikirim.",
+      "Server MiB hanya menyimpan data akun: email, kata sandi terenkripsi, dan data diri.",
+      "Internet dipakai saat memasang dan saat masuk ke akun.",
     ],
   },
 ];

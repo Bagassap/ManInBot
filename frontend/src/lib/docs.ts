@@ -26,11 +26,11 @@ export const DOCS: DocPage[] = [
     group: "Memulai",
     icon: "book",
     title: "Ikhtisar",
-    summary: "Agen AI untuk pekerjaan kantor di komputer Windows Anda.",
+    summary: "Agen AI gratis dan offline untuk pekerjaan kantor di Windows.",
     blocks: [
       { t: "p", text: "MiB adalah agen AI untuk pekerjaan kantor. Anda memberi tugas lewat chat, lalu MiB mengerjakannya di komputer Anda: surat, laporan, presentasi, Excel, merapikan berkas, bahkan mengoperasikan Word dan PowerPoint langsung di layar." },
       { t: "ul", items: [
-        "Berjalan di komputer Windows Anda; berkas tetap di sana.",
+        "Berjalan offline di komputer Windows Anda; berkas tetap di sana.",
         "Hanya menyentuh folder yang Anda izinkan.",
         "Setiap tindakan penting menunggu persetujuan Anda.",
       ] },
@@ -46,12 +46,12 @@ export const DOCS: DocPage[] = [
     blocks: [
       { t: "ol", items: [
         "Unduh MiB-Setup.exe dari halaman Unduh, jalankan, lalu klik Next, Install, dan Finish.",
-        "Buka MiB, lalu di Pengaturan daftar ke akun MiB dengan email Anda.",
-        "Pilih folder kerja di Pengaturan, Folder lokal, lalu beri tugas di chat.",
+        "Pilih model di pemasang (Ringan, Sedang, atau Kuat), lalu tunggu unduhannya selesai.",
+        "Buka MiB, daftar akun, isi data diri, lalu pilih folder kerja dan beri tugas di chat.",
       ] },
       { t: "p", text: "Lebih suka terminal? Buka PowerShell dan jalankan:" },
       { t: "code", text: "irm https://maninbot.id/download/install.ps1 | iex" },
-      { t: "note", kind: "info", text: "Gratis 3 perintah per hari. Paket berbayar membuka 30 perintah per hari." },
+      { t: "note", kind: "info", text: "Tiga model offline gratis. MiB Online akan tersedia." },
     ],
   },
   {
@@ -64,8 +64,8 @@ export const DOCS: DocPage[] = [
       { t: "h2", text: "Persyaratan" },
       { t: "ul", items: [
         "Windows 10 atau 11 (64-bit)",
-        "Ruang kosong sekitar 500 MB",
-        "Koneksi internet",
+        "Ruang kosong 8 sampai 12 GB, sesuai model",
+        "Internet saat memasang dan saat masuk ke akun",
       ] },
       { t: "h2", text: "Pasang" },
       { t: "ol", items: [
@@ -87,12 +87,12 @@ export const DOCS: DocPage[] = [
     summary: "Tiga langkah sebelum tugas pertama.",
     blocks: [
       { t: "ol", items: [
-        "Buka MiB. Aplikasi langsung terbuka, tanpa membuat akun di komputer.",
-        "Buka Pengaturan, panel Akun MiB: daftar dengan nama, email, dan kata sandi. Akun langsung aktif.",
+        "Buka MiB, lalu daftar dengan email dan kata sandi (butuh internet).",
+        "Isi data diri: nama dan nomor HP, serta kantor dan jabatan bila ada. Lalu pastikan panel Otak MiB bertuliskan Siap.",
         "Buka Pengaturan, Folder lokal, lalu pilih folder kerja Anda dan modenya.",
       ] },
       { t: "p", text: "Selesai. Kembali ke chat dan beri tugas, misalnya: tolong lihat isi folder Dokumen." },
-      { t: "note", kind: "info", text: "Lupa kata sandi akun MiB? Hubungi admin MiB untuk dibuatkan kata sandi sementara." },
+      { t: "note", kind: "info", text: "Kecepatan mengikuti prosesor dan RAM. Bila terasa lambat, ganti ke model yang lebih ringan di Pengaturan." },
     ],
   },
   {
@@ -100,7 +100,7 @@ export const DOCS: DocPage[] = [
     group: "Memulai",
     icon: "settings",
     title: "Konfigurasi",
-    summary: "Folder, akun dan paket, kendali layar, dan data.",
+    summary: "Folder, otak MiB, kendali layar, dan data.",
     blocks: [
       { t: "h2", text: "Folder dan izin" },
       { t: "ul", items: [
@@ -109,22 +109,21 @@ export const DOCS: DocPage[] = [
         "Baca dan tulis: MiB juga boleh membuat dan mengubah berkas, dengan persetujuan Anda setiap kali.",
         "Cabut izin kapan saja dengan menghapus folder dari daftar.",
       ] },
-      { t: "h2", text: "Akun dan paket" },
+      { t: "h2", text: "Otak MiB" },
       { t: "ul", items: [
-        "Gratis: 3 perintah per hari. Berbayar: 30 perintah per hari selama 30 hari.",
-        "Satu perintah adalah satu pesan yang Anda kirim ke agen. Kuota diperbarui setiap hari pukul 00.00 WIB.",
-        "Bayar dari panel Akun MiB; status berubah sendiri dalam beberapa menit. Kuota habis? Tunggu pergantian hari atau aktifkan paket berbayar.",
+        "Ringan untuk Core i3 / Ryzen 3, Sedang untuk Core i5 / Ryzen 5, Kuat untuk Core i7 / Ryzen 7.",
+        "Ganti model kapan saja di Pengaturan, panel Otak MiB.",
       ] },
       { t: "h2", text: "Kendali layar" },
       { t: "ul", items: [
         "MiB bisa mengetik dan mengklik sendiri di Word, Excel, PowerPoint, Outlook, OneNote, dan Publisher. Aplikasi lain tidak bisa dioperasikan.",
-        "Selalu meminta izin dulu. Hentikan seketika dengan Esc atau menggerakkan mouse.",
+        "Selalu meminta izin dulu. Hentikan seketika dengan Esc atau tombol stop. MiB membaca tombol dan menu, tanpa tangkapan layar.",
       ] },
       { t: "h2", text: "Data dan privasi" },
       { t: "ul", items: [
         "Tetap di komputer Anda: berkas, riwayat percakapan, dan pengaturan.",
-        "Dikirim ke server MiB untuk diproses AI: pesan Anda, isi berkas yang diminta dibaca, dan tangkapan layar saat kendali layar. Isinya tidak disimpan di server.",
-        "Server MiB menyimpan email akun, kata sandi terenkripsi, jumlah pemakaian, dan riwayat pembayaran.",
+        "Otak AI berjalan di komputer Anda; pesan dan isi berkas tidak dikirim ke internet.",
+        "Server MiB hanya menyimpan data akun: email, kata sandi terenkripsi, dan data diri.",
       ] },
       { t: "h2", text: "Mulai dari awal" },
       { t: "p", text: "Tutup MiB lalu hapus folder %APPDATA%\\mib-desktop. Semua akun dan percakapan di komputer ini ikut terhapus; berkas Anda di folder lain tidak tersentuh. Catatan galat ada di %APPDATA%\\mib-desktop\\data\\logs\\backend.log." },

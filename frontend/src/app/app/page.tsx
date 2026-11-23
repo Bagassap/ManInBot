@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import ChatApp from "@/components/ChatApp";
+import AppGate from "@/components/AppGate";
 
 export const metadata: Metadata = { title: "MiB — Mode Perintah" };
 
 export default function AppPage() {
-  return <ChatApp />;
+  return <AppGate />;
 }
