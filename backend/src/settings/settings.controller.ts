@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { IsEmail, IsOptional, IsString, Length, MaxLength, MinLength } from 'class-validator';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { AuthGuard } from '../auth/auth.guard.js';
+import { BrainService } from '../brain/brain.service.js';
 import { GATEWAY_URL, SettingsService, type CachedAccount } from './settings.service.js';
 
 class CredsDto {
@@ -113,11 +114,34 @@ function ok<T>(r: GwResult<T>): GwResult<T>['body'] {
 @Controller('settings')
 @UseGuards(AuthGuard)
 export class SettingsController {
-  constructor(private readonly settings: SettingsService) {}
+  private reported = { key: '', at: 0 };
+
+  constructor(
+    private readonly settings: SettingsService,
+    private readonly brain: BrainService,
+  ) {
+    brain.onInstalled(() => void this.reportBrain(true));
+  }
 
   private signedIn(token: string, account?: AccountView) {
     this.settings.setAccountToken(token);
     if (account) this.settings.setCachedAccount(account);
+    void this.reportBrain(true);
+  }
+
+  /** Memberi tahu dashboard admin model yang terpasang. Hanya nama model; gagal saat offline tidak mengganggu apa pun. */
+  private async reportBrain(force = false) {
+    const token = this.settings.accountToken;
+    const b = this.brain.installed;
+    if (!token || !b) return;
+    const key = `${token}|${b.model}`;
+    if (!force && this.reported.key === key && Date.now() - this.reported.at < 3600_000) return;
+    try {
+      const r = await gw('/v1/account/device', { body: { tier: b.tier, model: b.model }, token, timeoutMs: 4000 });
+      if (r.status === 200) this.reported = { key, at: Date.now() };
+    } catch {
+      /* offline: dicoba lagi saat aplikasi berikutnya memeriksa akun */
+    }
   }
 
   /** Status akun MiB dari gateway. Sesi yang sudah berakhir dibersihkan agar pengguna diminta masuk lagi. */
@@ -133,6 +157,7 @@ export class SettingsController {
         if (r.status === 200) {
           account = r.body as AccountView;
           this.settings.setCachedAccount(account);
+          void this.reportBrain();
         } else if (r.status === 401 || r.status === 403) this.settings.setAccountToken(null);
       } catch {
         /* offline */

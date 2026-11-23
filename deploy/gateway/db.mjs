@@ -48,7 +48,8 @@ export class Db {
     // Kolom nama ditambahkan belakangan; database lama diperbarui di tempat.
     const cols = this.db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
     if (!cols.includes('name')) this.db.exec('ALTER TABLE users ADD COLUMN name TEXT');
-    for (const c of ['phone', 'company', 'job_title']) if (!cols.includes(c)) this.db.exec(`ALTER TABLE users ADD COLUMN ${c} TEXT`);
+    for (const c of ['phone', 'company', 'job_title', 'brain_tier', 'brain_model']) if (!cols.includes(c)) this.db.exec(`ALTER TABLE users ADD COLUMN ${c} TEXT`);
+    for (const c of ['brain_at', 'last_seen']) if (!cols.includes(c)) this.db.exec(`ALTER TABLE users ADD COLUMN ${c} INTEGER`);
   }
 
   q(sql) {
@@ -84,6 +85,12 @@ export class Db {
   setProfile(id, { name, phone, company, jobTitle }) {
     this.q('UPDATE users SET name = ?, phone = ?, company = ?, job_title = ? WHERE id = ?').run(name, phone, company || null, jobTitle || null, id);
   }
+  /** Model offline yang terpasang di aplikasi pengguna. Waktu pemilihan hanya berubah saat modelnya berganti. */
+  setBrain(id, tier, model) {
+    const now = Date.now();
+    this.q(`UPDATE users SET brain_at = CASE WHEN brain_model IS ? THEN brain_at ELSE ? END,
+      brain_tier = ?, brain_model = ?, last_seen = ? WHERE id = ?`).run(model, now, tier, model, now, id);
+  }
   verifyPassword(user, password) {
     return checkPassword(password, user.pass_hash);
   }
@@ -104,7 +111,7 @@ export class Db {
   }
   /** Data dashboard admin: semua akun beserta ringkasan pembayaran dan pemakaian hari ini. */
   adminUsers() {
-    return this.q(`SELECT u.id, u.email, u.name, u.phone, u.company, u.job_title, u.verified, u.banned, u.paid_until, u.created_at,
+    return this.q(`SELECT u.id, u.email, u.name, u.phone, u.company, u.job_title, u.brain_tier, u.brain_model, u.brain_at, u.last_seen, u.verified, u.banned, u.paid_until, u.created_at,
         (SELECT COUNT(*) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_count,
         (SELECT COALESCE(SUM(amount), 0) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_total,
         (SELECT COUNT(*) FROM commands c WHERE c.user_id = u.id AND c.day = ?) AS used_today,

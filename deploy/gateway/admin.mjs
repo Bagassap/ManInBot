@@ -100,6 +100,11 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
       phone: u.phone || '',
       company: u.company || '',
       jobTitle: u.job_title || '',
+      profileComplete: !!(u.name && u.phone),
+      brainTier: u.brain_tier || '',
+      brainModel: u.brain_model || '',
+      brainAt: u.brain_at ? new Date(u.brain_at).toISOString() : null,
+      lastSeen: u.last_seen ? new Date(u.last_seen).toISOString() : null,
       verified: !!u.verified,
       banned: !!u.banned,
       paid: u.paid_until > now,
@@ -130,6 +135,10 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
       stats: {
         users: users.length,
         verified: users.filter((u) => u.verified).length,
+        profiles: users.filter((u) => u.profileComplete).length,
+        ringan: users.filter((u) => u.brainTier === 'ringan').length,
+        sedang: users.filter((u) => u.brainTier === 'sedang').length,
+        kuat: users.filter((u) => u.brainTier === 'kuat').length,
         paidActive: users.filter((u) => u.paid).length,
         revenue,
         paymentsPaid: payments.filter((p) => p.status === 'paid').length,
@@ -251,8 +260,9 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln);white-s
     <div class="stats" id="stats"></div>
     <div class="cfg" id="cfg"></div>
     <h2>Pengguna</h2>
-    <div class="tools"><input id="q" placeholder="Cari email…"><button class="ghost" id="csv">Unduh CSV</button></div>
-    <div class="card tw"><table><thead><tr><th>Nama</th><th>Email</th><th>No. HP</th><th>Kantor</th><th>Jabatan</th><th>Daftar</th><th>Status</th><th>Paket</th><th>Hari ini</th><th>40 hari</th><th>Total bayar</th><th>Aksi</th></tr></thead><tbody id="ut"></tbody></table></div>
+    <div class="tools"><input id="q" placeholder="Cari nama, email, HP, kantor…"><button class="ghost" id="csv">Unduh CSV</button><span class="muted" id="upd" style="align-self:center;font-size:12px"></span></div>
+    <p class="muted" style="margin:-4px 0 10px;font-size:12px">Data diperbarui otomatis tiap 20 detik. Kata sandi pengguna disimpan terenkripsi satu arah sehingga tidak bisa dilihat siapa pun; gunakan Sandi baru bila pengguna lupa.</p>
+    <div class="card tw"><table><thead><tr><th>Nama</th><th>Email</th><th>Kata sandi</th><th>No. HP</th><th>Kantor</th><th>Jabatan</th><th>Model</th><th>Terakhir aktif</th><th>Daftar</th><th>Status</th><th>Paket</th><th>Hari ini</th><th>40 hari</th><th>Total bayar</th><th>Aksi</th></tr></thead><tbody id="ut"></tbody></table></div>
     <h2>Pemakaian per akun</h2>
     <p class="muted" style="margin:-4px 0 10px;font-size:12px">Diambil langsung dari database server MiB (data perintah disimpan 40 hari). Biaya adalah perkiraan; angka pasti ada di Claude Console.</p>
     <div class="card tw"><table><thead><tr><th>Akun</th><th>Nama</th><th>Perintah</th><th>Token tercatat</th><th>Hari ini</th><th>Perintah terbesar</th><th>Perkiraan biaya</th><th>Pertama</th><th>Terakhir</th></tr></thead><tbody id="ust"></tbody></table></div>
@@ -295,7 +305,8 @@ async function load() {
 function render() {
   const s = DATA.stats, c = DATA.config;
   $('stats').innerHTML = [
-    ['Akun terdaftar', s.users], ['Terverifikasi', s.verified], ['Berbayar aktif', s.paidActive],
+    ['Akun terdaftar', s.users], ['Data diri lengkap', s.profiles], ['Model Ringan', s.ringan], ['Model Sedang', s.sedang], ['Model Kuat', s.kuat],
+    ['Terverifikasi', s.verified], ['Berbayar aktif', s.paidActive],
     ['Pembayaran lunas', s.paymentsPaid], ['Total pendapatan', rp(s.revenue)],
     ['Token 40 hari', num(DATA.users.reduce((a, u) => a + u.tokens40d, 0))],
     ['Perkiraan biaya AI', cost(DATA.users.reduce((a, u) => a + u.tokens40d, 0))],
@@ -304,14 +315,18 @@ function render() {
   $('cfg').innerHTML = pill(c.ai, 'Layanan AI') + pill(c.email, 'Email verifikasi') + pill(c.payment, 'Pembayaran' + (c.priceIdr ? ' ' + rp(c.priceIdr) : '')) +
     (c.unlimited ? '<span class="pill ok">● Uji coba: perintah tanpa batas</span>' : '<span class="pill">Gratis ' + c.freePerDay + '/hari · Berbayar ' + c.paidPerDay + '/hari</span>');
   const q = $('q').value.trim().toLowerCase();
-  const users = DATA.users.filter((u) => !q || u.email.includes(q));
+  const users = DATA.users.filter((u) => !q || [u.email, u.name, u.phone, u.company, u.jobTitle, u.brainTier].some((v) => String(v || '').toLowerCase().includes(q)));
+  const tierName = { ringan: 'Ringan', sedang: 'Sedang', kuat: 'Kuat' };
+  $('upd').textContent = 'Diperbarui ' + new Date().toLocaleTimeString('id-ID');
   $('ut').innerHTML = users.length ? users.map((u) =>
-    '<tr><td>' + (esc(u.name) || '<span class="muted">-</span>') + '</td><td>' + esc(u.email) + '</td><td>' + (esc(u.phone) || '-') + '</td><td>' + (esc(u.company) || '-') + '</td><td>' + (esc(u.jobTitle) || '-') + '</td><td>' + d(u.createdAt) + '</td><td>' +
+    '<tr><td>' + (esc(u.name) || '<span class="muted">Belum isi data diri</span>') + '</td><td>' + esc(u.email) + '</td><td class="muted">Terenkripsi</td><td>' + (esc(u.phone) || '-') + '</td><td>' + (esc(u.company) || '-') + '</td><td>' + (esc(u.jobTitle) || '-') + '</td><td>' +
+    (u.brainTier ? '<span class="tag paid">' + esc(tierName[u.brainTier] || u.brainTier) + '</span> <span class="muted">' + esc(u.brainModel) + '</span>' : '<span class="muted">Belum terpasang</span>') +
+    '</td><td>' + dt(u.lastSeen) + '</td><td>' + dt(u.createdAt) + '</td><td>' +
     (u.banned ? '<span class="tag ban">Diblokir</span>' : u.verified ? 'Terverifikasi' : '<span class="muted">Belum verifikasi</span>') +
     '</td><td>' + (u.paid ? '<span class="tag paid">Berbayar</span> s.d. ' + d(u.paidUntil) : 'Gratis') +
     '</td><td>' + u.usedToday + '</td><td>' + u.used40d + '</td><td>' + rp(u.paidTotal) + (u.paidCount ? ' (' + u.paidCount + 'x)' : '') +
     '</td><td><button class="ghost" data-a="grant" data-e="' + esc(u.email) + '">+ Hari</button> <button class="ghost" data-a="' + (u.banned ? 'unban' : 'ban') + '" data-e="' + esc(u.email) + '">' + (u.banned ? 'Buka blokir' : 'Blokir') + '</button> <button class="ghost" data-a="resetpw" data-e="' + esc(u.email) + '">Sandi baru</button></td></tr>'
-  ).join('') : '<tr><td colspan="12" class="muted">Belum ada akun.</td></tr>';
+  ).join('') : '<tr><td colspan="15" class="muted">Belum ada akun.</td></tr>';
   $('pt').innerHTML = DATA.payments.length ? DATA.payments.map((p) =>
     '<tr><td>' + dt(p.createdAt) + '</td><td>' + esc(p.email) + '</td><td class="muted">' + esc(p.orderId) + '</td><td>' + rp(p.amount) +
     '</td><td>' + p.days + '</td><td>' + (p.status === 'paid' ? '<span class="tag paid">Lunas</span>' : esc(p.status)) + '</td><td>' + dt(p.paidAt) + '</td></tr>'
@@ -354,12 +369,14 @@ $('ut').addEventListener('click', async (e) => {
   } catch (err) { alert(err.message); }
 });
 $('csv').addEventListener('click', () => {
-  const rows = [['nama', 'email', 'no_hp', 'kantor', 'jabatan', 'daftar', 'terverifikasi', 'diblokir', 'berbayar_sampai', 'total_bayar']].concat(
-    DATA.users.map((u) => [u.name, u.email, u.phone, u.company, u.jobTitle, u.createdAt, u.verified, u.banned, u.paidUntil || '', u.paidTotal]));
+  const rows = [['nama', 'email', 'no_hp', 'kantor', 'jabatan', 'tingkat_model', 'model', 'model_dipilih', 'terakhir_aktif', 'daftar', 'terverifikasi', 'diblokir', 'berbayar_sampai', 'total_bayar']].concat(
+    DATA.users.map((u) => [u.name, u.email, u.phone, u.company, u.jobTitle, u.brainTier, u.brainModel, u.brainAt || '', u.lastSeen || '', u.createdAt, u.verified, u.banned, u.paidUntil || '', u.paidTotal]));
   const csv = rows.map((r) => r.map((v) => { let t = String(v); if (/^[=+@-]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; }).join(',')).join('\\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   a.download = 'pengguna-mib.csv'; a.click();
 });
 load();
+// Pendaftar baru muncul sendiri; tidak memuat ulang saat tab tersembunyi.
+setInterval(() => { if (!document.hidden && !$('dash').hidden) load().catch(() => {}); }, 20000);
 })();`;

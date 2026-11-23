@@ -39,6 +39,8 @@ export const CFG = {
   unlimited: env.UNLIMITED_TRIAL === '1',
 };
 
+const BRAIN_MODELS = { ringan: 'qwen3:1.7b', sedang: 'qwen3:4b', kuat: 'qwen3:8b' };
+
 export function createGateway(db) {
   const active = new Map(); // id pengguna -> permintaan AI yang sedang berjalan
   const hits = new Map(); // kunci pembatas -> daftar cap waktu
@@ -238,6 +240,19 @@ export function createGateway(db) {
     if (!allow(`prof:${u.id}`, 20, 3600_000)) return fail(res, 429, 'Terlalu sering. Coba lagi nanti.');
     db.setProfile(u.id, { name, phone, company: text(b.company, 100), jobTitle: text(b.jobTitle, 80) });
     json(res, 200, { ok: true, account: accountView(db.userById(u.id)) });
+  }
+
+  /** Laporan aplikasi: model offline yang terpasang. Hanya nama model; isi pekerjaan tidak pernah dikirim. */
+  async function device(req, res) {
+    const u = sessionUser(req, res);
+    if (!u) return;
+    const b = await readJson(req, res);
+    if (!b) return;
+    const model = BRAIN_MODELS[b.tier];
+    if (!Object.hasOwn(BRAIN_MODELS, String(b.tier)) || b.model !== model) return fail(res, 400, 'Model tidak dikenal.');
+    if (!allow(`dev:${u.id}`, 30, 3600_000)) return fail(res, 429, 'Terlalu sering. Coba lagi nanti.');
+    db.setBrain(u.id, b.tier, model);
+    json(res, 200, { ok: true });
   }
 
   // ---------------- pembayaran ----------------
@@ -457,6 +472,8 @@ export function createGateway(db) {
         }
         case 'POST /v1/account/profile':
           return await profile(req, res);
+        case 'POST /v1/account/device':
+          return await device(req, res);
         case 'POST /v1/account/checkout':
           return await checkout(req, res);
         case 'POST /v1/pay/notify':

@@ -53,6 +53,7 @@ export class BrainService implements OnModuleDestroy {
   private setupProc: ChildProcess | null = null;
   private job: SetupJob = { running: false, phase: '', pct: null, message: '', error: null };
   private detected: { tier: BrainTier; pc: string } | null = null;
+  private readonly installedListeners: (() => void)[] = [];
 
   private get exe() {
     return path.join(this.root, 'ollama', 'ollama.exe');
@@ -70,6 +71,16 @@ export class BrainService implements OnModuleDestroy {
 
   get ready() {
     return this.config() !== null && (!!process.env.MIB_OLLAMA_URL || existsSync(this.exe));
+  }
+
+  /** Model yang benar-benar terpasang; null bila belum ada. */
+  get installed() {
+    return this.ready ? this.config() : null;
+  }
+
+  /** Dipanggil setiap kali pemasangan model selesai dengan sukses. */
+  onInstalled(fn: () => void) {
+    this.installedListeners.push(fn);
   }
 
   get modelName() {
@@ -216,6 +227,7 @@ export class BrainService implements OnModuleDestroy {
     const finish = (code: number | null) => {
       this.setupProc = null;
       this.job = { ...this.job, running: false, error: code === 0 ? null : (this.job.error ?? 'Pemasangan berhenti. Coba lagi.') };
+      if (code === 0) this.installedListeners.forEach((fn) => fn());
     };
     p.once('error', () => finish(1));
     p.once('exit', finish);
