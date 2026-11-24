@@ -272,18 +272,17 @@ body:has(.admin) {
 }
 
 html.desktop-app {
-  --font-satoshi: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --font-sora: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
-  --background: #0b2a33;
-  --surface: #14242b;
-  --foreground: #f2f6f7;
-  --muted: #a9bcc2;
-  --line: rgba(255, 255, 255, 0.11);
+  --font-sora: var(--font-satoshi);
+  --background: #0a0d0f;
+  --surface: #12171a;
+  --foreground: #f0f3f4;
+  --muted: #98a6ab;
+  --line: rgba(255, 255, 255, 0.09);
   scroll-behavior: auto;
   overflow: hidden;
   user-select: none;
 }
-html.desktop-app body { overflow: hidden; height: 100%; background: #0d1419; }
+html.desktop-app body { overflow: hidden; height: 100%; background: #0a0d0f; }
 html.desktop-app :is(p, pre, code, td, input, textarea, [contenteditable]) { user-select: text; }
 html.desktop-app :is(a, button, [role="button"]) { cursor: default; }
 html.desktop-app :is(img, a) { -webkit-user-drag: none; }
@@ -297,14 +296,16 @@ html.desktop-app ::-webkit-scrollbar-thumb {
 }
 html.desktop-app ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.32); }
 
-.cp-frame { display: flex; height: 100vh; background: #0d1419; }
+.cp-frame { display: flex; height: 100vh; background: #0a0d0f; }
 .cp-nodrag { -webkit-app-region: no-drag; }
 .cp-sidebar {
   display: flex;
   flex: none;
   flex-direction: column;
-  width: 256px;
+  width: 248px;
   padding: 10px;
+  background: #0e1215;
+  border-right: 1px solid var(--line);
   transition: width 0.18s ease;
 }
 .cp-sidebar.cp-collapsed { width: 60px; }
@@ -328,24 +329,20 @@ html.desktop-app ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 2
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  background: #0b2a33;
-  border-left: 1px solid var(--line);
-  border-top-left-radius: 14px;
-  border-bottom-left-radius: 14px;
+  background: #0a0d0f;
 }
-.cp-panel-full { border: 0; border-radius: 0; }
 .cp-panel::before {
   content: "";
   position: absolute;
   inset: 36px 0 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 34% at 72% 74%, rgba(63, 208, 196, 0.2), transparent 70%),
-    radial-gradient(46% 26% at 18% 82%, rgba(226, 164, 104, 0.2), transparent 72%),
-    radial-gradient(90% 26% at 50% 100%, rgba(5, 10, 13, 0.95), transparent 100%),
-    linear-gradient(180deg, #0b2a33 0%, #124250 34%, #2a5a63 58%, #38565a 72%, #101a1e 100%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 90px);
-  mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+    radial-gradient(560px 320px at 8% 0%, rgba(52, 173, 164, 0.16), transparent 72%),
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 70px, #000 45%, transparent 92%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 70px, #000 45%, transparent 92%);
 }
 .cp-drag { -webkit-app-region: drag; position: relative; flex: none; height: 36px; margin-right: 142px; }
 .cp-content { position: relative; flex: 1; min-height: 0; overflow: auto; transform: translateZ(0); }
@@ -354,27 +351,24 @@ html.desktop-app ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 2
 .cp-content a[aria-label="Kembali"] { display: none; }
 
 .cp-composer {
-  background: rgba(13, 24, 29, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 26px;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.34);
-  backdrop-filter: blur(18px);
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: inset 3px 0 0 var(--accent);
   transition: border-color 0.15s ease;
 }
-.cp-composer:focus-within { border-color: rgba(63, 208, 196, 0.6); }
-.cp-chip {
-  background: rgba(13, 24, 29, 0.46);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  backdrop-filter: blur(10px);
-  transition: background-color 0.15s ease;
+.cp-composer:focus-within { border-color: rgba(63, 208, 196, 0.55); }
+.cp-tile {
+  background: rgba(18, 23, 26, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
-.cp-chip:hover { background: rgba(255, 255, 255, 0.13); }
+.cp-tile:hover { background: #182024; border-color: rgba(63, 208, 196, 0.45); }
 .cp-card {
-  background: rgba(16, 28, 34, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  backdrop-filter: blur(16px);
+  background: rgba(18, 23, 26, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
 
 .sheet-table { table-layout: fixed; }

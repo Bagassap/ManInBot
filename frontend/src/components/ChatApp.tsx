@@ -3,16 +3,21 @@
 import {
   Check,
   ChevronDown,
+  ClipboardList,
+  FileText,
+  FolderOpen,
   History,
   LogOut,
-  MessageSquare,
+  type LucideIcon,
   RefreshCw,
   Settings,
   Menu,
   Plus,
+  Presentation,
+  ScrollText,
   SendHorizontal,
-  Sparkles,
   Square,
+  Table2,
   Trash2,
   Wrench,
   X,
@@ -39,12 +44,13 @@ import {
   type User,
 } from "@/lib/api";
 
-const CHIPS: [string, string][] = [
-  ["Buat surat", "Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen"],
-  ["Rekap Excel", "Buka Excel dan buat tabel rekap penjualan per bulan lengkap dengan totalnya"],
-  ["Buat slide", "Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint"],
-  ["Notulen rapat", "Buka Word dan tulis notulen rapat mingguan dengan daftar tindak lanjut"],
-  ["Rapikan folder", "Lihat isi folder Dokumen dan sarankan cara merapikannya"],
+const TASKS: { label: string; desc: string; prompt: string; icon: LucideIcon }[] = [
+  { label: "Buat surat", desc: "Surat resmi siap disimpan", prompt: "Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen", icon: FileText },
+  { label: "Rekap Excel", desc: "Tabel lengkap dengan total", prompt: "Buka Excel dan buat tabel rekap penjualan per bulan lengkap dengan totalnya", icon: Table2 },
+  { label: "Buat slide", desc: "Presentasi dari dokumen", prompt: "Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint", icon: Presentation },
+  { label: "Notulen rapat", desc: "Catatan dan tindak lanjut", prompt: "Buka Word dan tulis notulen rapat mingguan dengan daftar tindak lanjut", icon: ClipboardList },
+  { label: "Ringkas dokumen", desc: "Ambil poin pentingnya", prompt: "Baca dokumen ini dan buat ringkasan poin pentingnya: ", icon: ScrollText },
+  { label: "Rapikan folder", desc: "Saran susunan berkas", prompt: "Lihat isi folder Dokumen dan sarankan cara merapikannya", icon: FolderOpen },
 ];
 const APPS: [string, string, string][] = [
   ["Word", "W", "#2f6fbd"],
@@ -368,7 +374,7 @@ export default function ChatApp() {
         )}
         <button
           onClick={newChat}
-          className="mx-3 mb-3 flex items-center gap-2 rounded-xl border border-line px-3 py-2.5 text-sm transition-colors hover:bg-surface"
+          className="mx-3 mb-3 flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-[#0d1417] transition-colors hover:bg-accent-strong"
         >
           <Plus className="size-4" /> Percakapan baru
         </button>
@@ -411,7 +417,7 @@ export default function ChatApp() {
         e.preventDefault();
         send(input);
       }}
-      className="mx-auto w-full max-w-3xl"
+      className={empty ? "w-full" : "mx-auto w-full max-w-3xl"}
     >
       <div className="cp-composer relative p-3">
         <textarea
@@ -434,7 +440,7 @@ export default function ChatApp() {
             <Link
               href="/app/settings"
               title="Ganti model di Pengaturan"
-              className="flex h-9 items-center gap-1.5 rounded-full border border-line px-3 text-[13px] transition-colors hover:bg-white/8"
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-[13px] transition-colors hover:bg-white/8"
             >
               <Image src="/asset/logo-mark-v2.png" alt="" width={14} height={16} className="shrink-0" />
               {TIER_NAME[brainTier] ?? brainTier}
@@ -458,7 +464,7 @@ export default function ChatApp() {
                 type="button"
                 onClick={() => abortRef.current?.abort()}
                 aria-label="Hentikan"
-                className="flex size-10 items-center justify-center rounded-full bg-white/10 text-foreground hover:bg-white/20"
+                className="flex size-10 items-center justify-center rounded-lg bg-white/10 text-foreground hover:bg-white/20"
               >
                 <Square className="size-4" />
               </button>
@@ -467,7 +473,7 @@ export default function ChatApp() {
                 type="submit"
                 disabled={!input.trim()}
                 aria-label="Kirim"
-                className="flex size-10 items-center justify-center rounded-full bg-accent text-[#0d1417] transition-colors hover:bg-accent-strong disabled:opacity-40"
+                className="flex size-10 items-center justify-center rounded-lg bg-accent text-[#0d1417] transition-colors hover:bg-accent-strong disabled:opacity-40"
               >
                 <SendHorizontal className="size-4" />
               </button>
@@ -556,77 +562,84 @@ export default function ChatApp() {
         )}
 
         <div className="flex-1 overflow-y-auto px-4 py-6">
-          <div className={`mx-auto ${empty ? "max-w-4xl" : "max-w-3xl"} space-y-4`}>
+          <div className={`mx-auto ${empty ? "max-w-5xl" : "max-w-3xl"} space-y-4`}>
             {empty && (
-              <div className="pb-6 pt-[3vh] text-center">
-                <h1 className="text-balance text-[34px] font-semibold leading-tight tracking-tight">
+              <div className="pb-6 pt-[2vh]">
+                <p className="text-sm font-medium text-accent-strong">
                   {greeting()}{firstName ? `, ${firstName}` : ""}
-                  <br />
-                  Apa yang bisa MiB bantu hari ini?
+                </p>
+                <h1 className="mt-1 text-[30px] font-semibold leading-tight tracking-tight">
+                  Apa yang kita kerjakan hari ini?
                 </h1>
-                <div className="mt-7 text-left">{composer}</div>
-                <div className="mx-auto mt-5 flex max-w-3xl flex-wrap justify-center gap-2">
-                  {CHIPS.map(([label, prompt]) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => prefill(prompt)}
-                      className="cp-chip px-4 py-2 text-sm text-foreground/85"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="mx-auto mt-6 grid max-w-3xl gap-4 text-left md:grid-cols-2">
-                  <section className="cp-card p-5">
-                    <h2 className="flex items-center gap-2 text-sm font-medium text-foreground/85">
-                      <History className="size-4" /> Lanjutkan percakapan
+                <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
+                  <div className="min-w-0">
+                    {composer}
+                    <h2 className="mb-3 mt-6 text-xs font-medium uppercase tracking-wider text-muted">
+                      Mulai dari tugas
                     </h2>
-                    <div className="mt-3 space-y-1">
-                      {convs.slice(0, 3).map((c) => (
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {TASKS.map(({ label, desc, prompt, icon: Icon }) => (
                         <button
-                          key={c.id}
+                          key={label}
                           type="button"
-                          onClick={() => openConversation(c.id)}
-                          className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors hover:bg-white/8"
+                          onClick={() => prefill(prompt)}
+                          className="cp-tile p-4 text-left"
                         >
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/20 text-accent-strong">
-                            <MessageSquare className="size-4" />
-                          </span>
-                          <span className="min-w-0 truncate">{c.title}</span>
+                          <Icon className="size-5 text-accent-strong" />
+                          <span className="mt-3 block text-sm font-medium">{label}</span>
+                          <span className="mt-0.5 block text-xs leading-relaxed text-muted">{desc}</span>
                         </button>
                       ))}
-                      {convs.length === 0 && (
-                        <p className="px-2 py-6 text-center text-sm text-muted">
-                          Percakapan terbaru akan muncul di sini.
-                        </p>
-                      )}
                     </div>
-                  </section>
-                  <section className="cp-card p-5">
-                    <h2 className="flex items-center gap-2 text-sm font-medium text-foreground/85">
-                      <Sparkles className="size-4" /> Kerjakan di aplikasi
-                    </h2>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {APPS.map(([name, letter, color]) => (
-                        <button
-                          key={name}
-                          type="button"
-                          onClick={() => prefill(`Buka ${name} dan `)}
-                          className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-left text-sm transition-colors hover:bg-white/8"
-                        >
-                          <span
-                            aria-hidden
-                            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-                            style={{ background: color }}
+                  </div>
+                  <div className="space-y-4">
+                    <section className="cp-card p-4">
+                      <h2 className="text-xs font-medium uppercase tracking-wider text-muted">
+                        Aplikasi kantor
+                      </h2>
+                      <div className="mt-2 space-y-0.5">
+                        {APPS.map(([name, letter, color]) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => prefill(`Buka ${name} dan `)}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-white/6"
                           >
-                            {letter}
-                          </span>
-                          {name}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
+                            <span
+                              aria-hidden
+                              className="flex size-6 shrink-0 items-center justify-center rounded text-xs font-bold text-white"
+                              style={{ background: color }}
+                            >
+                              {letter}
+                            </span>
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                    <section className="cp-card p-4">
+                      <h2 className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted">
+                        <History className="size-3.5" /> Terakhir dikerjakan
+                      </h2>
+                      <div className="mt-2 space-y-0.5">
+                        {convs.slice(0, 4).map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => openConversation(c.id)}
+                            className="block w-full truncate rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-white/6"
+                          >
+                            {c.title}
+                          </button>
+                        ))}
+                        {convs.length === 0 && (
+                          <p className="px-2 py-3 text-xs leading-relaxed text-muted">
+                            Pekerjaan terbaru akan muncul di sini.
+                          </p>
+                        )}
+                      </div>
+                    </section>
+                  </div>
                 </div>
               </div>
             )}

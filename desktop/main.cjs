@@ -139,11 +139,11 @@ function createWindow() {
     minWidth: 860,
     minHeight: 560,
     show: false,
-    backgroundColor: '#0b2a33',
+    backgroundColor: '#0a0d0f',
     title: 'MiB',
     icon: path.join(__dirname, 'build', 'icon.png'),
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#0b2a33', symbolColor: '#e8f0f2', height: 36 },
+    titleBarOverlay: { color: '#0a0d0f', symbolColor: '#e8f0f2', height: 36 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
