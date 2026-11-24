@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Mengunggah situs promosi MiB + installer ke server Ubuntu (nginx).
-# Prasyarat: `node deploy/build-site.cjs <origin>` sudah dijalankan; nginx terpasang di server.
-# Pemakaian: deploy/deploy.sh <user@host> <file-kunci.pem> <server_name atau _>
 set -euo pipefail
 
 TARGET=${1:?user@host}

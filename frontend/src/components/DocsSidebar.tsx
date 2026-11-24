@@ -47,7 +47,6 @@ function Nav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-/** Sidebar dokumentasi: tetap di samping pada layar lebar, lipat (details) pada layar sempit. */
 export default function DocsSidebar() {
   return (
     <>

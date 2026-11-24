@@ -40,7 +40,6 @@ export class LocalToolsService {
     private readonly computer: ComputerService,
   ) {}
 
-  /** Mengakhiri sesi kendali komputer milik percakapan ini (dipanggil saat putaran agen selesai). */
   endRun(conversationId: string) {
     this.computer.endRun(conversationId);
   }
@@ -167,7 +166,6 @@ export class LocalToolsService {
     const command = str(i.command, 'command').trim();
     if (!command) throw new LocalToolError('Perintah kosong');
     if (command.length > 4000) throw new LocalToolError('Perintah terlalu panjang');
-    // Perintah boleh mengubah isi folder, jadi cwd harus di folder yang boleh ditulis.
     const { abs: cwd } = await resolveInside(rules, i.cwd ?? rules[0]?.path, true);
     if (!(await stat(cwd)).isDirectory()) throw new LocalToolError('cwd bukan folder');
     const timeout = int(i.timeout_seconds, SHELL_DEFAULT_TIMEOUT_MS / 1000, 1, SHELL_MAX_TIMEOUT_MS / 1000) * 1000;
@@ -214,7 +212,6 @@ export class LocalToolsService {
     if (s.size > DOC_MAX_INPUT) throw new LocalToolError('Berkas terlalu besar (maksimal 20 MB)');
     const pairs = parseReplacements(i.replacements);
 
-    // Tujuan: berkas lain (save_as) atau menimpa aslinya; keduanya butuh izin tulis.
     const target = typeof i.save_as === 'string' && i.save_as.trim() ? i.save_as : src;
     const { abs: dest } = await resolveInside(rules, target, true);
     if (path.extname(dest).toLowerCase() !== ext) throw new LocalToolError(`save_as harus berekstensi ${ext}`);

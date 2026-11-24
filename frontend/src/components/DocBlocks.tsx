@@ -1,7 +1,6 @@
 import { AlertTriangle, Info } from "lucide-react";
 import type { Block } from "@/lib/docs";
 
-/** Merender isi dokumentasi dari data terstruktur (tanpa HTML mentah). */
 export default function DocBlocks({ blocks }: { blocks: Block[] }) {
   return (
     <div className="space-y-4 text-[15px] leading-relaxed text-muted">

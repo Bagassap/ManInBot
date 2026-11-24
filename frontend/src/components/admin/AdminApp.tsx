@@ -44,7 +44,6 @@ const TABS: { key: Tab; label: string }[] = [
 const selectCls =
   "h-11 w-full appearance-none rounded-2xl border border-line bg-surface pl-4 pr-10 text-xs text-foreground outline-none transition-colors hover:border-accent/40 focus:border-accent";
 
-/** Persentase perubahan. `good` menentukan arah mana yang berwarna hijau. */
 function Delta({
   value,
   good,
@@ -135,19 +134,16 @@ export default function AdminApp() {
   const [tick, setTick] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // belum login -> ke halaman masuk
   useEffect(() => {
     if (me.error instanceof ApiError && me.error.status === 401)
       router.replace("/admin/masuk");
   }, [me.error, router]);
 
-  // debounce kotak pencarian
   useEffect(() => {
     const t = setTimeout(() => setQ(qInput.trim()), 300);
     return () => clearTimeout(t);
   }, [qInput]);
 
-  // segarkan otomatis tiap 30 detik selama tab terlihat
   useEffect(() => {
     const t = setInterval(() => {
       if (document.visibilityState === "visible") setTick((n) => n + 1);
@@ -208,7 +204,6 @@ export default function AdminApp() {
     URL.revokeObjectURL(url);
   }
 
-  /* ---------- status akses ---------- */
   if (me.loading || (me.data === null && !me.error)) {
     return (
       <div className="admin flex min-h-dvh items-center justify-center">
@@ -258,7 +253,6 @@ export default function AdminApp() {
   return (
     <div className="admin min-h-dvh p-3 sm:p-6">
       <div className="mx-auto max-w-[1400px] rounded-[32px] border border-white/70 bg-white/55 p-3 shadow-[0_30px_80px_-40px_rgba(60,50,160,0.35)] backdrop-blur sm:p-6">
-        {/* ===== bilah atas ===== */}
         <header className="flex flex-wrap items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5" aria-label="MiB">
             <Image
@@ -352,7 +346,6 @@ export default function AdminApp() {
           </div>
         </header>
 
-        {/* ===== judul ===== */}
         <div className="mt-6 flex flex-wrap items-start justify-between gap-4 sm:mt-8">
           <div className="flex items-start gap-4">
             <Link
@@ -385,7 +378,6 @@ export default function AdminApp() {
 
         {tab === "ringkasan" ? (
           <>
-            {/* ===== KPI ===== */}
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Card
                 title="Kesalahan"
@@ -560,7 +552,6 @@ export default function AdminApp() {
               </Card>
             </div>
 
-            {/* ===== filter ===== */}
             <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
               <span className="flex items-center gap-2 text-xs font-medium">
                 Filter aktif
@@ -629,7 +620,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* ===== panel gelap: daftar + rincian ===== */}
             <div className="mt-5">
               <RunsPanel
                 runs={runs.data}

@@ -7,10 +7,8 @@ import { createInterface } from 'node:readline';
 import { BadRequestException, ConflictException, Injectable, type OnModuleDestroy, ServiceUnavailableException } from '@nestjs/common';
 import { BrainService } from '../brain/brain.service.js';
 
-/** Kosakata kantor agar nama aplikasi tidak salah dengar. */
 const STT_PROMPT = 'Perintah kerja kantor: buka Word, Excel, PowerPoint, Outlook, simpan dokumen, buat tabel, laporan, surat, notulen.';
 
-/** Membaca suara Windows (WinRT) ke WAV di stdout. Teks lewat variabel lingkungan base64 agar aman dari injeksi. */
 export const TTS_SCRIPT = `
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
@@ -31,7 +29,6 @@ $in.CopyTo($out)
 $out.Flush()
 `;
 
-/** Membuang penanda non-ucapan dari keluaran Whisper. */
 export function cleanTranscript(raw: string) {
   return raw
     .replace(/\[[^\]]*\]|\([^)]*\)|\*[^*]*\*/g, ' ')
@@ -39,7 +36,6 @@ export function cleanTranscript(raw: string) {
     .trim();
 }
 
-/** Teks jawaban yang enak didengar: tanpa simbol markdown, blok kode, atau alamat panjang. */
 export function speakable(raw: string, max = 900) {
   const t = raw
     .replace(/```[\s\S]*?```/g, ' ')
@@ -55,7 +51,6 @@ export function speakable(raw: string, max = 900) {
   return end > 80 ? cut.slice(0, end + 1) : cut;
 }
 
-/** WAV PCM 16 kHz mono 16-bit, format yang dikirim antarmuka MiB. */
 export function isValidWav(b: Buffer) {
   return (
     b.length > 44 &&
@@ -75,7 +70,6 @@ interface VoiceJob {
   error: string | null;
 }
 
-/** Suara lokal: mendengar lewat Whisper, berbicara lewat suara Indonesia milik Windows. Tidak ada audio yang keluar dari komputer. */
 @Injectable()
 export class VoiceService implements OnModuleDestroy {
   private readonly root = path.join(process.env.LOCALAPPDATA || homedir(), 'MiB', 'voice');
@@ -125,7 +119,6 @@ export class VoiceService implements OnModuleDestroy {
   }
 
   async status() {
-    // Dicek ulang selama belum ada: pengguna bisa menambah suara di Pengaturan Windows tanpa menutup MiB.
     if (!this.voiceName) this.voiceName = await this.findVoice();
     return { sttReady: this.sttReady, ttsReady: !!this.voiceName, voice: this.voiceName ?? null, job: this.job };
   }
@@ -143,7 +136,6 @@ export class VoiceService implements OnModuleDestroy {
         const e = JSON.parse(line) as { phase: string; pct: number | null; msg: string };
         this.job = { ...this.job, pct: e.pct, message: e.msg, error: e.phase === 'error' ? e.msg : this.job.error };
       } catch {
-        /* baris bukan JSON */
       }
     });
     const finish = (code: number | null) => {
@@ -155,7 +147,6 @@ export class VoiceService implements OnModuleDestroy {
     return { ok: true };
   }
 
-  /** Membuka halaman Ucapan di Pengaturan Windows untuk menambah suara Indonesia. */
   openVoiceSettings() {
     spawn('explorer.exe', ['ms-settings:speech'], { windowsHide: true, stdio: 'ignore', detached: true }).unref();
     this.voiceName = undefined;
@@ -188,7 +179,7 @@ export class VoiceService implements OnModuleDestroy {
       return { text: cleanTranscript(text) };
     } finally {
       this.busy = false;
-      await rm(dir, { recursive: true, force: true }).catch(() => undefined); // rekaman tidak disimpan
+      await rm(dir, { recursive: true, force: true }).catch(() => undefined);
     }
   }
 

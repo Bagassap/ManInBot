@@ -28,7 +28,6 @@ export const toolDefinitions: Anthropic.Tool[] = [
   },
 ];
 
-/** Daftar alat yang ditawarkan ke model. */
 export const toolsFor = (): Anthropic.Tool[] => [...toolDefinitions, ...sheetToolDefinitions, ...localToolsFor()];
 
 export interface ToolOutput {
@@ -36,7 +35,6 @@ export interface ToolOutput {
   isError?: boolean;
 }
 
-/** Penghitung aman: parser rekursif, tanpa eval/Function. */
 export function calculate(expression: string): number {
   const src = expression.replace(/\s+/g, '');
   if (!src || src.length > 200) throw new Error('Ekspresi kosong atau terlalu panjang');
@@ -99,7 +97,6 @@ export function calculate(expression: string): number {
   const result = expr();
   if (i < src.length) throw new Error(`Karakter tidak valid pada posisi ${i + 1}`);
   if (!Number.isFinite(result)) throw new Error('Hasil tidak terdefinisi');
-  // Buang artefak pecahan biner (mis. 0.1+0.2 = 0.30000000000000004) agar hasilnya wajar dibaca/diucapkan.
   return Number(result.toPrecision(12));
 }
 

@@ -6,7 +6,6 @@ const pathProp = {
   description: 'Jalur berkas/folder. Boleh absolut, atau relatif terhadap folder izin pertama.',
 } as const;
 
-/** Alat yang menyentuh komputer pengguna. Semuanya dibatasi ke folder yang diizinkan. */
 export const fsToolDefinitions: Anthropic.Tool[] = [
   {
     name: 'list_allowed_folders',
@@ -61,7 +60,6 @@ export const fsToolDefinitions: Anthropic.Tool[] = [
   },
 ];
 
-/** Alat dokumen Office (Word/PowerPoint) dan membuka berkas di aplikasi milik pengguna. */
 export const docToolDefinitions: Anthropic.Tool[] = [
   {
     name: 'doc_read',
@@ -140,7 +138,6 @@ export const docToolDefinitions: Anthropic.Tool[] = [
   },
 ];
 
-/** Kendali komputer lewat UI Automation (tanpa tangkapan layar). Hanya di aplikasi lokal Windows. */
 export const computerToolDefinitions: Anthropic.Tool[] = [
   {
     name: 'computer_start',
@@ -175,7 +172,6 @@ export const computerToolDefinitions: Anthropic.Tool[] = [
   },
 ];
 
-/** Alat Excel lokal: membuka/menyimpan .xlsx lewat lembar kerja milik percakapan (tersedia di chat). */
 export const excelLocalToolDefinitions: Anthropic.Tool[] = [
   {
     name: 'excel_open_local',

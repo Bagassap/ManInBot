@@ -1,6 +1,5 @@
 import type ExcelJS from 'exceljs';
 
-/** ExcelJS berat; dimuat saat pertama kali dibutuhkan, bukan saat aplikasi dibuka. */
 const loadExcel = async () => (await import('exceljs')).default;
 import { inflateRawSync } from 'node:zlib';
 import {
@@ -20,10 +19,6 @@ export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const MAX_UNCOMPRESSED = 80 * 1024 * 1024;
 const MAX_ZIP_ENTRIES = 500;
 
-/**
- * Memeriksa isi zip SEBELUM diekstrak, supaya file jebakan (zip bomb: kecil di disk, raksasa di memori)
- * dan file bermakro ditolak. Membaca "central directory" langsung dari byte.
- */
 export function inspectZip(buf: Buffer): void {
   if (buf.length < 22 || buf.readUInt32LE(0) !== 0x04034b50) throw new SheetError('Bukan berkas .xlsx yang valid');
   let eocd = -1;
@@ -59,8 +54,6 @@ export function inspectZip(buf: Buffer): void {
     off += 46 + nameLen + extraLen + commentLen;
   }
 
-  // Ukuran di atas hanya KLAIMAN berkas. Ekstrak tiap bagian dengan batas keluaran sesuai klaim, agar
-  // berkas yang berbohong soal ukuran (isi sebenarnya meledak) ditolak sebelum menghabiskan memori.
   for (const e of entries) {
     if (e.usize === 0) continue;
     if (e.lho + 30 > buf.length || buf.readUInt32LE(e.lho) !== 0x04034b50) throw new SheetError('Berkas rusak (header bagian tidak valid)');
@@ -80,7 +73,6 @@ export function inspectZip(buf: Buffer): void {
   }
 }
 
-/* ===================== Impor ===================== */
 const argbToHex = (argb?: string): string | undefined =>
   argb && /^[0-9a-fA-F]{8}$/.test(argb) ? `#${argb.slice(2)}` : argb && /^[0-9a-fA-F]{6}$/.test(argb) ? `#${argb}` : undefined;
 
@@ -177,7 +169,6 @@ export async function importXlsx(buf: Buffer, fileName: string): Promise<ImportR
         if (read?.f !== undefined) c.f = read.f;
         if (read?.v !== undefined) c.v = read.v;
         if (style) c.s = style;
-        // Format tanggal bawaan Excel (mm-dd-yy) mengikuti wilayah pengguna; untuk Indonesia: dd/mm/yyyy.
         if (read?.isDate && (!c.s?.fmt || /^(mm-dd-yy|m\/d\/yy|mm-dd-yyyy)$/i.test(c.s.fmt))) c.s = { ...c.s, fmt: 'dd/mm/yyyy' };
         if (c.v === undefined && c.f === undefined && !c.s) return;
         if (++total > LIMITS.MAX_CELLS) throw new SheetError(`Berkas terlalu besar: melebihi ${LIMITS.MAX_CELLS} sel. Kecilkan datanya atau unggah sebagian saja.`);
@@ -199,7 +190,6 @@ export async function importXlsx(buf: Buffer, fileName: string): Promise<ImportR
   return { workbook: { name: fileName.replace(/\.xlsx$/i, '').slice(0, 80) || 'Lembar kerja', sheets }, warnings };
 }
 
-/* ===================== Ekspor ===================== */
 const toArgb = (hex: string) => `FF${hex.slice(1).toUpperCase()}`;
 
 export async function exportXlsx(wb: Workbook, computed: ComputedBook): Promise<Buffer> {
@@ -214,8 +204,6 @@ export async function exportXlsx(wb: Workbook, computed: ComputedBook): Promise<
       const out = ws.getCell(ref);
       const c = computed[sheet.name]?.[ref];
       if (cell.f !== undefined) {
-        // Rumus hanya diekspor bila berhasil dipahami mesin. Selain itu ditulis sebagai TEKS (bukan rumus),
-        // sehingga teks berawalan "=" (mis. suntikan DDE/perintah) tidak pernah dijalankan Excel.
         const parsed = c && c.e !== '#NAME?' && c.e !== '#ERROR!' && !c.m;
         if (parsed) out.value = { formula: cell.f, result: (c.e ? { error: c.e } : (c.v ?? undefined)) as never };
         else out.value = cell.v ?? `=${cell.f}`;

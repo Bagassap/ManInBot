@@ -38,7 +38,6 @@ const MAX_EVENT_CELLS = 1500;
 export class WorkbooksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /* ---------- penyimpanan ---------- */
   private async load(conversationId: string) {
     const row = await this.prisma.workbook.findUnique({ where: { conversationId } });
     return row ? { id: row.id, wb: row.data as unknown as Workbook } : null;
@@ -58,7 +57,6 @@ export class WorkbooksService {
     if (!conv) throw new NotFoundException('Percakapan tidak ditemukan');
   }
 
-  /* ---------- tampilan ---------- */
   snapshot(wb: Workbook, computed: ComputedBook = evaluateAll(wb), active?: string, warnings?: string[]): SheetSnapshot {
     return {
       name: wb.name,
@@ -82,7 +80,6 @@ export class WorkbooksService {
     return loaded ? this.snapshot(loaded.wb) : null;
   }
 
-  /* ---------- impor / ekspor ---------- */
   async importFile(workspaceId: string, userId: string, conversationId: string, buffer: Buffer, fileName: string): Promise<SheetSnapshot> {
     await this.assertOwned(workspaceId, userId, conversationId);
     try {
@@ -102,7 +99,6 @@ export class WorkbooksService {
     return { buffer: await exportXlsx(loaded.wb, evaluateAll(loaded.wb)), name: loaded.wb.name };
   }
 
-  /* ---------- peristiwa untuk layar bersama ---------- */
   private patchEvents(wb: Workbook, before: ComputedBook, after: ComputedBook, focus: Sheet, touched: string[], wasNew: boolean): SheetEvent[] {
     const events: SheetEvent[] = [];
     const names = wb.sheets.map((s) => s.name);
@@ -127,7 +123,6 @@ export class WorkbooksService {
       if (Object.keys(cells).length || (isFocus && wasNew)) per.push({ sheet, cells, touched: isFocus ? touched.filter((r) => r in cells) : [] });
     }
 
-    // Terlalu banyak perubahan: kirim potret penuh agar layar pasti sinkron.
     if (total > MAX_EVENT_CELLS) return [{ type: 'sheet_reset', snapshot: this.snapshot(wb, after, focus.name) }];
 
     for (const { sheet, cells, touched: t } of per) {
@@ -137,7 +132,6 @@ export class WorkbooksService {
     return events;
   }
 
-  /* ---------- alat agen ---------- */
   isSheetTool = (name: string) => SHEET_TOOL_NAMES.has(name);
 
   async runTool(name: string, input: unknown, ctx: ToolCtx): Promise<ToolResult> {
@@ -196,7 +190,6 @@ export class WorkbooksService {
         return { content: rows.length ? `${head}\n${rows.join('\n')}` : `${head}\n(kosong)` };
       }
 
-      // ---- alat yang mengubah lembar kerja ----
       const before = evaluateAll(wb);
       let focus: Sheet;
       let touched: string[] = [];

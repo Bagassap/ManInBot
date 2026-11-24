@@ -1,6 +1,5 @@
 import type { SheetEvent } from '../workbooks/types.js';
 
-/** Kejadian yang dialirkan ke pengguna saat agen meminta izin. */
 export type ApprovalEvent =
   | { type: 'approval_request'; id: string; tool: string; summary: string; detail: string | null }
   | { type: 'approval_result'; id: string; approved: boolean };

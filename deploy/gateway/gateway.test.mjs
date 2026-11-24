@@ -48,7 +48,6 @@ console.log = (...a) => {
   captured += a.join(' ') + '\n';
 };
 
-// --- daftar dan verifikasi
 ok('daftar email buruk ditolak', (await jr(await post('/v1/account/register', { email: 'x', password: '12345678' }))).s === 400);
 ok('daftar sandi pendek ditolak', (await jr(await post('/v1/account/register', { email: 'a@b.co', password: '123' }))).s === 400);
 ok('daftar benar', (await jr(await post('/v1/account/register', { email: 'Budi@Kantor.id', password: 'rahasia123' }))).s === 200);
@@ -66,7 +65,6 @@ ok('login salah sandi', (await jr(await post('/v1/account/login', { email: 'budi
 const st = await jr(await fetch(B + '/v1/account', { headers: A }));
 ok('status akun gratis 0/3', st.s === 200 && !st.paid && st.limitToday === 3 && st.usedToday === 0, JSON.stringify({ u: st.usedToday, l: st.limitToday }));
 
-// --- kuota gratis: 3 perintah per hari
 const msg = (cmd, tok = T) =>
   fetch(B + '/v1/messages', { method: 'POST', headers: { 'x-api-key': tok, 'x-mib-command': cmd, 'content-type': 'application/json' }, body: JSON.stringify({ model: 'claude-opus-5-5', max_tokens: 10, stream: true, messages: [] }) });
 ok('tanpa token ditolak', (await fetch(B + '/v1/messages', { method: 'POST', body: '{}' })).status === 401);
@@ -88,7 +86,6 @@ const rcap = await msg('cmd-aaaaaaaa');
 const bcap = await rcap.json();
 ok('batas token per perintah', rcap.status === 429 && /batas pemrosesan/.test(bcap.error.message) && /lanjutkan/.test(bcap.error.message), bcap.error.message);
 
-// --- bayar
 const co = await jr(await post('/v1/account/checkout', {}, A));
 ok('checkout -> url pembayaran', co.s === 200 && co.url === 'https://pay.example/abc' && co.orderId?.startsWith('MIB-1-'));
 const sign = (o, sc, g) => createHash('sha512').update(o + sc + g + 'SB-Mid-server-TEST').digest('hex');
@@ -111,7 +108,6 @@ const r5 = await msg('cmd-eeeeeeee');
 await r5.text();
 ok('setelah bayar, perintah ke-4 hari ini lolos', r5.status === 200);
 
-// --- reset sandi dan keamanan
 ok('lupa sandi email tak dikenal tetap 200 (tak bocor)', (await jr(await post('/v1/account/forgot', { email: 'tidakada@x.id' }))).s === 200);
 await post('/v1/account/forgot', { email: 'budi@kantor.id' });
 const rc = [...captured.matchAll(/budi@kantor\.id reset (\d{6})/g)].map((m) => m[1]).at(-1);

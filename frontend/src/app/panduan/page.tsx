@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
-/** Halaman Panduan lama digabung ke dokumentasi; alamat lama diarahkan ke sana. */
 export default function PanduanPage() {
   useEffect(() => {
     window.location.replace("/docs/mulai-cepat");

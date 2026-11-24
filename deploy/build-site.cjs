@@ -1,5 +1,3 @@
-// Menyusun paket situs publik dari hasil ekspor statis frontend + installer.
-// Pemakaian: node deploy/build-site.cjs <origin, mis. https://mib.example.com atau http://1.2.3.4>
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -11,7 +9,6 @@ const dist = path.join(__dirname, 'dist');
 const origin = (process.argv[2] || '').replace(/\/+$/, '');
 if (!/^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/.test(origin)) throw new Error('Argumen origin tidak valid, mis. https://mib.example.com');
 
-// Halaman yang hanya berguna di aplikasi desktop (butuh layanan lokal) tidak dipublikasikan di situs promosi.
 const DESKTOP_ONLY = ['app', 'admin', 'masuk', 'daftar'];
 
 fs.rmSync(dist, { recursive: true, force: true });
@@ -23,8 +20,6 @@ for (const name of fs.readdirSync(site)) {
   if (DESKTOP_ONLY.includes(base)) fs.rmSync(path.join(site, name), { recursive: true, force: true });
 }
 
-// Prefetch segmen Next meminta "__next.a.b.__PAGE__.txt", padahal di disk berkasnya "__next.a/b/__PAGE__.txt".
-// Nginx statis tidak bisa memetakan itu, jadi buat salinan dengan nama datar.
 let flattened = 0;
 (function walk(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -47,7 +42,6 @@ let flattened = 0;
   }
 })(site);
 
-// Installer terbaru
 const installers = fs
   .readdirSync(relDir)
   .map((n) => ({ n, m: /^MiB Setup (\d+\.\d+\.\d+)\.exe$/.exec(n) }))

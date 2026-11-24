@@ -3,20 +3,16 @@ import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileS
 import path from 'node:path';
 import { PrismaClient } from '../generated/prisma/client.js';
 
-/** Folder data pengguna (database, rahasia, pengaturan). Kosong = mode pengembangan tanpa folder data khusus. */
 export const dataDir = (): string | null => process.env.MIB_DATA_DIR || null;
 
-/** Menulis berkas rahasia dengan izin terbatas pemilik (di Windows chmod tidak berpengaruh, ACL profil pengguna sudah membatasi). */
 export function writePrivate(file: string, content: string) {
   writeFileSync(file, content, { encoding: 'utf8', mode: 0o600 });
   try {
     chmodSync(file, 0o600);
   } catch {
-    /* sistem berkas tanpa chmod */
   }
 }
 
-/** JWT_SECRET dibuat sekali saat pertama jalan dan disimpan di folder data, jadi pemasangan tidak perlu mengatur .env. */
 function ensureJwtSecret(dir: string) {
   if (process.env.JWT_SECRET) return;
   const file = path.join(dir, 'secrets.json');
@@ -24,7 +20,6 @@ function ensureJwtSecret(dir: string) {
   try {
     secrets = JSON.parse(readFileSync(file, 'utf8')) as typeof secrets;
   } catch {
-    /* belum ada */
   }
   if (!secrets.jwtSecret) {
     secrets.jwtSecret = randomBytes(48).toString('base64');
@@ -33,7 +28,6 @@ function ensureJwtSecret(dir: string) {
   process.env.JWT_SECRET = secrets.jwtSecret;
 }
 
-/** Memecah berkas migrasi menjadi pernyataan SQL (migrasi Prisma untuk SQLite sederhana: komentar `--` dan `;` di akhir baris). */
 export function splitSql(sql: string): string[] {
   return sql
     .split('\n')
@@ -44,10 +38,6 @@ export function splitSql(sql: string): string[] {
     .filter(Boolean);
 }
 
-/**
- * Menerapkan migrasi database tanpa Prisma CLI (yang tidak ikut dibundel di aplikasi desktop). Migrasi yang sudah
- * dicatat oleh `prisma migrate deploy` (tabel _prisma_migrations) dianggap sudah diterapkan.
- */
 export async function applyMigrations(migrationsDir: string, log: (m: string) => void = () => undefined) {
   const prisma = new PrismaClient();
   try {
@@ -80,7 +70,6 @@ export async function applyMigrations(migrationsDir: string, log: (m: string) =>
   }
 }
 
-/** Dipanggil sekali sebelum Nest dibuat: menyiapkan folder data, rahasia, dan skema database. */
 export async function prepareRuntime(log: (m: string) => void = () => undefined) {
   const dir = dataDir();
   if (dir) {

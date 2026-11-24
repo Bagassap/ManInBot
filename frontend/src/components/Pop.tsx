@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-/** Muncul membesar dengan efek pegas (untuk node bernomor). */
 export default function Pop({
   children,
   className,

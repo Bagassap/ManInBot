@@ -4,7 +4,7 @@ import PptxGenJS from 'pptxgenjs';
 import { LocalToolError } from './paths.js';
 
 export const DOC_MAX_INPUT = 20 * 1024 * 1024;
-const XML_MAX = 25 * 1024 * 1024; // batas hasil dekompresi per bagian (anti zip-bomb)
+const XML_MAX = 25 * 1024 * 1024;
 export const DOC_TEXT_MAX = 200_000;
 
 export type Block =
@@ -22,7 +22,6 @@ export interface Slide {
 const decode = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n))).replace(/&amp;/g, '&');
 
-/** Mengambil teks dari satu bagian XML OOXML: tiap paragraf (w:p / a:p) jadi satu baris. */
 function paragraphs(xml: string, p: 'w' | 'a'): string[] {
   const out: string[] = [];
   for (const para of xml.split(`</${p}:p>`)) {
@@ -44,7 +43,6 @@ async function xmlOf(zip: JSZip, name: string): Promise<string | null> {
 
 const num = (n: string) => Number(/(\d+)\.xml$/.exec(n)?.[1] ?? 0);
 
-/** Membaca teks .docx atau .pptx. */
 export async function readDocumentText(buf: Buffer, ext: string): Promise<string> {
   let zip: JSZip;
   try {
@@ -128,7 +126,6 @@ export async function buildPptx(slides: Slide[]): Promise<Buffer> {
 
 const PDF_MAX_PAGES = 300;
 
-/** Membaca teks PDF (per halaman). PDF hasil pindai (tanpa lapisan teks) menghasilkan pesan khusus. */
 export async function readPdfText(buf: Buffer): Promise<string> {
   const { extractText, getDocumentProxy } = await import('unpdf');
   let pages: string[];
@@ -155,7 +152,6 @@ export interface Replacement {
 
 const encode = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** Mengganti teks dalam satu paragraf XML (w:p / a:p) tanpa merusak format: teks yang terbelah di beberapa "run" tetap terdeteksi. */
 function replaceInParagraph(xml: string, ns: 'w' | 'a', pairs: Replacement[], counts: number[]): string {
   const re = new RegExp(`(<${ns}:t(?:\\s[^>]*)?>)([^<]*)(</${ns}:t>)`, 'g');
   const runs = [...xml.matchAll(re)].map((m) => ({ open: m[1], close: m[3], index: m.index ?? 0, length: m[0].length, text: decode(m[2]) }));
@@ -210,10 +206,6 @@ function replaceInParagraph(xml: string, ns: 'w' | 'a', pairs: Replacement[], co
   return out;
 }
 
-/**
- * Cari-dan-ganti teks di .docx / .pptx yang sudah ada, mempertahankan format. Hanya teks yang berada dalam satu paragraf
- * (atau satu bentuk/sel) yang bisa diganti; pencocokan persis dan peka huruf besar-kecil.
- */
 export async function editOoxml(buf: Buffer, ext: string, pairs: Replacement[]): Promise<{ buffer: Buffer; counts: number[] }> {
   let zip: JSZip;
   try {
@@ -247,7 +239,6 @@ export function parseReplacements(v: unknown): Replacement[] {
   });
 }
 
-/** Validasi masukan dari model menjadi Block[] / Slide[] (jangan percaya bentuknya). */
 export function parseBlocks(v: unknown): Block[] {
   if (!Array.isArray(v) || v.length > 500) throw new LocalToolError('blocks harus berupa daftar (maks. 500)');
   const s = (x: unknown) => (typeof x === 'string' ? x.slice(0, 20_000) : '');

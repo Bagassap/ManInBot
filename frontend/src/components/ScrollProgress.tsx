@@ -2,7 +2,6 @@
 
 import { motion, useScroll, useSpring } from "framer-motion";
 
-/** Garis kemajuan gulir di tepi atas layar. */
 export default function ScrollProgress() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {

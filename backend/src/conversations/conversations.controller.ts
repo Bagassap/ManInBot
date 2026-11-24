@@ -55,7 +55,6 @@ export class ConversationsController {
     return this.conversations.remove(ws.workspaceId, user.id, id);
   }
 
-  /** Mode Perintah: kirim perintah, agen mengeksekusi, hasil dialirkan sebagai SSE. */
   @Post(':id/messages')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   async send(
@@ -101,7 +100,6 @@ export class ConversationsController {
 
     let text = '';
     let steps: AgentStep[] = [];
-    // Catatan untuk dashboard admin: status, durasi, token, dan jumlah langkah alat.
     const startedAt = Date.now();
     const usage: RunUsage = { inputTokens: 0, outputTokens: 0 };
     let toolCalls = 0;
@@ -138,7 +136,6 @@ export class ConversationsController {
     }
     res.end();
 
-    // Pencatatan tidak boleh mengganggu jawaban ke pengguna.
     await this.conversations
       .recordRun({
         workspaceId: ws.workspaceId,

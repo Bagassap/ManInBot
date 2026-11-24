@@ -65,7 +65,7 @@ describe('resolveInside', () => {
     try {
       symlinkSync(outside, link, 'junction');
     } catch {
-      return; // lingkungan tanpa izin membuat symlink: lewati
+      return;
     }
     await expect(resolveInside(rw, path.join('pintas', 'gaji.txt'), false)).rejects.toThrow(/luar folder/);
     await expect(resolveInside(rw, path.join('pintas', 'baru.txt'), true)).rejects.toThrow(/luar folder/);

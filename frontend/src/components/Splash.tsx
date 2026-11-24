@@ -7,7 +7,6 @@ import { splashState } from "@/lib/splash-state";
 const DURATION_MS = 4600;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-// Posisi tetap (bukan acak) agar render server & client identik.
 const PARTICLES = [
   { x: 8, y: 78, s: 3, d: 0.2 },
   { x: 16, y: 30, s: 2, d: 1.1 },
@@ -26,8 +25,6 @@ const PARTICLES = [
 const STATUS = ["Menyiapkan agen", "Mengamankan sesi", "Siap bekerja"];
 
 export default function Splash() {
-  // Tampil sejak render pertama (SSR) agar landing tidak sempat berkedip; saat pindah
-  // halaman di dalam situs (splashState.shown sudah true) langsung tidak ditampilkan.
   const [visible, setVisible] = useState(!splashState.shown);
   const [status, setStatus] = useState(0);
   const reduced = useReducedMotion();
@@ -72,7 +69,6 @@ export default function Splash() {
           exit={{ opacity: 0, scale: 1.03 }}
           transition={{ duration: 0.7, ease: EASE }}
         >
-          {/* grid sirkuit tipis, memudar ke tepi */}
           <motion.div
             aria-hidden
             className="absolute inset-0"
@@ -90,7 +86,6 @@ export default function Splash() {
             transition={{ duration: 1.4 }}
           />
 
-          {/* cahaya latar */}
           <motion.div
             aria-hidden
             className="absolute size-[46vmin] rounded-full bg-accent/[0.10] blur-[100px]"
@@ -99,7 +94,6 @@ export default function Splash() {
             transition={{ duration: 1.8, ease: "easeOut" }}
           />
 
-          {/* partikel naik */}
           {!reduced &&
             PARTICLES.map((p, i) => (
               <motion.span
@@ -123,9 +117,7 @@ export default function Splash() {
               />
             ))}
 
-          {/* logo */}
           <div className="relative aspect-[398/570] h-[min(40vh,360px,78vw)]">
-            {/* cincin orbit berputar, berpusat di perisai; ukuran relatif terhadap logo agar responsif */}
             {!reduced &&
               [
                 { pct: 105, dur: 14, dir: 1, dash: "2 10", delay: 0.4 },
@@ -169,7 +161,6 @@ export default function Splash() {
                 </motion.svg>
               ))}
 
-            {/* garis perisai tergambar */}
             <motion.svg
               aria-hidden
               viewBox="0 0 100 110"
@@ -196,7 +187,6 @@ export default function Splash() {
               />
             </motion.svg>
 
-            {/* perisai muncul */}
             <motion.img
               src="/asset/logo.png"
               alt="MiB — Man in Bot"
@@ -208,7 +198,6 @@ export default function Splash() {
               transition={{ duration: 1, delay: 0.9, ease: EASE }}
             />
 
-            {/* tulisan MiB / Man in Bot tersapu dari kiri */}
             <motion.img
               src="/asset/logo.png"
               alt=""
@@ -220,7 +209,6 @@ export default function Splash() {
               transition={{ duration: 0.9, delay: 1.7, ease: EASE }}
             />
 
-            {/* denyut inti teal */}
             {[0, 0.6].map((delay) => (
               <motion.span
                 key={delay}
@@ -244,7 +232,6 @@ export default function Splash() {
               />
             ))}
 
-            {/* garis pindai melintasi logo */}
             {!reduced && (
               <motion.div
                 aria-hidden
@@ -256,7 +243,6 @@ export default function Splash() {
             )}
           </div>
 
-          {/* status + progres */}
           <div
             aria-hidden
             className="absolute bottom-[9vh] flex flex-col items-center gap-3"

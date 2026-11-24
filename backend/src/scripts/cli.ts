@@ -3,20 +3,10 @@ import * as argon2 from 'argon2';
 import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '../generated/prisma/client.js';
 
-/**
- * Perintah pengelolaan (dijalankan lewat `npm run cli -- <perintah>`):
- *   make-admin <email>   jadikan akun yang sudah terdaftar sebagai ADMIN
- *   create-admin <email> [--reset]  buat akun admin dengan kata sandi acak (atau naikkan akun yang ada;
- *                        --reset juga mengganti kata sandinya dan mengakhiri sesi lamanya)
- *   revoke-admin <email> kembalikan ke USER
- *   seed-demo            isi data contoh (akun @demo.mib.test) agar dashboard admin ada isinya
- *   clear-demo           hapus semua data contoh itu
- */
 const DEMO_DOMAIN = '@demo.mib.test';
 
 const prisma = new PrismaClient();
 
-// Pseudo-acak berbenih: hasilnya sama setiap kali dijalankan.
 let seed = 20261104;
 const rnd = () => {
   seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -63,7 +53,6 @@ async function makeAdmin(email: string | undefined, role: 'ADMIN' | 'USER') {
   console.log(`${user.email} sekarang ${role}.`);
 }
 
-/** Kata sandi acak yang kuat, tanpa karakter yang mudah tertukar. */
 function strongPassword(n = 18) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
   const bytes = randomBytes(n);
@@ -119,7 +108,6 @@ async function seedDemo() {
 
   let runs = 0;
   for (let daysAgo = 59; daysAgo >= 0; daysAgo--) {
-    // lebih ramai pada hari kerja, dan tren naik seiring waktu
     const day = new Date(Date.now() - daysAgo * 86_400_000);
     const weekend = [0, 6].includes(day.getDay());
     const load = Math.round((weekend ? 1 : 4) * (1 + (60 - daysAgo) / 40) * (0.6 + rnd() * 0.9));

@@ -8,10 +8,8 @@ import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { prepareRuntime } from './runtime/bootstrap.js';
 
-/** Folder hasil ekspor statis frontend. Bila diisi, backend menyajikan antarmuka sendiri (satu port, satu origin). */
 const frontendDir = process.env.MIB_FRONTEND_DIR ? path.resolve(process.env.MIB_FRONTEND_DIR) : null;
 
-/** Memetakan /app -> app.html, / -> index.html dst. (ekspor statis Next menghasilkan satu berkas .html per halaman). */
 function htmlPages(dir: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
@@ -22,7 +20,6 @@ function htmlPages(dir: string) {
       return next();
     }
     if (rel.includes('..') || rel.includes('\0')) return next();
-    // Prefetch segmen Next meminta "__next.a.b.__PAGE__.txt"; di disk berkasnya "__next.a/b/__PAGE__.txt".
     const seg = /^(.*\/)?__next\.([^/]+)\.txt$/.exec(rel);
     if (seg && !existsSync(path.join(dir, rel))) {
       const mapped = `${(seg[1] ?? '').replace(/^\/+/, '')}__next.${seg[2].replace(/\./g, '/')}.txt`;
@@ -37,7 +34,6 @@ function htmlPages(dir: string) {
 
 async function bootstrap() {
   await prepareRuntime((m) => console.log(`[MiB] ${m}`));
-  // Diimpor setelah prepareRuntime: modul membaca JWT_SECRET/DATABASE_URL saat dibuat.
   const { AppModule } = await import('./app.module.js');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -45,7 +41,6 @@ async function bootstrap() {
     helmet(
       frontendDir
         ? {
-            // Ekspor statis Next memakai skrip inline untuk hidrasi; sisanya tetap dikunci ke origin sendiri.
             contentSecurityPolicy: {
               useDefaults: true,
               directives: {
@@ -56,7 +51,7 @@ async function bootstrap() {
                 'upgrade-insecure-requests': null,
               },
             },
-            hsts: false, // layanan lokal lewat http://localhost
+            hsts: false,
           }
         : undefined,
     ),
@@ -82,7 +77,6 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, doc);
   }
 
-  // Hanya bisa dijangkau dari komputer ini. Untuk server (Docker dsb.) set HOST=0.0.0.0 secara sengaja.
   const host = process.env.HOST ?? '127.0.0.1';
   const port = Number(process.env.PORT ?? 4000);
   await app.listen(port, host);

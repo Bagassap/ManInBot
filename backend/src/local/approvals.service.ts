@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { AuditService } from '../workspaces/audit.service.js';
 import type { LocalCtx } from './types.js';
 
-/** Lama menunggu jawaban pengguna sebelum permintaan dianggap ditolak. */
 export const APPROVAL_TIMEOUT_MS = 5 * 60_000;
 
 interface Waiter {
@@ -15,11 +14,6 @@ interface Waiter {
   settle: (approved: boolean, status: 'APPROVED' | 'DENIED' | 'EXPIRED') => void;
 }
 
-/**
- * Persetujuan manusia untuk tindakan berdampak. Agen berhenti menunggu sampai pengguna menjawab (atau waktu habis,
- * atau pengguna memutus koneksi) dan baru melanjutkan bila disetujui. Setiap permintaan dicatat di tabel Approval
- * dan di audit workspace, apa pun jawabannya.
- */
 @Injectable()
 export class ApprovalsService {
   private readonly waiting = new Map<string, Waiter>();
@@ -88,7 +82,6 @@ export class ApprovalsService {
     });
   }
 
-  /** Jawaban pengguna. Hanya pemilik run (di workspace yang sama) yang boleh menjawab; selain itu 404. */
   decide(workspaceId: string, userId: string, id: string, allow: boolean) {
     const w = this.waiting.get(id);
     if (!w || w.workspaceId !== workspaceId || w.userId !== userId) {
@@ -98,7 +91,6 @@ export class ApprovalsService {
     return { ok: true };
   }
 
-  /** Riwayat permintaan izin milik pengguna di workspace ini. */
   history(workspaceId: string, userId: string, take = 50) {
     return this.prisma.approval.findMany({
       where: { workspaceId, userId },

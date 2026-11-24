@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useEffect, useId, type ReactNode } from "react";
 
-/** Dialog sederhana: Esc atau klik di luar menutup; fokus ke isian pertama lewat `autoFocus` di anaknya. */
 export default function Modal({
   title,
   onClose,

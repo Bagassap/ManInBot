@@ -8,12 +8,10 @@ import type { CreateUserDto, ResetPasswordDto, RunsQueryDto, UpdateUserDto } fro
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TZ = 'Asia/Jakarta';
 
-/** Tanggal (YYYY-MM-DD) pada zona waktu Jakarta. */
 const dayKey = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
 
 export const delta = (now: number, prev: number) => (prev === 0 ? (now === 0 ? 0 : null) : ((now - prev) / prev) * 100);
 
-/** Mengelompokkan run per hari (zona waktu TZ) di aplikasi, agar tidak bergantung pada SQL khusus satu database. */
 function bucketByDay(rows: { createdAt: Date; status: string; durationMs: number }[]): DayRow[] {
   const days = new Map<string, { runs: number; errors: number; ms: number }>();
   for (const r of rows) {
@@ -84,7 +82,6 @@ export class AdminService {
       this.prisma.conversation.count(),
     ]);
 
-    // Isi hari tanpa data dengan nol agar grafik tidak bolong.
     const byDay = new Map(perDay.map((r) => [r.day, r]));
     const series: { date: string; runs: number; errors: number; avgLatencyMs: number }[] = [];
     for (let i = days - 1; i >= 0; i--) {
@@ -247,7 +244,6 @@ export class AdminService {
     });
   }
 
-  /* ---------- pengelolaan pengguna ---------- */
 
   private async audit(actor: AuthUser, action: string, target?: { id: string; email: string }, detail?: string) {
     await this.prisma.adminAudit.create({
@@ -261,7 +257,6 @@ export class AdminService {
     return user;
   }
 
-  /** Pastikan setelah perubahan masih ada admin aktif lain (agar tidak terkunci dari dashboard). */
   private async assertOtherActiveAdmin(excludeId: string) {
     const others = await this.prisma.user.count({ where: { role: 'ADMIN', blockedAt: null, id: { not: excludeId } } });
     if (others < 1) throw new BadRequestException('Harus tersisa minimal satu admin aktif');
@@ -320,7 +315,6 @@ export class AdminService {
     const user = await this.getUser(id);
     await this.prisma.user.update({
       where: { id },
-      // Sesi lama ikut berakhir; dibulatkan ke detik karena "iat" token berdetik.
       data: { passwordHash: await argon2.hash(dto.password), sessionsValidAfter: new Date(Math.floor(Date.now() / 1000) * 1000) },
     });
     await this.audit(actor, 'user.reset_password', user);
@@ -338,7 +332,6 @@ export class AdminService {
     const user = await this.getUser(id);
     if (user.role === 'ADMIN' && !user.blockedAt) await this.assertOtherActiveAdmin(id);
     await this.prisma.user.delete({ where: { id } });
-    // Workspace yang tak punya anggota lagi ikut dibersihkan (beserta percakapan dan catatannya).
     await this.prisma.workspace.deleteMany({ where: { memberships: { none: {} } } });
     await this.audit(actor, 'user.delete', user);
   }

@@ -12,7 +12,6 @@ import type { LucideIcon } from "lucide-react";
 import { useId, useState } from "react";
 import Reveal from "./Reveal";
 
-/* Hanya klaim yang benar-benar berlaku pada aplikasi MiB yang dipasang. */
 const layers: {
   icon: LucideIcon;
   title: string;
@@ -68,7 +67,6 @@ function Layer({
   points,
 }: (typeof layers)[number]) {
   const id = useId();
-  // Selalu mulai tertutup di semua ukuran layar; terbuka hanya setelah diketuk.
   const [open, setOpen] = useState(false);
 
   return (
@@ -119,8 +117,6 @@ function Layer({
   );
 }
 
-// Urutan di HP tetap 1-4; di layar lebar dibagi dua kolom independen
-// (kiri: 1 & 3, kanan: 2 & 4) agar membuka satu kartu tidak meninggalkan celah di kolom sebelah.
 const mobileOrder = ["order-1", "order-2", "order-3", "order-4"];
 const columns = [
   [0, 2],

@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 
-/** Garis penghubung antar langkah: tergambar dari kiri ke kanan saat terlihat. */
 export default function StepLine() {
   return (
     <motion.div

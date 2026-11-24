@@ -2,12 +2,16 @@
 
 import {
   Check,
+  ChevronDown,
+  History,
   LogOut,
+  MessageSquare,
   RefreshCw,
   Settings,
   Menu,
   Plus,
   SendHorizontal,
+  Sparkles,
   Square,
   Trash2,
   Wrench,
@@ -17,11 +21,12 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import Script from "@/components/Script";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ApprovalCard, { type ApprovalRequest } from "@/components/ApprovalCard";
 import VoiceControls from "@/components/VoiceControls";
 import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
+import { DesktopSlot, NEW_CHAT_EVENT } from "@/lib/desktop";
 import { useWorkspace, wsPath } from "@/lib/workspace";
 import {
   api,
@@ -34,12 +39,28 @@ import {
   type User,
 } from "@/lib/api";
 
-const SUGGESTIONS = [
-  "Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen",
-  "Buka Excel dan buat tabel rekap penjualan per bulan lengkap dengan totalnya",
-  "Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint",
-  "Buka Word dan tulis notulen rapat mingguan dengan daftar tindak lanjut",
+const CHIPS: [string, string][] = [
+  ["Buat surat", "Buka Word dan ketik surat penawaran untuk PT Maju, lalu simpan di folder Dokumen"],
+  ["Rekap Excel", "Buka Excel dan buat tabel rekap penjualan per bulan lengkap dengan totalnya"],
+  ["Buat slide", "Baca laporan.docx dan buat ringkasannya dalam 5 slide PowerPoint"],
+  ["Notulen rapat", "Buka Word dan tulis notulen rapat mingguan dengan daftar tindak lanjut"],
+  ["Rapikan folder", "Lihat isi folder Dokumen dan sarankan cara merapikannya"],
 ];
+const APPS: [string, string, string][] = [
+  ["Word", "W", "#2f6fbd"],
+  ["Excel", "X", "#23865a"],
+  ["PowerPoint", "P", "#c4593a"],
+  ["Outlook", "O", "#2788b8"],
+];
+const TIER_NAME: Record<string, string> = { ringan: "Ringan", sedang: "Sedang", kuat: "Kuat" };
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 11) return "Selamat pagi";
+  if (h < 15) return "Selamat siang";
+  if (h < 18) return "Selamat sore";
+  return "Selamat malam";
+}
 
 function StepList({ steps }: { steps: Step[] }) {
   if (!steps.length) return null;
@@ -123,6 +144,9 @@ export default function ChatApp() {
   const [agentReady, setAgentReady] = useState(true);
   const [needAccount, setNeedAccount] = useState(false);
   const [reply, setReply] = useState<{ id: string; text: string } | null>(null);
+  const [brainTier, setBrainTier] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState("");
+  const slot = useContext(DesktopSlot);
   const ws = useWorkspace();
   const wsId = ws.current?.id ?? null;
 
@@ -143,17 +167,33 @@ export default function ChatApp() {
   }, [router]);
 
   useEffect(() => {
-    api<{ ready: boolean }>("/brain").then(
-      (s) => setAgentReady(s.ready),
+    api<{ ready: boolean; tier: string | null }>("/brain").then(
+      (s) => {
+        setAgentReady(s.ready);
+        setBrainTier(s.ready ? s.tier : null);
+      },
       () => undefined,
     );
+    api<{ account: { name: string | null } | null }>("/settings").then(
+      (s) => setAccountName(s.account?.name ?? ""),
+      () => undefined,
+    );
+  }, []);
+
+  const newChatRef = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    newChatRef.current = newChat;
+  });
+  useEffect(() => {
+    const go = () => newChatRef.current();
+    window.addEventListener(NEW_CHAT_EVENT, go);
+    return () => window.removeEventListener(NEW_CHAT_EVENT, go);
   }, []);
 
   useEffect(() => {
     if (ws.unauthorized) router.replace("/masuk");
   }, [ws.unauthorized, router]);
 
-  // Berpindah workspace: percakapan yang terbuka milik workspace lama, jadi layar dikosongkan.
   useEffect(() => {
     if (!wsId) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -203,7 +243,6 @@ export default function ChatApp() {
   async function send(text: string) {
     const content = text.trim();
     if (!content || busy || !wsId) return;
-    // Otak belum dipasang: jangan kirim, arahkan ke Pengaturan (teks tetap di kotak ketik).
     if (!agentReady) {
       setNeedAccount(true);
       return;
@@ -270,7 +309,6 @@ export default function ChatApp() {
           else if (e.type === "done") {
             finished = true;
             setMessages((m) => [...m, e.message]);
-            // Hanya jawaban baru yang dibacakan, bukan riwayat yang dibuka kembali.
             setReply({ id: e.message.id, text: e.message.content });
             setLiveText("");
             setLiveSteps([]);
@@ -282,7 +320,6 @@ export default function ChatApp() {
       if (!abort.signal.aborted)
         setError(e instanceof Error ? e.message : "Terjadi kesalahan");
     } finally {
-      // Dihentikan/terputus sebelum selesai: pertahankan teks parsial di layar.
       if (!finished && liveTextRef.current) {
         setMessages((m) => [
           ...m,
@@ -302,41 +339,25 @@ export default function ChatApp() {
     }
   }
 
-  // Salinan terbaru liveText untuk dibaca di blok finally.
   const liveTextRef = useRef("");
   useEffect(() => {
     liveTextRef.current = liveText;
   }, [liveText]);
 
   const empty = messages.length === 0 && !busy;
+  const firstName = accountName.trim().split(/\s+/)[0] ?? "";
 
-  return (
-    <div className="flex h-dvh">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebar ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-line bg-background/95 backdrop-blur-md transition-transform md:static md:translate-x-0`}
-      >
-        <div className="flex items-center justify-between px-4 py-4">
-          <span className="flex items-center gap-2.5">
-            <Image
-              src="/asset/logo-mark-v2.png"
-              alt=""
-              width={28}
-              height={32}
-              className="shrink-0"
-            />
-            <span className="font-display text-lg font-semibold">MiB</span>
-          </span>
-          <button
-            className="md:hidden"
-            onClick={() => setSidebar(false)}
-            aria-label="Tutup menu"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
+  function prefill(text: string) {
+    setInput(text);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      el?.focus();
+      el?.setSelectionRange(text.length, text.length);
+    });
+  }
+
+  const historyPanel = (
+    <>
         {ws.workspaces && (
           <WorkspaceSwitcher
             workspaces={ws.workspaces}
@@ -376,6 +397,115 @@ export default function ChatApp() {
             </div>
           ))}
         </nav>
+      {slot && convs.length === 0 && (
+        <p className="px-4 py-3 text-xs leading-relaxed text-muted">
+          Riwayat percakapan akan muncul di sini.
+        </p>
+      )}
+    </>
+  );
+
+  const composer = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        send(input);
+      }}
+      className="mx-auto w-full max-w-3xl"
+    >
+      <div className="cp-composer relative p-3">
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send(input);
+            }
+          }}
+          rows={empty ? 2 : 1}
+          maxLength={8000}
+          placeholder="Tanyakan atau perintahkan apa saja untuk pekerjaan kantor…"
+          className="max-h-40 min-h-10 w-full resize-none bg-transparent px-2 py-1.5 text-[15px] outline-none placeholder:text-muted/70"
+        />
+        <div className="mt-1 flex items-center gap-1">
+          {API_URL === "" && brainTier && (
+            <Link
+              href="/app/settings"
+              title="Ganti model di Pengaturan"
+              className="flex h-9 items-center gap-1.5 rounded-full border border-line px-3 text-[13px] transition-colors hover:bg-white/8"
+            >
+              <Image src="/asset/logo-mark-v2.png" alt="" width={14} height={16} className="shrink-0" />
+              {TIER_NAME[brainTier] ?? brainTier}
+              <ChevronDown className="size-3.5 text-muted" />
+            </Link>
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            {API_URL === "" && (
+              <VoiceControls
+                disabled={busy}
+                reply={reply}
+                onText={(t) => {
+                  setInput((v) => (v.trim() ? `${v.trim()} ${t}` : t).slice(0, 8000));
+                  inputRef.current?.focus();
+                }}
+                onError={setError}
+              />
+            )}
+            {busy ? (
+              <button
+                type="button"
+                onClick={() => abortRef.current?.abort()}
+                aria-label="Hentikan"
+                className="flex size-10 items-center justify-center rounded-full bg-white/10 text-foreground hover:bg-white/20"
+              >
+                <Square className="size-4" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                aria-label="Kirim"
+                className="flex size-10 items-center justify-center rounded-full bg-accent text-[#0d1417] transition-colors hover:bg-accent-strong disabled:opacity-40"
+              >
+                <SendHorizontal className="size-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+
+  return (
+    <div className="flex h-dvh">
+      {!slot && (
+      <aside
+        className={`${
+          sidebar ? "translate-x-0" : "-translate-x-full"
+        } fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-line bg-background/95 backdrop-blur-md transition-transform md:static md:translate-x-0`}
+      >
+        <div className="flex items-center justify-between px-4 py-4">
+          <span className="flex items-center gap-2.5">
+            <Image
+              src="/asset/logo-mark-v2.png"
+              alt=""
+              width={28}
+              height={32}
+              className="shrink-0"
+            />
+            <span className="font-display text-lg font-semibold">MiB</span>
+          </span>
+          <button
+            className="md:hidden"
+            onClick={() => setSidebar(false)}
+            aria-label="Tutup menu"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+        {historyPanel}
         <Link
           href="/app/settings"
           className="mx-3 mb-2 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
@@ -387,7 +517,6 @@ export default function ChatApp() {
             {user?.name || user?.email}
           </span>
           {API_URL === "" ? (
-            // Aplikasi desktop: masuk otomatis, jadi tidak ada "Keluar"; sediakan muat ulang.
             <button
               onClick={() => window.location.reload()}
               aria-label="Muat ulang"
@@ -407,6 +536,8 @@ export default function ChatApp() {
           )}
         </div>
       </aside>
+      )}
+      {slot && createPortal(historyPanel, slot)}
       {sidebar && (
         <div
           className="fixed inset-0 z-20 bg-black/50 md:hidden"
@@ -414,42 +545,88 @@ export default function ChatApp() {
         />
       )}
 
-      {/* Chat */}
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-line px-4 py-3 md:hidden">
-          <button onClick={() => setSidebar(true)} aria-label="Buka menu">
-            <Menu className="size-5" />
-          </button>
-          <span className="font-display font-semibold">MiB</span>
-        </header>
+        {!slot && (
+          <header className="flex items-center gap-3 border-b border-line px-4 py-3 md:hidden">
+            <button onClick={() => setSidebar(true)} aria-label="Buka menu">
+              <Menu className="size-5" />
+            </button>
+            <span className="font-display font-semibold">MiB</span>
+          </header>
+        )}
 
         <div className="flex-1 overflow-y-auto px-4 py-6">
-          <div className="mx-auto max-w-3xl space-y-4">
+          <div className={`mx-auto ${empty ? "max-w-4xl" : "max-w-3xl"} space-y-4`}>
             {empty && (
-              <div className="pt-[10vh] text-center">
-                <Image
-                  src="/asset/logo-mark-v2.png"
-                  alt=""
-                  width={70}
-                  height={79}
-                  className="mx-auto"
-                />
-                <h1 className="mt-6 text-2xl font-semibold">
-                  Apa yang ingin Anda <Script>kerjakan</Script>?
+              <div className="pb-6 pt-[3vh] text-center">
+                <h1 className="text-balance text-[34px] font-semibold leading-tight tracking-tight">
+                  {greeting()}{firstName ? `, ${firstName}` : ""}
+                  <br />
+                  Apa yang bisa MiB bantu hari ini?
                 </h1>
-                <p className="mt-2 text-sm text-muted">
-                  Beri perintah, MiB langsung mengeksekusinya.
-                </p>
-                <div className="mx-auto mt-8 grid max-w-xl gap-2">
-                  {SUGGESTIONS.map((s) => (
+                <div className="mt-7 text-left">{composer}</div>
+                <div className="mx-auto mt-5 flex max-w-3xl flex-wrap justify-center gap-2">
+                  {CHIPS.map(([label, prompt]) => (
                     <button
-                      key={s}
-                      onClick={() => send(s)}
-                      className="rounded-xl border border-line bg-surface/50 px-4 py-3 text-left text-sm transition-colors hover:border-accent/60"
+                      key={label}
+                      type="button"
+                      onClick={() => prefill(prompt)}
+                      className="cp-chip px-4 py-2 text-sm text-foreground/85"
                     >
-                      {s}
+                      {label}
                     </button>
                   ))}
+                </div>
+                <div className="mx-auto mt-6 grid max-w-3xl gap-4 text-left md:grid-cols-2">
+                  <section className="cp-card p-5">
+                    <h2 className="flex items-center gap-2 text-sm font-medium text-foreground/85">
+                      <History className="size-4" /> Lanjutkan percakapan
+                    </h2>
+                    <div className="mt-3 space-y-1">
+                      {convs.slice(0, 3).map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => openConversation(c.id)}
+                          className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors hover:bg-white/8"
+                        >
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/20 text-accent-strong">
+                            <MessageSquare className="size-4" />
+                          </span>
+                          <span className="min-w-0 truncate">{c.title}</span>
+                        </button>
+                      ))}
+                      {convs.length === 0 && (
+                        <p className="px-2 py-6 text-center text-sm text-muted">
+                          Percakapan terbaru akan muncul di sini.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+                  <section className="cp-card p-5">
+                    <h2 className="flex items-center gap-2 text-sm font-medium text-foreground/85">
+                      <Sparkles className="size-4" /> Kerjakan di aplikasi
+                    </h2>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {APPS.map(([name, letter, color]) => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => prefill(`Buka ${name} dan `)}
+                          className="flex items-center gap-2.5 rounded-xl px-2 py-2.5 text-left text-sm transition-colors hover:bg-white/8"
+                        >
+                          <span
+                            aria-hidden
+                            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
+                            style={{ background: color }}
+                          >
+                            {letter}
+                          </span>
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
                 </div>
               </div>
             )}
@@ -524,62 +701,7 @@ export default function ChatApp() {
           </div>
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-          className="border-t border-line px-4 py-4"
-        >
-          <div className="relative mx-auto flex max-w-3xl items-end gap-1 rounded-2xl border border-line bg-surface/70 p-2 focus-within:border-accent">
-            {API_URL === "" && (
-              <VoiceControls
-                disabled={busy}
-                reply={reply}
-                onText={(t) => {
-                  // Hasil dengar bisa keliru: ditaruh di kotak ketik untuk diperiksa, dikirim dengan Enter.
-                  setInput((v) => (v.trim() ? `${v.trim()} ${t}` : t).slice(0, 8000));
-                  inputRef.current?.focus();
-                }}
-                onError={setError}
-              />
-            )}
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-              rows={1}
-              maxLength={8000}
-              placeholder="Ketik perintah untuk MiB…"
-              className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted/60"
-            />
-            {busy ? (
-              <button
-                type="button"
-                onClick={() => abortRef.current?.abort()}
-                aria-label="Hentikan"
-                className="flex size-10 items-center justify-center rounded-xl bg-surface text-foreground hover:bg-line"
-              >
-                <Square className="size-4" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!input.trim()}
-                aria-label="Kirim"
-                className="flex size-10 items-center justify-center rounded-xl bg-accent text-[#0d1417] transition-colors hover:bg-accent-strong disabled:opacity-40"
-              >
-                <SendHorizontal className="size-4" />
-              </button>
-            )}
-          </div>
-        </form>
+        {!empty && <div className="px-4 pb-4 pt-2">{composer}</div>}
       </section>
     </div>
   );

@@ -16,10 +16,8 @@ export default function Security() {
           </h2>
         </Reveal>
 
-        {/* Empat lapis: selalu mulai tertutup, dibuka dengan diketuk */}
         <SecurityLayers />
 
-        {/* Prinsip Man in Bot */}
         <Reveal delay={0.1}>
           <div className="fx-shimmer mt-3 flex flex-col gap-4 rounded-3xl border border-accent/30 bg-gradient-to-r from-accent/10 to-shield/20 p-5 sm:mt-5 sm:flex-row sm:items-center sm:p-7">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-background/60 text-accent-strong ring-1 ring-accent/30">

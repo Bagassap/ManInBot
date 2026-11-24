@@ -21,7 +21,6 @@ export enum RunStatusFilter {
 }
 
 export class RangeDto {
-  /** Rentang hari yang dilihat. */
   @IsOptional()
   @Type(() => Number)
   @IsIn([7, 30, 90])
@@ -37,7 +36,6 @@ export class RunsQueryDto extends RangeDto {
   @IsUUID()
   userId?: string;
 
-  /** Cari pada isi perintah atau email/nama pengguna. */
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -76,7 +74,6 @@ export class UpdateUserDto {
   @IsIn(['USER', 'ADMIN'])
   role?: 'USER' | 'ADMIN';
 
-  /** true = blokir, false = buka blokir. */
   @IsOptional()
   @IsBoolean()
   blocked?: boolean;

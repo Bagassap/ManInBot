@@ -17,7 +17,6 @@ export type NavItem =
 
 const isGroup = (i: NavItem): i is Extract<NavItem, { children: NavChild[] }> => "children" in i;
 
-/** Menu bertingkat: klik atau arahkan kursor, tutup dengan Esc atau klik di luar. */
 function Group({ item, active }: { item: Extract<NavItem, { children: NavChild[] }>; active: boolean }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLLIElement>(null);
@@ -70,7 +69,6 @@ function Group({ item, active }: { item: Extract<NavItem, { children: NavChild[]
   );
 }
 
-/** Menu topbar; bagian aktif ditandai garis yang bergeser mulus mengikuti halaman. */
 export default function NavLinks({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (

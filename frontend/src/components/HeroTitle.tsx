@@ -7,7 +7,6 @@ import Script from "./Script";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/** Satu baris judul yang naik dari balik "topeng" (clip) saat muncul. */
 function Line({ children, delay }: { children: ReactNode; delay: number }) {
   return (
     <span className="-my-[0.1em] block overflow-hidden py-[0.1em]">

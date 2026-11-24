@@ -90,7 +90,6 @@ model Message {
   @@index([conversationId, createdAt])
 }
 
-/// Satu kali agen menjawab satu perintah pengguna; dipakai dashboard admin untuk mengawasi layanan.
 model AgentRun {
   id             String        @id @default(uuid())
   userId         String
@@ -115,7 +114,6 @@ model AgentRun {
   @@index([workspaceId, createdAt])
 }
 
-/// Riwayat tindakan admin. Tanpa relasi, agar catatan tetap ada walau akunnya dihapus.
 model AdminAudit {
   id          String   @id @default(uuid())
   actorId     String
@@ -129,7 +127,6 @@ model AdminAudit {
   @@index([createdAt])
 }
 
-/// Lembar kerja Excel milik satu percakapan (meeting). Isinya JSON; nilai rumus dihitung ulang saat dibaca.
 model Workbook {
   id             String       @id @default(uuid())
   userId         String
@@ -144,7 +141,6 @@ model Workbook {
   updatedAt      DateTime     @updatedAt
 }
 
-/// Ruang kerja satu perusahaan/klien. Semua data (percakapan, lembar kerja, catatan audit) terikat ke satu workspace.
 model Workspace {
   id            String          @id @default(uuid())
   name          String
@@ -174,7 +170,6 @@ model Membership {
   @@index([workspaceId])
 }
 
-/// Undangan untuk email yang belum punya akun; diklaim otomatis saat email itu mendaftar atau masuk.
 model Invite {
   id          String        @id @default(uuid())
   workspaceId String
@@ -188,7 +183,6 @@ model Invite {
   @@index([email])
 }
 
-/// Catatan tindakan di dalam satu workspace. Tanpa relasi ke User agar tetap ada walau akunnya dihapus.
 model AuditLog {
   id          String    @id @default(uuid())
   workspaceId String
@@ -203,7 +197,6 @@ model AuditLog {
   @@index([workspaceId, createdAt])
 }
 
-/// Folder di komputer yang boleh disentuh agen. Di luar daftar ini, alat berkas dan shell menolak bekerja.
 model AllowedFolder {
   id          String     @id @default(uuid())
   workspaceId String
@@ -215,7 +208,6 @@ model AllowedFolder {
   @@unique([workspaceId, path])
 }
 
-/// Permintaan izin dari agen untuk tindakan berdampak (tulis berkas, jalankan perintah, simpan Excel). Tercatat permanen.
 model Approval {
   id             String         @id @default(uuid())
   workspaceId    String

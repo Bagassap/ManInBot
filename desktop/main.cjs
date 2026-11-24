@@ -1,18 +1,16 @@
-// Proses utama aplikasi desktop MiB: menjalankan backend lokal (yang juga menyajikan antarmuka) lalu membuka jendelanya.
-const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu, screen, session, shell } = require('electron');
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
 const path = require('node:path');
 
-const PREFERRED_PORT = 47821; // port tetap agar alamat (dan penyimpanan browser) sama tiap kali dibuka
+const PREFERRED_PORT = 47821;
 let backend = null;
 let backendLog = null;
 let mainWindow = null;
 let origin = '';
 let quitting = false;
-// Rahasia sekali-jalan untuk masuk otomatis; hanya diketahui proses ini dan backend lokalnya.
 const localToken = require('node:crypto').randomBytes(24).toString('hex');
 
 const resources = () => (app.isPackaged ? path.join(process.resourcesPath, 'app-data') : path.join(__dirname, 'stage'));
@@ -54,7 +52,6 @@ function startBackend(port) {
   fs.mkdirSync(path.join(dataDir, 'logs'), { recursive: true });
   backendLog = fs.createWriteStream(path.join(dataDir, 'logs', 'backend.log'), { flags: 'a' });
   const env = {
-    // Hanya yang perlu; rahasia lain di lingkungan pengguna tidak diteruskan.
     PATH: process.env.PATH,
     SystemRoot: process.env.SystemRoot,
     TEMP: process.env.TEMP,
@@ -85,18 +82,15 @@ function startBackend(port) {
   backend.stdout.pipe(backendLog, { end: false });
   backend.stderr.pipe(backendLog, { end: false });
   backend.on('exit', (code) => {
-    // Beri waktu sebentar agar catatan terakhir sempat tertulis ke berkas log.
     if (!quitting) setTimeout(() => showStopped(code), 400);
   });
   const showStopped = (code) => {
     if (!quitting) {
-      // Sertakan potongan akhir log supaya pengguna cukup memotret jendela ini untuk melapor.
       let tail = '';
       try {
         const txt = fs.readFileSync(path.join(dataDir, 'logs', 'backend.log'), 'utf8').replace(/\x1b\[[0-9;]*m/g, '');
         tail = txt.trim().split(/\r?\n/).slice(-8).join('\n').slice(-1200);
       } catch {
-        /* log belum ada */
       }
       dialog.showErrorBox(
         'MiB berhenti',
@@ -113,7 +107,6 @@ function stopBackend() {
     if (process.platform === 'win32') spawn('taskkill', ['/pid', String(backend.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
     else backend.kill('SIGTERM');
   } catch {
-    /* sudah berhenti */
   }
 }
 
@@ -123,15 +116,34 @@ function openApp() {
   if (mainWindow) mainWindow.loadURL(startUrl());
 }
 
+const windowFile = () => path.join(app.getPath('userData'), 'window.json');
+
+function savedBounds() {
+  try {
+    const b = JSON.parse(fs.readFileSync(windowFile(), 'utf8'));
+    if (![b.x, b.y, b.width, b.height].every(Number.isFinite)) return null;
+    const a = screen.getDisplayMatching(b).workArea;
+    const visible = b.x < a.x + a.width - 80 && b.x + b.width > a.x + 80 && b.y >= a.y - 8 && b.y < a.y + a.height - 80;
+    return visible ? b : null;
+  } catch {
+    return null;
+  }
+}
+
 function createWindow() {
+  const saved = savedBounds();
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 820,
-    minWidth: 380,
+    width: saved?.width ?? 1280,
+    height: saved?.height ?? 820,
+    ...(saved ? { x: saved.x, y: saved.y } : { center: true }),
+    minWidth: 860,
     minHeight: 560,
-    backgroundColor: '#020202',
+    show: false,
+    backgroundColor: '#0b2a33',
     title: 'MiB',
     icon: path.join(__dirname, 'build', 'icon.png'),
+    titleBarStyle: 'hidden',
+    titleBarOverlay: { color: '#0b2a33', symbolColor: '#e8f0f2', height: 36 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -139,22 +151,31 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  // Jendela tampil seketika dengan layar memuat; aplikasi dibuka begitu layanan lokal siap (openApp).
+  mainWindow.once('ready-to-show', () => {
+    if (saved?.maximized) mainWindow.maximize();
+    mainWindow.show();
+  });
+  mainWindow.on('close', () => {
+    try {
+      fs.writeFileSync(windowFile(), JSON.stringify({ ...mainWindow.getNormalBounds(), maximized: mainWindow.isMaximized() }));
+    } catch {
+    }
+  });
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow?.webContents.setVisualZoomLevelLimits(1, 1).catch(() => undefined);
+  });
   mainWindow.loadFile(path.join(__dirname, 'loading.html'));
 
-  // Masuk otomatis: jika sesi habis dan halaman jatuh ke layar masuk/daftar, masuk ulang secara diam-diam.
   const relogin = (_e, url) => {
     try {
       const p = new URL(url).pathname.replace(/\/$/, '');
       if (p === '/masuk' || p === '/daftar') mainWindow && mainWindow.loadURL(startUrl());
     } catch {
-      /* abaikan */
     }
   };
   mainWindow.webContents.on('did-navigate', relogin);
   mainWindow.webContents.on('did-navigate-in-page', relogin);
 
-  // Muat ulang: F5, Ctrl+R, Ctrl+Shift+R (menu aplikasi dimatikan, jadi pintasan dipasang di sini).
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') return;
     const k = input.key.toLowerCase();
@@ -165,7 +186,6 @@ function createWindow() {
     }
   });
 
-  // Klik kanan: salin/tempel dan muat ulang.
   mainWindow.webContents.on('context-menu', (_e, params) => {
     const wc = mainWindow.webContents;
     const items = [];
@@ -180,13 +200,11 @@ function createWindow() {
     Menu.buildFromTemplate(items).popup({ window: mainWindow });
   });
 
-  // Hanya halaman MiB sendiri yang boleh dimuat di jendela ini; tautan luar dibuka di browser.
   const external = (url) => {
     try {
       const u = new URL(url);
       if (u.origin !== origin && (u.protocol === 'https:' || u.protocol === 'http:')) shell.openExternal(url);
     } catch {
-      /* abaikan */
     }
   };
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -215,7 +233,6 @@ ipcMain.handle('pick-folder', async (event) => {
   return r.canceled ? null : r.filePaths[0];
 });
 
-// Pengenalan suara Mode Meeting memakai layanan Chrome/Edge yang tidak ada di jendela ini: buka di browser.
 ipcMain.handle('open-in-browser', async (event, p) => {
   if (event.senderFrame.url.split('/').slice(0, 3).join('/') !== origin) return false;
   if (typeof p !== 'string' || !p.startsWith('/') || p.startsWith('//')) return false;
@@ -228,7 +245,7 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   app.whenReady().then(async () => {
     if (process.platform !== 'darwin') Menu.setApplicationMenu(null);
-    createWindow(); // tampil dulu, jangan tunggu layanan lokal
+    createWindow();
     try {
       const port = await freePort();
       origin = `http://127.0.0.1:${port}`;
@@ -240,7 +257,6 @@ if (!app.requestSingleInstanceLock()) {
       app.quit();
       return;
     }
-    // Mikrofon hanya untuk halaman MiB sendiri (perintah suara).
     session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(permission === 'media' && wc.getURL().startsWith(origin)));
     openApp();
   });

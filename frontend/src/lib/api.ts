@@ -71,7 +71,6 @@ export type StreamEvent =
   | { type: "done"; message: ChatMessage }
   | { type: "error"; message: string };
 
-/** Mengirim perintah dan membaca aliran SSE dari agen. */
 export async function streamMessage(
   workspaceId: string,
   conversationId: string,

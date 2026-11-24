@@ -3,7 +3,6 @@
 import { MotionConfig, motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-/** Transisi halus saat berpindah halaman. Hanya opasitas, agar elemen `fixed` tidak ikut terpengaruh. */
 export default function Template({ children }: { children: ReactNode }) {
   return (
     <MotionConfig reducedMotion="user">

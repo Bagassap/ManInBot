@@ -1,6 +1,3 @@
-// Gateway MiB: akun, kuota perintah harian, pembayaran Midtrans, dan perantara ke layanan AI.
-// Kunci layanan AI hanya ada di sini; aplikasi di komputer pengguna memegang token sesi akun MiB.
-// Tanpa dependensi selain nodemailer (Node 22+, memakai node:sqlite). Mendengarkan 127.0.0.1; nginx meneruskan /ai/ ke sini.
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { Db } from './db.mjs';
 import { mailReady, sendCode } from './mail.mjs';
@@ -13,18 +10,14 @@ export const CFG = {
   aiKey: env.ANTHROPIC_API_KEY,
   upstream: env.UPSTREAM || 'https://api.anthropic.com',
   models: (env.ALLOWED_MODELS || 'claude-opus-5-5,claude-sonnet-5-5').split(',').map((s) => s.trim()),
-  // Bila diisi, semua permintaan memakai model ini apa pun yang diminta aplikasi (ganti model tanpa pasang ulang aplikasi).
   forceModel: (env.FORCE_MODEL || '').trim(),
-  // Bila diisi (low|medium|high|xhigh|max), tingkat "berpikir" agen dipaksa ke nilai ini. Lebih rendah = lebih hemat.
   forceEffort: ['low', 'medium', 'high', 'xhigh', 'max'].includes((env.FORCE_EFFORT || '').trim()) ? env.FORCE_EFFORT.trim() : '',
-  // Rem biaya: batas "token setara input" per akun per hari (0 = tanpa batas). Berlaku juga di masa uji coba.
   dailyTokenBudget: num('DAILY_TOKEN_BUDGET', 0),
   maxTokensCap: num('MAX_TOKENS_CAP', 64000),
   maxConcurrent: num('MAX_CONCURRENT', 3),
   rpm: num('RPM', 90),
   freePerDay: num('FREE_PER_DAY', 3),
   paidPerDay: num('PAID_PER_DAY', 30),
-  // Batas pemrosesan per perintah, dalam "token setara input" (lihat usageTracker): ±US$2 / ±US$4 per perintah di Sonnet.
   freeCmdTokens: num('FREE_CMD_TOKENS', 1_000_000),
   paidCmdTokens: num('PAID_CMD_TOKENS', 2_000_000),
   planDays: num('PLAN_DAYS', 30),
@@ -33,19 +26,16 @@ export const CFG = {
   midtransSnap: env.MIDTRANS_SNAP_URL || (env.MIDTRANS_PRODUCTION === '1' ? 'https://app.midtrans.com/snap/v1/transactions' : 'https://app.sandbox.midtrans.com/snap/v1/transactions'),
   midtransApi: env.MIDTRANS_API_URL || (env.MIDTRANS_PRODUCTION === '1' ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com'),
   maxBody: 25 * 1024 * 1024,
-  // 1 = wajib verifikasi kode email saat daftar (butuh SMTP). 0 = akun langsung aktif.
   requireVerify: env.REQUIRE_EMAIL_VERIFY === '1',
-  // 1 = masa uji coba: perintah per hari tidak dibatasi (batas token per perintah dan laju tetap berlaku).
   unlimited: env.UNLIMITED_TRIAL === '1',
 };
 
 const BRAIN_MODELS = { ringan: 'qwen3:1.7b', sedang: 'qwen3:4b', kuat: 'qwen3:8b' };
 
 export function createGateway(db) {
-  const active = new Map(); // id pengguna -> permintaan AI yang sedang berjalan
-  const hits = new Map(); // kunci pembatas -> daftar cap waktu
+  const active = new Map();
+  const hits = new Map();
 
-  /** Pembatas laju sederhana di memori. true = lolos. */
   const allow = (key, max, windowMs) => {
     const now = Date.now();
     const list = (hits.get(key) || []).filter((t) => now - t < windowMs);
@@ -132,7 +122,6 @@ export function createGateway(db) {
     };
   };
 
-  /** Pengguna dari token sesi; mengirim galat dan mengembalikan null bila tidak sah. */
   function sessionUser(req, res, ai = false) {
     const err = (status, type, msg) => (ai ? aiError(res, status, type, msg) : fail(res, status, msg));
     const token = tokenOf(req);
@@ -147,7 +136,6 @@ export function createGateway(db) {
   const normEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase().slice(0, 120) : '');
   const validPassword = (p) => typeof p === 'string' && p.length >= 8 && p.length <= 100;
 
-  // ---------------- akun ----------------
   async function register(req, res) {
     const b = await readJson(req, res);
     if (!b) return;
@@ -159,12 +147,10 @@ export function createGateway(db) {
     const existing = db.userByEmail(email);
     if (existing?.verified) return fail(res, 409, 'Email ini sudah terdaftar. Silakan masuk.');
     if (!CFG.requireVerify) {
-      // Tanpa verifikasi email: batasi jumlah akun baru per alamat IP agar kuota gratis tidak disalahgunakan.
       if (!allow(`regd:${ipOf(req)}`, 5, 86_400_000)) return fail(res, 429, 'Terlalu banyak pendaftaran dari jaringan ini hari ini. Coba lagi besok.');
       const id = db.createActive(email, b.password, name);
       return json(res, 200, { ok: true, needVerify: false, token: db.newSession(id), account: accountView(db.userById(id)) });
     }
-    // Email langsung tercatat (belum terverifikasi) agar terlihat di dashboard admin, apa pun hasil pengiriman kodenya.
     db.upsertUnverified(email, b.password);
     if (!mailReady()) return fail(res, 503, 'Pendaftaran sedang tidak tersedia. Coba lagi nanti.');
     try {
@@ -195,7 +181,7 @@ export function createGateway(db) {
     const u = db.userByEmail(email);
     if (!u || typeof b.password !== 'string' || !db.verifyPassword(u, b.password)) return fail(res, 401, 'Email atau kata sandi salah.');
     if (u.banned) return fail(res, 403, 'Akun ini dinonaktifkan.');
-    if (!u.verified && !CFG.requireVerify) db.markVerified(u.id); // verifikasi dimatikan: akun lama langsung aktif
+    if (!u.verified && !CFG.requireVerify) db.markVerified(u.id);
     else if (!u.verified) {
       if (mailReady()) await sendCode(email, 'verify', db.newCode(email, 'verify')).catch(() => {});
       return fail(res, 403, 'Email belum diverifikasi. Kode baru sudah dikirim ke email Anda.', { needVerify: true });
@@ -211,7 +197,7 @@ export function createGateway(db) {
     if (!mailReady()) return fail(res, 503, 'Atur ulang kata sandi lewat email belum tersedia. Hubungi admin MiB.');
     const u = db.userByEmail(email);
     if (u?.verified && mailReady()) await sendCode(email, 'reset', db.newCode(email, 'reset')).catch((e) => console.error('email gagal', e?.message));
-    json(res, 200, { ok: true }); // jawaban sama untuk email yang tidak terdaftar
+    json(res, 200, { ok: true });
   }
 
   async function reset(req, res) {
@@ -226,7 +212,6 @@ export function createGateway(db) {
     json(res, 200, { ok: true });
   }
 
-  /** Data diri: nama dan nomor HP wajib, kantor dan jabatan boleh kosong. */
   async function profile(req, res) {
     const u = sessionUser(req, res);
     if (!u) return;
@@ -242,7 +227,6 @@ export function createGateway(db) {
     json(res, 200, { ok: true, account: accountView(db.userById(u.id)) });
   }
 
-  /** Laporan aplikasi: model offline yang terpasang. Hanya nama model; isi pekerjaan tidak pernah dikirim. */
   async function device(req, res) {
     const u = sessionUser(req, res);
     if (!u) return;
@@ -255,7 +239,6 @@ export function createGateway(db) {
     json(res, 200, { ok: true });
   }
 
-  // ---------------- pembayaran ----------------
   async function checkout(req, res) {
     const u = sessionUser(req, res);
     if (!u) return;
@@ -289,7 +272,6 @@ export function createGateway(db) {
     return x.length === y.length && timingSafeEqual(x, y);
   };
 
-  /** Notifikasi Midtrans: tanda tangan diperiksa, lalu status dikonfirmasi langsung ke Midtrans sebelum akun diaktifkan. */
   async function payNotify(req, res) {
     const b = await readJson(req, res);
     if (!b) return;
@@ -298,7 +280,7 @@ export function createGateway(db) {
     const expected = createHash('sha512').update(orderId + sc + gross + CFG.midtransKey).digest('hex');
     if (!safeEq(expected, sig)) return fail(res, 403, 'signature');
     const p = db.payment(orderId);
-    if (!p) return json(res, 200, { ok: true }); // pesanan yang bukan milik kita: abaikan agar Midtrans tidak mengulang
+    if (!p) return json(res, 200, { ok: true });
     try {
       const r = await fetch(`${CFG.midtransApi}/v2/${encodeURIComponent(orderId)}/status`, {
         headers: { Accept: 'application/json', Authorization: `Basic ${Buffer.from(`${CFG.midtransKey}:`).toString('base64')}` },
@@ -311,13 +293,11 @@ export function createGateway(db) {
       else if (['deny', 'cancel', 'expire', 'failure'].includes(s.transaction_status)) db.failPayment(orderId, s.transaction_status);
     } catch (e) {
       console.error('verifikasi pembayaran gagal', e?.message);
-      return fail(res, 500, 'retry'); // Midtrans akan mengirim ulang
+      return fail(res, 500, 'retry');
     }
     json(res, 200, { ok: true });
   }
 
-  // ---------------- perantara layanan AI ----------------
-  /** Menjumlah pemakaian token dari aliran SSE atau JSON biasa, tanpa mengubah isi yang diteruskan. */
   function usageTracker() {
     let tail = '';
     let input = 0;
@@ -331,7 +311,6 @@ export function createGateway(db) {
         raw.cr = Math.max(raw.cr, u.cache_read_input_tokens || 0);
       }
       if (typeof u.output_tokens === 'number') raw.out = Math.max(raw.out, u.output_tokens);
-      // Dibobot sesuai harga: tulis cache 1,25x, baca cache 0,1x, keluaran 5x harga token masukan.
       if (typeof u.input_tokens === 'number') input = Math.max(input, u.input_tokens + 1.25 * (u.cache_creation_input_tokens || 0) + 0.1 * (u.cache_read_input_tokens || 0));
       if (typeof u.output_tokens === 'number') output = Math.max(output, 5 * u.output_tokens);
     };
@@ -354,7 +333,7 @@ export function createGateway(db) {
       },
       finish() {
         try {
-          take(JSON.parse(tail).usage); // respons non-stream: satu objek JSON
+          take(JSON.parse(tail).usage);
         } catch {}
         return Math.round(input + output);
       },
@@ -431,7 +410,6 @@ export function createGateway(db) {
     } finally {
       const used = tracker.finish();
       if (used > 0) db.addTokens(u.id, cmdId, used);
-      // Rincian per langkah (tanpa isi percakapan) untuk memantau efektivitas cache dan biaya.
       const r = tracker.raw;
       if (used > 0) console.log(`[pakai] akun=${u.id} perintah=${cmdId.slice(0, 8)} masuk=${r.in} tulis-cache=${r.cw} baca-cache=${r.cr} keluar=${r.out} setara=${used}`);
       active.set(u.id, Math.max(0, (active.get(u.id) || 1) - 1));
@@ -440,7 +418,6 @@ export function createGateway(db) {
 
   const admin = createAdmin(db, { json, fail, ipOf, allow, readJson, cfg: CFG });
 
-  // ---------------- router ----------------
   return async (req, res) => {
     const url = new URL(req.url || '/', 'http://x');
     const route = `${req.method} ${url.pathname}`;

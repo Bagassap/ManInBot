@@ -2,7 +2,6 @@
 
 import ApprovalCard from "./ApprovalCard";
 
-/** Contoh statis kartu izin untuk halaman promosi (tombolnya tidak melakukan apa-apa). */
 export default function ApprovalDemo() {
   return (
     <div className="pointer-events-none select-none" aria-label="Contoh tampilan kartu izin">

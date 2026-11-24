@@ -66,7 +66,6 @@ export class LocalController {
     } catch {
       throw new BadRequestException('Folder tidak ditemukan');
     }
-    // Akar drive / direktori sistem terlalu luas: izin sekecil mungkin.
     if (path.parse(real).root === real || path.dirname(real) === real) {
       throw new BadRequestException('Pilih folder tertentu, bukan seluruh drive');
     }
@@ -97,7 +96,6 @@ export class LocalController {
     await this.audit.log({ workspaceId: ws.workspaceId, actorId: user.id, actorEmail: user.email, action: 'folder.removed', target: f.path });
   }
 
-  /** Jawaban pengguna untuk permintaan izin yang sedang ditunggu agen. */
   @Post('approvals/:approvalId')
   @HttpCode(200)
   decide(

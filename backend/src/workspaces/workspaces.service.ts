@@ -25,7 +25,6 @@ export class WorkspacesService {
     private readonly audit: AuditService,
   ) {}
 
-  /** Workspace milik pengguna beserta perannya. */
   async listMine(userId: string) {
     const rows = await this.prisma.membership.findMany({
       where: { userId },
@@ -87,7 +86,6 @@ export class WorkspacesService {
     };
   }
 
-  /** Admin hanya boleh mengelola ADMIN/MEMBER; hanya OWNER yang boleh menyentuh peran OWNER. */
   private assertCanGrant(actorRole: WorkspaceRole, target: WorkspaceRole) {
     if (target === 'OWNER' && actorRole !== 'OWNER') throw new ForbiddenException('Hanya pemilik yang boleh mengatur peran pemilik');
   }
@@ -141,7 +139,6 @@ export class WorkspacesService {
     });
   }
 
-  /** Anggota boleh keluar sendiri; admin/pemilik boleh mengeluarkan anggota sesuai aturan peran. */
   async removeMember(actor: Actor, actorRole: WorkspaceRole, workspaceId: string, userId: string) {
     const target = await this.prisma.membership.findUnique({
       where: { userId_workspaceId: { userId, workspaceId } },
@@ -173,10 +170,6 @@ export class WorkspacesService {
     await this.audit.log({ workspaceId, actorId: actor.id, actorEmail: actor.email, action: 'invite.revoked', target: invite.email });
   }
 
-  /**
-   * Dipanggil saat akun dibuat atau masuk: klaim undangan yang menunggu email ini; bila akun belum punya
-   * workspace sama sekali, buatkan satu workspace pribadi agar selalu ada tempat bekerja.
-   */
   async provisionFor(user: { id: string; email: string; name: string | null }) {
     const invites = await this.prisma.invite.findMany({ where: { email: user.email.toLowerCase() } });
     for (const inv of invites) {

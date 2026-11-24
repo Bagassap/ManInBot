@@ -38,8 +38,6 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    // Status akun dibaca dari database pada setiap permintaan, jadi blokir, pencabutan sesi,
-    // penghapusan akun, dan perubahan peran langsung berlaku (tidak menunggu token kedaluwarsa).
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, email: true, role: true, blockedAt: true, sessionsValidAfter: true },

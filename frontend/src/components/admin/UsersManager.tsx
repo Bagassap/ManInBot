@@ -62,7 +62,6 @@ const btnGhost =
 const errMsg = (e: unknown) =>
   e instanceof ApiError || e instanceof Error ? e.message : "Terjadi kesalahan";
 
-/* ---------- isian kata sandi dengan pembuat acak ---------- */
 function PasswordField({
   value,
   onChange,
@@ -130,7 +129,6 @@ function ErrorLine({ msg }: { msg: string }) {
   ) : null;
 }
 
-/* ---------- dialog ---------- */
 function DialogBody({
   dialog,
   onClose,
@@ -326,7 +324,6 @@ function DialogBody({
     );
   }
 
-  // dialog konfirmasi
   const confirms = {
     block: {
       text: `${who} tidak akan bisa masuk atau memakai agen, dan sesi yang sedang berjalan langsung diputus. Datanya tetap tersimpan, dan blokir bisa dibuka kapan saja.`,
@@ -428,7 +425,6 @@ const DIALOG_TITLE: Record<string, string> = {
   sessions: "Akhiri semua sesi",
 };
 
-/* ---------- menu aksi ---------- */
 interface MenuState {
   user: AdminUser;
   x: number;
@@ -564,10 +560,6 @@ function ActionMenu({
   );
 }
 
-/**
- * Dialog, menu, dan notifikasi dirender di <body>. Kontainer dashboard memakai backdrop-blur, yang membuat
- * elemen "fixed" di dalamnya berpatokan pada kontainer (bukan layar), sehingga dialog bisa jatuh di luar layar.
- */
 function Portal({ children }: { children: ReactNode }) {
   if (typeof document === "undefined") return null;
   return createPortal(
@@ -579,7 +571,6 @@ function Portal({ children }: { children: ReactNode }) {
 const MENU_W = 224;
 const MENU_H = 330;
 
-/* ---------- riwayat tindakan ---------- */
 function AuditList({ tick }: { tick: number }) {
   const audit = useFetch<AuditEntry[]>(`audit:${tick}`, () => adminApi.audit());
   const rows = audit.data ?? [];
@@ -624,7 +615,6 @@ function AuditList({ tick }: { tick: number }) {
   );
 }
 
-/* ---------- komponen utama ---------- */
 export default function UsersManager({
   users,
   loading,
@@ -679,7 +669,6 @@ export default function UsersManager({
         8,
         Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8),
       ),
-      // dijepit agar selalu berada di dalam layar, apa pun posisi tombolnya
       y: Math.max(
         8,
         Math.min(
@@ -692,7 +681,6 @@ export default function UsersManager({
 
   return (
     <>
-      {/* ringkasan + alat */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-2 text-xs">
           {[

@@ -3,7 +3,6 @@ import BackgroundFX from "./BackgroundFX";
 import Navbar from "./Navbar";
 import SiteFooter from "./SiteFooter";
 
-/** Kerangka halaman situs promosi: latar, navigasi, isi, dan footer. */
 export default function SiteShell({ children }: { children: ReactNode }) {
   return (
     <>

@@ -1,9 +1,3 @@
-/**
- * Skrip PowerShell yang tetap hidup dan menerima perintah JSON per baris di stdin, membalas JSON per baris di stdout.
- * Layar dibaca lewat Windows UI Automation (daftar tombol, kolom, menu beserta namanya), TANPA tangkapan layar:
- * otak menerima teks bernomor dan menjawab "klik nomor sekian".
- * Semua teks dikirim sebagai base64 agar aman dari masalah encoding pipa.
- */
 export const DRIVER_LOADER = String.raw`$s = [Console]::In.ReadLine(); Invoke-Expression ([System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($s)))`;
 
 export const DRIVER_SCRIPT = String.raw`

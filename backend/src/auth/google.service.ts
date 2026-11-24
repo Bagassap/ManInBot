@@ -11,7 +11,6 @@ export interface GoogleProfile {
 
 const TIMEOUT_MS = 10_000;
 
-/** Alur OAuth 2.0 "authorization code" Google. Endpoint bisa diganti lewat env (untuk pengujian). */
 @Injectable()
 export class GoogleService {
   private readonly logger = new Logger(GoogleService.name);
@@ -37,7 +36,6 @@ export class GoogleService {
     return Boolean(this.clientId && this.clientSecret);
   }
 
-  /** URL tujuan pengalihan ke halaman persetujuan Google, beserta `state` anti-CSRF. */
   buildAuthUrl(): { url: string; state: string } | null {
     if (!this.enabled) return null;
     const state = randomBytes(24).toString('base64url');
@@ -53,7 +51,6 @@ export class GoogleService {
     return { url: url.toString(), state };
   }
 
-  /** Menukar `code` dengan token, lalu mengambil profil. Hanya email terverifikasi yang diterima. */
   async fetchProfile(code: string): Promise<GoogleProfile> {
     const tokenRes = await fetch(this.tokenUrl, {
       method: 'POST',

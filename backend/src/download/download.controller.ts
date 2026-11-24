@@ -12,7 +12,6 @@ interface Installer {
   mtimeMs: number;
 }
 
-/** Folder berisi installer hasil build (desktop/release). Di server, arahkan lewat MIB_RELEASE_DIR. */
 const releaseDir = () => path.resolve(process.env.MIB_RELEASE_DIR ?? path.join(process.cwd(), '..', 'desktop', 'release'));
 
 const cmpVersion = (a: string, b: string) => {
@@ -56,7 +55,6 @@ function sha256(i: Installer): Promise<string> {
   });
 }
 
-/** Alamat publik untuk skrip pemasang. Header Host divalidasi ketat agar tidak bisa menyisipkan perintah ke skrip. */
 function publicOrigin(req: Request): string {
   const fixed = process.env.PUBLIC_URL;
   if (fixed && /^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/.test(fixed)) return fixed;
@@ -86,7 +84,6 @@ export class DownloadController {
     createReadStream(i.file).pipe(res);
   }
 
-  /** Pemasang satu baris: `irm <alamat>/download/install.ps1 | iex` — mengunduh, memeriksa SHA-256, lalu menjalankan installer. */
   @Get('install.ps1')
   @Header('Content-Type', 'text/plain; charset=utf-8')
   async script(@Req() req: Request) {

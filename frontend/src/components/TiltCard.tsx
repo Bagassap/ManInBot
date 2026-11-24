@@ -9,7 +9,6 @@ import {
 } from "framer-motion";
 import type { MouseEvent, ReactNode } from "react";
 
-/** Kartu yang miring halus mengikuti kursor, dengan sorot cahaya teal di bawah kursor. */
 export default function TiltCard({
   children,
   className = "",

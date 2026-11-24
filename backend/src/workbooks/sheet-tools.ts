@@ -3,7 +3,6 @@ import { FORMULA_HELP, LIMITS } from './engine.js';
 
 const sheetProp = { type: 'string', description: 'Nama sheet. Kosong = sheet pertama.' } as const;
 
-/** Alat lembar kerja Excel (Excel di chat). */
 export const sheetToolDefinitions: Anthropic.Tool[] = [
   {
     name: 'sheet_info',

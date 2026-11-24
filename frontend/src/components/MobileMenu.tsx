@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import type { NavItem } from "./NavLinks";
 
-/** Menu navigasi untuk layar sempit (menu horizontal disembunyikan di bawah lebar md). */
 export default function MobileMenu({ items }: { items: NavItem[] }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);

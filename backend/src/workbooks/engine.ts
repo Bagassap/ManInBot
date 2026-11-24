@@ -1,10 +1,8 @@
 import FormulaParser, { type FnArg } from 'fast-formula-parser';
 
-// Paket ini CommonJS: Node ESM hanya mengenali default export, jadi kelasnya diambil dari sana.
 const FormulaError = FormulaParser.FormulaError;
 type FormulaError = InstanceType<typeof FormulaParser.FormulaError>;
 
-/* ===================== Batas ===================== */
 export const LIMITS = {
   MAX_ROWS: 2000,
   MAX_COLS: 60,
@@ -19,7 +17,6 @@ export const LIMITS = {
   MAX_RANGE_CELLS: 100_000,
 } as const;
 
-/* ===================== Model ===================== */
 export type CellValue = number | string | boolean | null;
 
 export interface CellStyle {
@@ -30,10 +27,6 @@ export interface CellStyle {
   a?: 'left' | 'center' | 'right';
 }
 
-/**
- * Sel menyimpan nilai literal (`v`) ATAU rumus (`f`, tanpa tanda "="). Nilai rumus dihitung saat dibaca.
- * Sel hasil impor dari Excel boleh memuat keduanya: `v` = nilai tersimpan, dipakai bila rumusnya tidak didukung mesin.
- */
 export interface Cell {
   v?: CellValue;
   f?: string;
@@ -54,7 +47,6 @@ export interface Workbook {
 export interface Computed {
   v: CellValue;
   e?: string;
-  /** Pesan galat singkat (untuk agen), bukan untuk tampilan. */
   m?: string;
 }
 
@@ -62,7 +54,6 @@ export type ComputedBook = Record<string, Record<string, Computed>>;
 
 export class SheetError extends Error {}
 
-/* ===================== Alamat sel ===================== */
 export function colToLetters(col: number): string {
   let s = '';
   for (let n = col; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
@@ -90,7 +81,6 @@ export interface RangeBox {
   r2: number;
 }
 
-/** "A1" atau "A1:C5" -> kotak; null bila tidak valid. */
 export function parseRange(text: string): RangeBox | null {
   const [a, b] = text.split(':');
   const p1 = parseRef(a ?? '');
@@ -105,14 +95,11 @@ function assertBounds(col: number, row: number, ref: string) {
   }
 }
 
-/* ===================== Fungsi tambahan ===================== */
-/** Mengumpulkan semua nilai dari argumen (rentang 2D maupun skalar) menjadi daftar datar. */
 const flat = (args: FnArg[]): unknown[] => args.flatMap((a) => (Array.isArray(a.value) ? (a.value as unknown[]).flat(Infinity) : [a.value]));
 const nums = (args: FnArg[]): number[] => flat(args).filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
 const scalar = (a: FnArg | undefined): unknown => (Array.isArray(a?.value) ? (a!.value as unknown[][])[0]?.[0] : a?.value);
 const asNumber = (v: unknown): number | null => (typeof v === 'number' ? v : typeof v === 'boolean' ? Number(v) : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
 
-/** Kriteria gaya Excel untuk SUMIFS/COUNTIFS: angka, ">=10", "<>x", "a*" (wildcard). */
 function matchesCriteria(value: unknown, crit: unknown): boolean {
   if (typeof crit === 'number' || typeof crit === 'boolean') return typeof value === 'number' ? value === Number(crit) : String(value).toLowerCase() === String(crit).toLowerCase();
   const text = String(crit ?? '');
@@ -222,11 +209,9 @@ const CUSTOM_FUNCTIONS: Record<string, (...args: FnArg[]) => unknown> = {
   },
 };
 
-/** Daftar fungsi yang bisa dipakai di rumus (untuk deskripsi alat agen). */
 export const FORMULA_HELP =
   'SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, MEDIAN, LARGE, SMALL, SUMIF, SUMIFS, COUNTIF, COUNTIFS, AVERAGEIF, IF, IFERROR, AND, OR, NOT, ROUND, ROUNDUP, ROUNDDOWN, ABS, SQRT, POWER, MOD, INT, SUMPRODUCT, VLOOKUP, HLOOKUP, INDEX, MATCH, LEFT, RIGHT, MID, LEN, UPPER, LOWER, TRIM, CONCATENATE, SUBSTITUTE, TEXT, VALUE, DATE, YEAR, MONTH, DAY, TODAY, FIND, ISBLANK, ISNUMBER';
 
-/* ===================== Evaluator ===================== */
 const toError = (e: unknown): FormulaError => (e instanceof FormulaError ? e : new FormulaError('#VALUE!'));
 
 export class Evaluator {
@@ -287,7 +272,6 @@ export class Evaluator {
       this.visiting.delete(key);
       this.depth--;
     }
-    // Rumus dari Excel yang tidak didukung mesin: tampilkan nilai tersimpannya, bukan galat.
     if ((result.e === '#NAME?' || result.e === '#ERROR!') && cell.v !== undefined) {
       result = { v: cell.v, m: `${result.m ?? 'Rumus tidak didukung'}; menampilkan nilai tersimpan dari Excel` };
     }
@@ -316,7 +300,6 @@ export function evaluateAll(wb: Workbook): ComputedBook {
   return out;
 }
 
-/* ===================== Operasi ===================== */
 export function newWorkbook(name = 'Lembar kerja'): Workbook {
   return { name, sheets: [{ name: 'Sheet1', cells: {}, widths: {} }] };
 }
@@ -358,7 +341,6 @@ function toCell(value: unknown, prev: Cell | undefined): Cell | null {
   return keep({ v: text, s });
 }
 
-/** Menulis tabel 2D mulai dari `start`. Mengembalikan daftar sel yang disentuh (urut baris demi baris). */
 export function writeRows(wb: Workbook, sheet: Sheet, start: string, rows: unknown[][]): string[] {
   const origin = parseRef(start);
   if (!origin) throw new SheetError(`Alamat awal "${start}" tidak valid (contoh: A1)`);
@@ -446,7 +428,6 @@ export function setWidth(sheet: Sheet, col: string, chars: number) {
   sheet.widths[col.toUpperCase()] = Math.min(80, Math.max(4, chars));
 }
 
-/* ===================== Tampilan ===================== */
 export interface CellView {
   v?: CellValue;
   f?: string;
@@ -474,7 +455,6 @@ export function usedDims(sheet: Sheet): { rows: number; cols: number } {
   return { rows, cols };
 }
 
-/** Teks ringkas satu nilai untuk dibaca model. */
 export function show(c: Computed | undefined): string {
   if (!c) return '(kosong)';
   if (c.e) return c.e;

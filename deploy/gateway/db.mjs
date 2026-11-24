@@ -1,4 +1,3 @@
-// Database gateway MiB (SQLite bawaan Node). Satu proses menulis; semua operasi bersifat sinkron sehingga atomik.
 import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -6,7 +5,6 @@ import { DatabaseSync } from 'node:sqlite';
 
 export const sha = (s) => createHash('sha256').update(s).digest('hex');
 
-/** Tanggal (YYYY-MM-DD) menurut WIB; batas harian kuota berganti pukul 00.00 WIB. */
 export const dayKey = (t = Date.now()) => new Date(t + 7 * 3600_000).toISOString().slice(0, 10);
 
 export function hashPassword(pw) {
@@ -45,7 +43,6 @@ export class Db {
         order_id TEXT PRIMARY KEY, user_id INTEGER NOT NULL, amount INTEGER NOT NULL, days INTEGER NOT NULL,
         status TEXT NOT NULL, created INTEGER NOT NULL, paid_at INTEGER);
     `);
-    // Kolom nama ditambahkan belakangan; database lama diperbarui di tempat.
     const cols = this.db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
     if (!cols.includes('name')) this.db.exec('ALTER TABLE users ADD COLUMN name TEXT');
     for (const c of ['phone', 'company', 'job_title', 'brain_tier', 'brain_model']) if (!cols.includes(c)) this.db.exec(`ALTER TABLE users ADD COLUMN ${c} TEXT`);
@@ -56,14 +53,12 @@ export class Db {
     return this.db.prepare(sql);
   }
 
-  // --- pengguna ---
   userByEmail(email) {
     return this.q('SELECT * FROM users WHERE email = ?').get(email) ?? null;
   }
   userById(id) {
     return this.q('SELECT * FROM users WHERE id = ?').get(id) ?? null;
   }
-  /** Membuat akun baru atau memperbarui kata sandi akun yang belum terverifikasi. */
   upsertUnverified(email, password) {
     const u = this.userByEmail(email);
     if (u) {
@@ -72,7 +67,6 @@ export class Db {
     }
     return Number(this.q('INSERT INTO users (email, pass_hash, created_at) VALUES (?, ?, ?)').run(email, hashPassword(password), Date.now()).lastInsertRowid);
   }
-  /** Pendaftaran tanpa verifikasi email: akun langsung aktif. Akun lama yang belum terverifikasi ikut diaktifkan. */
   createActive(email, password, name) {
     const u = this.userByEmail(email);
     if (u) {
@@ -81,11 +75,9 @@ export class Db {
     }
     return Number(this.q('INSERT INTO users (email, pass_hash, name, verified, created_at) VALUES (?, ?, ?, 1, ?)').run(email, hashPassword(password), name || null, Date.now()).lastInsertRowid);
   }
-  /** Data diri yang diisi pengguna setelah mendaftar. */
   setProfile(id, { name, phone, company, jobTitle }) {
     this.q('UPDATE users SET name = ?, phone = ?, company = ?, job_title = ? WHERE id = ?').run(name, phone, company || null, jobTitle || null, id);
   }
-  /** Model offline yang terpasang di aplikasi pengguna. Waktu pemilihan hanya berubah saat modelnya berganti. */
   setBrain(id, tier, model) {
     const now = Date.now();
     this.q(`UPDATE users SET brain_at = CASE WHEN brain_model IS ? THEN brain_at ELSE ? END,
@@ -101,7 +93,6 @@ export class Db {
   setBanned(email, banned) {
     return Number(this.q('UPDATE users SET banned = ? WHERE email = ?').run(banned ? 1 : 0, email).changes) > 0;
   }
-  /** Menambah hari berbayar; bila masih aktif, hari ditambahkan di belakang masa berlaku yang ada. */
   extendPaid(userId, days) {
     const u = this.userById(userId);
     const base = Math.max(Date.now(), u?.paid_until ?? 0);
@@ -109,7 +100,6 @@ export class Db {
     this.q('UPDATE users SET paid_until = ? WHERE id = ?').run(until, userId);
     return until;
   }
-  /** Data dashboard admin: semua akun beserta ringkasan pembayaran dan pemakaian hari ini. */
   adminUsers() {
     return this.q(`SELECT u.id, u.email, u.name, u.phone, u.company, u.job_title, u.brain_tier, u.brain_model, u.brain_at, u.last_seen, u.verified, u.banned, u.paid_until, u.created_at,
         (SELECT COUNT(*) FROM payments p WHERE p.user_id = u.id AND p.status = 'paid') AS paid_count,
@@ -123,7 +113,6 @@ export class Db {
         (SELECT MAX(created) FROM commands c WHERE c.user_id = u.id) AS last_cmd
       FROM users u ORDER BY u.id DESC`).all(dayKey(), dayKey());
   }
-  /** Ringkasan pemakaian per hari (WIB) selama data perintah tersimpan (40 hari). */
   adminDaily() {
     return this.q(`SELECT day, COUNT(*) AS commands, COUNT(DISTINCT user_id) AS users, COALESCE(SUM(tokens), 0) AS tokens
       FROM commands GROUP BY day ORDER BY day DESC`).all();
@@ -136,13 +125,11 @@ export class Db {
     return this.q('SELECT id, email, verified, banned, paid_until, created_at FROM users ORDER BY id').all();
   }
 
-  // --- kode email (verifikasi / reset) ---
   newCode(email, purpose) {
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     this.q('INSERT OR REPLACE INTO email_codes (email, purpose, code_hash, expires, attempts) VALUES (?, ?, ?, ?, 0)').run(email, purpose, sha(`${email}|${purpose}|${code}`), Date.now() + 15 * 60_000);
     return code;
   }
-  /** true bila kode benar; kode hangus setelah dipakai atau setelah 5 salah. */
   consumeCode(email, purpose, code) {
     const row = this.q('SELECT * FROM email_codes WHERE email = ? AND purpose = ?').get(email, purpose);
     if (!row || row.expires < Date.now() || row.attempts >= 5) return false;
@@ -157,7 +144,6 @@ export class Db {
     this.q('UPDATE users SET verified = 1 WHERE id = ?').run(id);
   }
 
-  // --- sesi ---
   newSession(userId, days = 90) {
     const token = `mibs_${randomBytes(24).toString('hex')}`;
     this.q('INSERT INTO sessions (token_hash, user_id, expires) VALUES (?, ?, ?)').run(sha(token), userId, Date.now() + days * 86_400_000);
@@ -178,14 +164,9 @@ export class Db {
     this.q('DELETE FROM commands WHERE created < ?').run(now - 40 * 86_400_000);
   }
 
-  // --- kuota perintah ---
   usedToday(userId) {
     return this.q('SELECT COUNT(*) AS n FROM commands WHERE user_id = ? AND day = ?').get(userId, dayKey()).n;
   }
-  /**
-   * Mencatat awal satu perintah (satu pesan pengguna ke agen; terdiri dari banyak panggilan ke layanan AI).
-   * Mengembalikan { ok, tokens } atau { ok:false, reason } bila kuota harian habis / perintah ini sudah melewati batas token.
-   */
   beginCommand(userId, cmdId, perDay, cmdTokenCap) {
     const day = dayKey();
     this.db.exec('BEGIN IMMEDIATE');
@@ -214,14 +195,12 @@ export class Db {
     this.q('UPDATE commands SET tokens = tokens + ? WHERE user_id = ? AND cmd_id = ?').run(tokens, userId, cmdId);
   }
 
-  // --- pembayaran ---
   createPayment(orderId, userId, amount, days) {
     this.q('INSERT INTO payments (order_id, user_id, amount, days, status, created) VALUES (?, ?, ?, ?, ?, ?)').run(orderId, userId, amount, days, 'pending', Date.now());
   }
   payment(orderId) {
     return this.q('SELECT * FROM payments WHERE order_id = ?').get(orderId) ?? null;
   }
-  /** Menandai lunas tepat sekali; mengembalikan masa berlaku baru atau null bila sudah pernah diproses. */
   settle(orderId) {
     this.db.exec('BEGIN IMMEDIATE');
     try {

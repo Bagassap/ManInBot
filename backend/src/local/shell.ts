@@ -11,10 +11,6 @@ export interface ShellResult {
   truncated: boolean;
 }
 
-/**
- * Variabel lingkungan yang diteruskan ke perintah. Sisanya (kunci API, JWT_SECRET, DATABASE_URL, dsb.) sengaja
- * tidak ikut, supaya perintah yang dijalankan agen tidak bisa membaca rahasia MiB lewat `env`.
- */
 const ENV_ALLOW = [
   'PATH', 'PATHEXT', 'SystemRoot', 'SYSTEMROOT', 'ComSpec', 'windir', 'TEMP', 'TMP', 'TMPDIR',
   'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'ProgramFiles', 'ProgramFiles(x86)', 'ProgramData',
@@ -29,7 +25,6 @@ export function cleanEnv(src: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEn
   return out;
 }
 
-/** Menjalankan perintah di cwd dengan batas waktu dan batas keluaran; seluruh pohon proses dimatikan saat habis waktu/dibatalkan. */
 export function runShell(command: string, cwd: string, timeoutMs: number, signal: AbortSignal): Promise<ShellResult> {
   return new Promise((resolve) => {
     const win = process.platform === 'win32';
@@ -66,7 +61,6 @@ export function runShell(command: string, cwd: string, timeoutMs: number, signal
         if (win) spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
         else process.kill(-child.pid, 'SIGKILL');
       } catch {
-        /* proses sudah selesai */
       }
     };
     const timer = setTimeout(() => {

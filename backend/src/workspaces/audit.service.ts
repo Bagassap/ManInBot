@@ -10,7 +10,6 @@ export interface AuditEntry {
   detail?: string | null;
 }
 
-/** Catatan audit per workspace. Kegagalan mencatat tidak boleh menggagalkan tindakan aslinya. */
 @Injectable()
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);

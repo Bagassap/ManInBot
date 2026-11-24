@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useId } from "react";
 
-/** Grafik batang: tinggi tiap batang tumbuh dari bawah; warna makin pekat ke arah terbaru. */
 export function BarChart({
   values,
   labels,
@@ -46,7 +45,6 @@ export function BarChart({
   );
 }
 
-/** Grafik garis dengan area gradasi; garis tergambar saat muncul. */
 export function LineChart({
   values,
   labels,

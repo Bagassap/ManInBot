@@ -33,7 +33,6 @@ const COPY = {
   },
 } as const;
 
-// Kode galat dari pengalihan backend (/masuk?error=...)
 const OAUTH_ERRORS: Record<string, string> = {
   google_off: "Masuk dengan Google belum diaktifkan di server.",
   google_gagal: "Masuk dengan Google gagal. Silakan coba lagi.",
@@ -86,7 +85,6 @@ export default function AuthForm({ mode }: { mode: "masuk" | "daftar" }) {
   const [loading, setLoading] = useState(false);
   const urlError = OAUTH_ERRORS[useSearchParams().get("error") ?? ""] ?? "";
 
-  // Sudah login? langsung ke aplikasi.
   useEffect(() => {
     api<User>("/auth/me")
       .then(() => router.replace("/app"))
@@ -139,7 +137,6 @@ export default function AuthForm({ mode }: { mode: "masuk" | "daftar" }) {
         {copy.subtitle}
       </p>
 
-      {/* Google hanya di versi server; aplikasi desktop (satu asal, API_URL kosong) memakai email saja */}
       {API_URL !== "" && (
       <motion.div
         initial={{ opacity: 0, y: 14 }}

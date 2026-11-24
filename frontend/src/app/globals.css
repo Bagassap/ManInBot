@@ -54,7 +54,6 @@ h3 {
   }
 }
 
-/* Latar futuristik landing page */
 .fx-grid {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
@@ -106,7 +105,6 @@ h3 {
   }
 }
 
-/* Ilustrasi mode produk */
 @keyframes fx-bar {
   0%, 100% { transform: scaleY(0.25); }
   50% { transform: scaleY(1); }
@@ -149,7 +147,6 @@ h3 {
   .fx-step { animation: none; opacity: 1; }
 }
 
-/* Garis penghubung "Cara kerja": gradasi teal yang mengalir */
 .fx-flow {
   background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent-strong) 50%, var(--accent) 80%, transparent);
   background-size: 200% 100%;
@@ -163,9 +160,7 @@ h3 {
   .fx-flow { animation: none; }
 }
 
-/* ===== Animasi tambahan ===== */
 
-/* kilau menyapu kartu/panel */
 .fx-shimmer {
   position: relative;
   overflow: hidden;
@@ -184,7 +179,6 @@ h3 {
   100% { transform: translateX(100%); }
 }
 
-/* latar gradasi yang mengalir */
 .fx-gradient {
   background-size: 220% 220%;
   animation: fx-gradient 12s ease-in-out infinite;
@@ -194,7 +188,6 @@ h3 {
   50% { background-position: 100% 50%; }
 }
 
-/* tombol utama: kilau saat disorot */
 .fx-btn {
   position: relative;
   overflow: hidden;
@@ -213,7 +206,6 @@ h3 {
   transform: translateX(120%);
 }
 
-/* pilihan mode bergantian menyala (ilustrasi "Pilih mode") */
 @keyframes fx-toggle-a {
   0%, 45% { background: rgba(52, 173, 164, 0.15); border-color: rgba(52, 173, 164, 0.6); color: var(--accent-strong); }
   55%, 100% { background: transparent; border-color: var(--line); color: var(--muted); }
@@ -222,7 +214,6 @@ h3 {
   0%, 45% { background: transparent; border-color: var(--line); color: var(--muted); }
   55%, 100% { background: rgba(52, 173, 164, 0.15); border-color: rgba(52, 173, 164, 0.6); color: var(--accent-strong); }
 }
-/* gaya dasar (dipakai juga saat animasi mati/"kurangi gerakan"): A = aktif, B = tidak aktif */
 .fx-toggle-a {
   border: 1px solid rgba(52, 173, 164, 0.6);
   background: rgba(52, 173, 164, 0.15);
@@ -236,14 +227,12 @@ h3 {
   animation: fx-toggle-b 6s ease-in-out infinite;
 }
 
-/* melayang pelan */
 @keyframes fx-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
 .fx-float { animation: fx-float 5s ease-in-out infinite; }
 
-/* denyut cahaya */
 @keyframes fx-glow {
   0%, 100% { opacity: 0.45; transform: scale(1); }
   50% { opacity: 0.9; transform: scale(1.12); }
@@ -255,9 +244,6 @@ h3 {
   .fx-btn::after { transition: none; }
 }
 
-/* ===== Dashboard admin: tema terang (mengikuti gambar acuan) =====
-   Mengganti token warna di dalam .admin, sehingga kelas bg-surface/text-muted/border-line dst. ikut berubah.
-   Untuk memakai aksen teal merek: ubah --accent / --accent-strong / --shield di bawah. */
 .admin,
 .admin-vars {
   color-scheme: light;
@@ -270,7 +256,6 @@ h3 {
   --accent-strong: #4a37e6;
   --shield: #7c6cf8;
 }
-/* .admin-vars dipakai oleh dialog/menu yang dirender lewat portal di luar .admin */
 .admin {
   background: var(--background);
   color: var(--foreground);
@@ -286,7 +271,112 @@ body:has(.admin) {
   background: #eceefa;
 }
 
-/* ---------- lembar kerja Excel di layar bersama ---------- */
+html.desktop-app {
+  --font-satoshi: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-sora: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --background: #0b2a33;
+  --surface: #14242b;
+  --foreground: #f2f6f7;
+  --muted: #a9bcc2;
+  --line: rgba(255, 255, 255, 0.11);
+  scroll-behavior: auto;
+  overflow: hidden;
+  user-select: none;
+}
+html.desktop-app body { overflow: hidden; height: 100%; background: #0d1419; }
+html.desktop-app :is(p, pre, code, td, input, textarea, [contenteditable]) { user-select: text; }
+html.desktop-app :is(a, button, [role="button"]) { cursor: default; }
+html.desktop-app :is(img, a) { -webkit-user-drag: none; }
+html.desktop-app ::-webkit-scrollbar { width: 10px; height: 10px; }
+html.desktop-app ::-webkit-scrollbar-track { background: transparent; }
+html.desktop-app ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+html.desktop-app ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.32); }
+
+.cp-frame { display: flex; height: 100vh; background: #0d1419; }
+.cp-nodrag { -webkit-app-region: no-drag; }
+.cp-sidebar {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 256px;
+  padding: 10px;
+  transition: width 0.18s ease;
+}
+.cp-sidebar.cp-collapsed { width: 60px; }
+.cp-sidebar-head {
+  -webkit-app-region: drag;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+.cp-collapsed .cp-sidebar-head { padding-left: 0; gap: 4px; }
+.cp-history { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+
+.cp-panel {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: #0b2a33;
+  border-left: 1px solid var(--line);
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+.cp-panel-full { border: 0; border-radius: 0; }
+.cp-panel::before {
+  content: "";
+  position: absolute;
+  inset: 36px 0 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 34% at 72% 74%, rgba(63, 208, 196, 0.2), transparent 70%),
+    radial-gradient(46% 26% at 18% 82%, rgba(226, 164, 104, 0.2), transparent 72%),
+    radial-gradient(90% 26% at 50% 100%, rgba(5, 10, 13, 0.95), transparent 100%),
+    linear-gradient(180deg, #0b2a33 0%, #124250 34%, #2a5a63 58%, #38565a 72%, #101a1e 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+}
+.cp-drag { -webkit-app-region: drag; position: relative; flex: none; height: 36px; margin-right: 142px; }
+.cp-content { position: relative; flex: 1; min-height: 0; overflow: auto; transform: translateZ(0); }
+.cp-content .h-dvh { height: 100%; }
+.cp-content .min-h-dvh { min-height: 100%; }
+.cp-content a[aria-label="Kembali"] { display: none; }
+
+.cp-composer {
+  background: rgba(13, 24, 29, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 26px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px);
+  transition: border-color 0.15s ease;
+}
+.cp-composer:focus-within { border-color: rgba(63, 208, 196, 0.6); }
+.cp-chip {
+  background: rgba(13, 24, 29, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  transition: background-color 0.15s ease;
+}
+.cp-chip:hover { background: rgba(255, 255, 255, 0.13); }
+.cp-card {
+  background: rgba(16, 28, 34, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(16px);
+}
+
 .sheet-table { table-layout: fixed; }
 .sheet-corner, .sheet-colhead, .sheet-rowhead {
   position: sticky;

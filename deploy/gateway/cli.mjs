@@ -1,15 +1,10 @@
 #!/usr/bin/env node
-// Pengelolaan akun MiB di server.
-//   mib-admin users                      daftar akun
-//   mib-admin grant <email> --days 30    beri/perpanjang paket berbayar (mis. transfer manual atau hadiah)
-//   mib-admin ban <email> | unban <email>
 import { Db, dayKey, hashPassword } from './db.mjs';
 
-// Dipakai mib-admin-setup: membaca kata sandi dari stdin, mencetak hash-nya. Tidak menyentuh database.
 if (process.argv[2] === 'hash-stdin') {
   let pw = '';
   for await (const c of process.stdin) pw += c;
-  pw = pw.trimEnd(); // buang baris baru di akhir
+  pw = pw.trimEnd();
   if (pw.length < 12) {
     console.error('Kata sandi admin minimal 12 karakter.');
     process.exit(1);
@@ -18,7 +13,6 @@ if (process.argv[2] === 'hash-stdin') {
   process.exit(0);
 }
 
-// Dipakai mib-email-gmail: kirim satu email percobaan dengan pengaturan SMTP saat ini.
 if (process.argv[2] === 'test-mail') {
   const { sendCode } = await import('./mail.mjs');
   try {

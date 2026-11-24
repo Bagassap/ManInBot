@@ -12,6 +12,39 @@ import Faq from "@/components/Faq";
 import SiteFooter from "@/components/SiteFooter";
 import Splash from "@/components/Splash";
 
+const MODELS = [
+  {
+    name: "Ringan",
+    intro: "Untuk komputer kantor sederhana yang tetap harus lancar dipakai bekerja.",
+    cpu: "Core i3 / Ryzen 3",
+    ram: "4–8 GB",
+    download: "±3 GB",
+    disk: "±8 GB",
+    uses: ["Surat dan email pendek", "Meringkas teks singkat", "Merapikan kalimat dan ejaan"],
+    note: "Hasil terbaik bila tugas diberikan satu per satu.",
+  },
+  {
+    name: "Sedang",
+    intro: "Pilihan seimbang untuk sebagian besar komputer kantor.",
+    cpu: "Core i5 / Ryzen 5",
+    ram: "8 GB ke atas",
+    download: "±4 GB",
+    disk: "±9 GB",
+    uses: ["Laporan dan notulen rapat", "Tabel dan rekap di Excel", "Slide PowerPoint dari dokumen"],
+    note: "Cocok untuk pekerjaan kantor sehari-hari.",
+  },
+  {
+    name: "Kuat",
+    intro: "Untuk komputer bertenaga dan pekerjaan yang lebih panjang.",
+    cpu: "Core i7 / Ryzen 7",
+    ram: "16 GB ke atas",
+    download: "±7 GB",
+    disk: "±12 GB",
+    uses: ["Dokumen panjang", "Tugas dengan banyak langkah", "Menggabungkan isi beberapa berkas"],
+    note: "Memakai RAM paling besar, jadi tutup aplikasi berat yang tidak dipakai.",
+  },
+];
+
 export default function Home() {
   return (
     <>
@@ -21,7 +54,6 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero */}
         <section className="relative overflow-hidden">
           <div
             aria-hidden
@@ -77,37 +109,70 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Model offline + versi online */}
         <section id="model" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Tiga model gratis, semuanya offline</h2>
             <p className="mt-2 hidden max-w-2xl text-muted sm:block">
-              Pemasang memeriksa komputer Anda dan menyarankan model yang cocok. Setelah terpasang,
-              pekerjaan Anda tidak dikirim ke internet.
+              Cukup satu file pemasang. Saat pertama dibuka, MiB memeriksa komputer Anda dan menyarankan
+              model yang cocok. Setelah terpasang, pekerjaan Anda tidak dikirim ke internet.
             </p>
           </Reveal>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {[
-              ["Ringan", "Core i3 / Ryzen 3", "RAM 4–8 GB", "Draf surat, ringkasan, dan merapikan teks.", "±3 GB"],
-              ["Sedang", "Core i5 / Ryzen 5", "RAM 8 GB ke atas", "Dokumen, tabel, dan pekerjaan kantor harian.", "±4 GB"],
-              ["Kuat", "Core i7 / Ryzen 7", "RAM 16 GB ke atas", "Tugas lebih panjang dan bertahap.", "±7 GB"],
-            ].map(([name, cpu, ram, use, size]) => (
-              <Reveal key={name}>
-                <div className="flex h-full flex-col rounded-2xl border border-line bg-surface p-6">
+            {MODELS.map((m) => (
+              <Reveal key={m.name}>
+                <article className="flex h-full flex-col rounded-2xl border border-line bg-surface p-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">{name}</h3>
+                    <h3 className="text-lg font-medium">{m.name}</h3>
                     <span className="rounded-md bg-accent/15 px-2 py-1 text-xs text-accent-strong">Gratis</span>
                   </div>
-                  <p className="mt-3 text-sm">{cpu}</p>
-                  <p className="text-sm text-muted">{ram} · unduh {size}</p>
-                  <p className="mt-3 flex-1 text-sm text-muted">{use}</p>
-                  <a href={`/unduh?model=${name.toLowerCase()}`} className="mt-5 inline-block rounded-lg border border-line px-4 py-2 text-center text-sm font-medium transition-colors hover:bg-background">
-                    Unduh
-                  </a>
-                </div>
+                  <p className="mt-2 text-sm text-muted">{m.intro}</p>
+                  <dl className="mt-4 space-y-1.5 border-y border-line py-3 text-sm">
+                    {[
+                      ["Prosesor", m.cpu],
+                      ["RAM", m.ram],
+                      ["Unduhan", m.download],
+                      ["Ruang kosong", m.disk],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3">
+                        <dt className="text-muted">{k}</dt>
+                        <dd className="text-right">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <h4 className="mt-4 text-sm font-medium">Paling cocok untuk</h4>
+                  <ul className="mt-2 flex-1 space-y-1.5 text-sm text-muted">
+                    {m.uses.map((u) => (
+                      <li key={u} className="flex gap-2">
+                        <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-accent-strong" />
+                        {u}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 rounded-lg bg-background/60 px-3 py-2 text-xs leading-relaxed text-muted">{m.note}</p>
+                </article>
               </Reveal>
             ))}
           </div>
+          <Reveal>
+            <div className="mt-4 rounded-2xl border border-line bg-surface p-6">
+              <h3 className="text-lg font-medium">Bingung memilih?</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Tidak perlu memutuskan sekarang. Setelah MiB terpasang, aplikasi memeriksa prosesor dan RAM lalu menandai
+                model yang disarankan. Ketiganya punya fitur yang sama. Model yang lebih besar lebih mampu menangani
+                tugas panjang, tetapi memakai lebih banyak RAM dan ruang disk. Bila terasa lambat, ganti ke model yang
+                lebih ringan kapan saja di Pengaturan.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <a href="/unduh" className="fx-btn inline-block rounded-xl bg-accent px-6 py-3 font-medium text-[#0d1417] transition-colors hover:bg-accent-strong">
+                  Unduh MiB
+                </a>
+                <Link href="/docs/model" className="text-sm text-accent-strong hover:underline">
+                  Baca panduan model →
+                </Link>
+              </div>
+              <p className="mt-2 text-xs text-muted">Satu pemasang untuk semua. Model dipilih di aplikasi setelah MiB terpasang.</p>
+            </div>
+          </Reveal>
           <Reveal>
             <div id="online" className="mt-4 flex scroll-mt-24 flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-line p-6">
               <div>
@@ -119,7 +184,6 @@ export default function Home() {
           </Reveal>
         </section>
 
-        {/* Cara kerja + contoh tugas */}
         <section id="cara-kerja" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Pasang sekali, MiB bekerja di komputer Anda</h2>
@@ -131,7 +195,7 @@ export default function Home() {
           </Reveal>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
-              ["1", "Unduh dan pilih model", "Pemasang memeriksa PC Anda dan menyiapkan otak MiB."],
+              ["1", "Unduh dan pilih model", "Pasang satu file MiB. Saat pertama dibuka, MiB memeriksa PC Anda dan Anda memilih modelnya."],
               ["2", "Daftar akun MiB", "Isi email, kata sandi, dan data diri, lalu pilih folder yang boleh diakses."],
               ["3", "Beri perintah", "Mulai percakapan, MiB membuka aplikasi dan mengerjakannya sendiri di layarmu."],
             ].map(([n, t, d]) => (
@@ -155,7 +219,6 @@ export default function Home() {
           </Reveal>
         </section>
 
-        {/* Mulai cepat */}
         <section id="mulai" className="mx-auto max-w-3xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Mulai cepat</h2>
@@ -194,7 +257,6 @@ export default function Home() {
           </Reveal>
         </section>
 
-        {/* Apa yang bisa dilakukan */}
         <section id="fitur" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Apa yang bisa dilakukan</h2>
@@ -224,7 +286,6 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Terhubung ke */}
         <section id="integrasi" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16">
           <Reveal>
             <h2 className="text-3xl font-semibold tracking-tight">Bekerja dengan</h2>
@@ -249,12 +310,9 @@ export default function Home() {
         </section>
 
 
-        {/* Bagian akhir: cukup tinggi agar menu "Keamanan" bisa menggulir sampai ke bawah topbar
-            (tanpa ini, di layar tinggi bagian sebelumnya ikut mengintip di atasnya). */}
         <div className="flex min-h-[calc(100svh-9rem)] flex-col">
           <Security />
 
-          {/* FAQ */}
           <section id="faq" className="mx-auto max-w-3xl scroll-mt-24 px-5 pb-16">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-tight">Pertanyaan umum</h2>
@@ -271,7 +329,6 @@ export default function Home() {
             </Reveal>
           </section>
 
-          {/* CTA */}
           <section className="mx-auto max-w-4xl px-5 pb-12 sm:pb-16 lg:pb-24">
             <Reveal>
               <div className="fx-gradient fx-shimmer rounded-3xl border border-line bg-gradient-to-br from-shield/40 via-surface to-accent/15 p-8 text-center sm:p-14">

@@ -47,10 +47,6 @@ export class AuthController {
     return user;
   }
 
-  /**
-   * Masuk otomatis aplikasi desktop. Hanya aktif bila MIB_LOCAL=1 dan token rahasia (dibuat
-   * aplikasi desktop tiap dijalankan, tidak pernah ke jaringan) cocok.
-   */
   @Get('local-start')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   async localStart(@Query('t') t: string | undefined, @Res() res: Response) {
@@ -80,7 +76,6 @@ export class AuthController {
     return user;
   }
 
-  /** Awal login Google: simpan state anti-CSRF di cookie pendek, lalu arahkan ke Google. */
   @Get('google')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   googleStart(@Res() res: Response) {
@@ -88,7 +83,7 @@ export class AuthController {
     if (!started) return res.redirect(`${this.frontendUrl}/masuk?error=google_off`);
     res.cookie(STATE_COOKIE, started.state, {
       httpOnly: true,
-      sameSite: 'lax', // harus lax: callback datang lewat navigasi lintas situs dari Google
+      sameSite: 'lax',
       secure: this.secureCookies,
       maxAge: 10 * 60 * 1000,
       path: STATE_PATH,

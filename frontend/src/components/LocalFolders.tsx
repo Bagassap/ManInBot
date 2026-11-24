@@ -11,7 +11,6 @@ interface FolderItem {
   mode: "READ" | "READWRITE";
 }
 
-/** Dipasang oleh aplikasi desktop (Electron) lewat preload; di browser biasa tidak ada. */
 interface DesktopBridge {
   pickFolder?: () => Promise<string | null>;
 }

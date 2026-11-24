@@ -1,4 +1,3 @@
-/** Pertanyaan yang sering diajukan; memakai details/summary agar tetap bisa dibuka tanpa JavaScript. */
 export const FAQ_ITEMS: [string, string][] = [
   ["Apakah MiB aplikasi web?", "Bukan. Situs ini hanya tempat Anda mengenal dan mengunduh MiB. Agennya berjalan sebagai aplikasi di komputer Anda sendiri, memakai berkas dan aplikasi yang ada di sana."],
   ["Apakah MiB bisa dipakai untuk hal selain pekerjaan kantor?", "Tidak. MiB dirancang khusus untuk pekerjaan kantor: dokumen, data, berkas, dan aplikasi perkantoran. Permintaan di luar itu ditolak dengan sopan."],

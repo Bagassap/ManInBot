@@ -3,7 +3,6 @@ import path from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { dataDir, writePrivate } from '../runtime/bootstrap.js';
 
-/** Salinan data akun: MiB offline tetap tahu siapa yang masuk tanpa menghubungi server. */
 export interface CachedAccount {
   email: string;
   name: string | null;
@@ -18,13 +17,8 @@ interface StoredSettings {
   account?: CachedAccount;
 }
 
-/** Alamat gateway MiB: kunci layanan AI hanya ada di server MiB, aplikasi memakai kode lisensi. */
 export const GATEWAY_URL = process.env.MIB_GATEWAY_URL || 'https://maninbot.id/ai';
 
-/**
- * Pengaturan yang diubah lewat aplikasi (token sesi akun MiB). Disimpan di folder data pengguna, di luar database.
- * Tanpa folder data (mode pengembangan) dipakai ANTHROPIC_API_KEY langsung ke layanan AI.
- */
 @Injectable()
 export class SettingsService {
   private readonly file = dataDir() ? path.join(dataDir()!, 'settings.json') : null;
@@ -42,7 +36,6 @@ export class SettingsService {
     return this.read().accountToken || null;
   }
 
-  /** Kredensial untuk klien AI: token akun MiB (lewat gateway) menang atas kunci langsung milik pengembang. */
   get credentials(): { apiKey: string; baseURL?: string } | null {
     const token = this.accountToken;
     if (token) return { apiKey: token, baseURL: GATEWAY_URL };
@@ -61,7 +54,6 @@ export class SettingsService {
     writePrivate(this.file, JSON.stringify(s));
   }
 
-  /** Sudah masuk dan data diri lengkap. Tanpa folder data (pengembangan) tidak dibatasi. */
   get accountReady() {
     return !this.file || this.cachedAccount?.profileComplete === true;
   }

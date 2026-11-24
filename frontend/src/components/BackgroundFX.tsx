@@ -7,7 +7,7 @@ type Pulse = { a: number; b: number; t: number; speed: number };
 
 const LINK_DIST = 150;
 const MOUSE_DIST = 190;
-const TEAL = "63, 208, 196"; // --accent-strong
+const TEAL = "63, 208, 196";
 const BLUE = "92, 140, 200";
 
 export default function BackgroundFX() {
@@ -79,7 +79,6 @@ export default function BackgroundFX() {
           if (n.y < -20) n.y = h + 20;
           else if (n.y > h + 20) n.y = -20;
 
-          // tarikan lembut ke arah kursor
           const dx = mouse.x - n.x;
           const dy = mouse.y - n.y;
           const d = Math.hypot(dx, dy);
@@ -90,7 +89,6 @@ export default function BackgroundFX() {
         }
       }
 
-      // garis antar node
       ctx.lineWidth = 1;
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i];
@@ -105,7 +103,6 @@ export default function BackgroundFX() {
             ctx.stroke();
           }
         }
-        // garis ke kursor
         const md = Math.hypot(a.x - mouse.x, a.y - mouse.y);
         if (md < MOUSE_DIST) {
           ctx.strokeStyle = `rgba(${TEAL}, ${(1 - md / MOUSE_DIST) * 0.55})`;
@@ -116,7 +113,6 @@ export default function BackgroundFX() {
         }
       }
 
-      // node
       for (const n of nodes) {
         const md = Math.hypot(n.x - mouse.x, n.y - mouse.y);
         const near = md < MOUSE_DIST;
@@ -126,7 +122,6 @@ export default function BackgroundFX() {
         ctx.fill();
       }
 
-      // denyut data berjalan di sepanjang garis
       if (!reduced) {
         if (Math.random() < 0.05) spawnPulse();
         pulses = pulses.filter((p) => p.t < 1);
@@ -182,18 +177,14 @@ export default function BackgroundFX() {
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {/* aurora yang melayang pelan */}
       <div className="fx-aurora fx-a absolute -left-[10%] top-[8%] size-[55vmax] rounded-full bg-accent/[0.035] blur-[130px]" />
       <div className="fx-aurora fx-b absolute -right-[12%] top-[38%] size-[50vmax] rounded-full bg-shield/[0.08] blur-[140px]" />
       <div className="fx-aurora fx-c absolute bottom-[-18%] left-[28%] size-[44vmax] rounded-full bg-accent/[0.025] blur-[130px]" />
 
-      {/* grid tipis yang bergeser */}
       <div className="fx-grid absolute inset-0" />
 
-      {/* jaringan node */}
       <canvas ref={canvasRef} className="absolute inset-0" />
 
-      {/* vinyet agar teks tetap terbaca */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,var(--background)_100%)]" />
     </div>
   );

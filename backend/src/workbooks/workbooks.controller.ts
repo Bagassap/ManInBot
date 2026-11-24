@@ -26,13 +26,11 @@ export class WorkbooksController {
     private readonly audit: AuditService,
   ) {}
 
-  /** Potret lembar kerja saat ini (null bila belum ada). */
   @Get()
   async get(@CurrentUser() user: AuthUser, @CurrentWorkspace() ws: WorkspaceAccess, @Param('id', ParseUUIDPipe) id: string) {
     return { workbook: await this.workbooks.getSnapshot(ws.workspaceId, user.id, id) };
   }
 
-  /** Unggah berkas .xlsx: menggantikan lembar kerja percakapan ini. */
   @Post('import')
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 0 } }))
@@ -48,10 +46,6 @@ export class WorkbooksController {
     return { workbook };
   }
 
-  /**
-   * Unduh lembar kerja sebagai .xlsx. Tanpa Content-Disposition: frontend mengambilnya lewat fetch lalu
-   * menyimpannya dengan nama sendiri, dan header "attachment" membuat Chrome membatalkan fetch lintas-origin.
-   */
   @Get('download')
   async download(@CurrentUser() user: AuthUser, @CurrentWorkspace() ws: WorkspaceAccess, @Param('id', ParseUUIDPipe) id: string) {
     const { buffer, name } = await this.workbooks.exportFile(ws.workspaceId, user.id, id);

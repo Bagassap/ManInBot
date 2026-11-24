@@ -100,7 +100,6 @@ export default function RunsPanel({
       aria-label="Perintah agen"
       className="relative rounded-[28px] bg-[#1c1b38] p-4 text-white sm:p-6"
     >
-      {/* tab status melayang di tengah, seperti pada gambar acuan */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-white sm:text-lg">
           Perintah agen
@@ -149,7 +148,6 @@ export default function RunsPanel({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        {/* daftar */}
         <div
           className={`flex max-h-[520px] flex-col gap-2 overflow-y-auto pr-1 transition-opacity ${loading ? "opacity-60" : ""}`}
         >
@@ -207,7 +205,6 @@ export default function RunsPanel({
           })}
         </div>
 
-        {/* rincian */}
         <div className="relative min-h-[320px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#5b47f5] via-[#5340e0] to-[#7466f6] p-5 sm:p-6">
           <div
             aria-hidden

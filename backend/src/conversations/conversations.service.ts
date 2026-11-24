@@ -26,7 +26,6 @@ export class ConversationsService {
     });
   }
 
-  /** Mengembalikan percakapan hanya bila dimiliki userId; selain itu 404 (tidak membocorkan keberadaan). */
   async getOwned(workspaceId: string, userId: string, id: string) {
     const conv = await this.prisma.conversation.findFirst({ where: { id, userId, workspaceId } });
     if (!conv) throw new NotFoundException('Percakapan tidak ditemukan');
@@ -97,7 +96,6 @@ export class ConversationsService {
     return message;
   }
 
-  /** Riwayat teks untuk dikirim ke model (tanpa blok alat; cukup konteks percakapan). */
   async history(conversationId: string): Promise<ChatTurn[]> {
     const rows = await this.prisma.message.findMany({
       where: { conversationId, role: { in: ['USER', 'ASSISTANT'] } },

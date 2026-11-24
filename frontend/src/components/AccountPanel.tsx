@@ -38,7 +38,6 @@ interface Props {
   reload: () => Promise<void>;
 }
 
-/** Akun MiB: daftar/masuk dengan email dan kata sandi, lalu lengkapi data diri. Butuh internet hanya saat ini. */
 export default function AccountPanel({ isAdmin, status, reload }: Props) {
   const { loggedIn, account, plan } = status;
   const [step, setStep] = useState<Step>("masuk");
@@ -166,7 +165,6 @@ export default function AccountPanel({ isAdmin, status, reload }: Props) {
     <input inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="Kode 6 angka" aria-label="Kode" value={code} onChange={(e) => setCode(e.target.value)} className={`${input} font-mono tracking-widest`} />
   );
 
-  // ---------- data diri ----------
   if (loggedIn && (!account?.profileComplete || editing)) {
     const field = (key: keyof typeof profile, label: string, required: boolean, type = "text", auto = "off") => (
       <input
@@ -206,7 +204,6 @@ export default function AccountPanel({ isAdmin, status, reload }: Props) {
     );
   }
 
-  // ---------- sudah masuk ----------
   if (loggedIn && account) {
     return (
       <section className="rounded-2xl border border-line bg-surface p-5">
@@ -235,7 +232,6 @@ export default function AccountPanel({ isAdmin, status, reload }: Props) {
     );
   }
 
-  // ---------- belum masuk ----------
   return (
     <section className="rounded-2xl border border-line bg-surface p-5">
       {header}

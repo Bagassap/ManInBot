@@ -11,7 +11,6 @@ import { api, ApiError, type User } from "@/lib/api";
 const field =
   "h-12 w-full rounded-2xl border border-line bg-surface px-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-accent";
 
-/** Halaman masuk khusus admin: tema terang, sama dengan dashboard admin. */
 export default function AdminLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -21,7 +20,6 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [notAdmin, setNotAdmin] = useState<User | null>(null);
 
-  // Sudah masuk sebagai admin? Langsung ke dashboard.
   useEffect(() => {
     api<User>("/auth/me")
       .then((u) => u.role === "ADMIN" && router.replace("/admin"))

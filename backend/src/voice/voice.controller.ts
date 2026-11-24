@@ -4,7 +4,6 @@ import type { Request, Response } from 'express';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { VoiceService } from './voice.service.js';
 
-/** 16 kHz, 16-bit, mono selama 65 detik. */
 const MAX_WAV = 44 + 65 * 32_000;
 
 class SpeakDto {
@@ -36,7 +35,6 @@ export class VoiceController {
     return this.voice.openVoiceSettings();
   }
 
-  /** Badan permintaan: audio/wav mentah (tidak melewati pengurai JSON). */
   @Post('transcribe')
   @HttpCode(200)
   async transcribe(@Req() req: Request) {

@@ -1,8 +1,3 @@
-# Memasang "otak" MiB (Ollama + satu model) untuk pengguna ini, tanpa hak administrator.
-# Dipakai oleh pemasang MiB dan oleh tombol "Pasang" di aplikasi. Hanya karakter ASCII: PowerShell 5.1 membaca berkas tanpa BOM sebagai ANSI.
-#   -Detect  : cetak "tier|keterangan PC" lalu selesai
-#   -Tier    : auto | ringan | sedang | kuat
-#   -Json    : kemajuan sebagai JSON per baris (dibaca aplikasi)
 param(
   [ValidateSet('auto', 'ringan', 'sedang', 'kuat')][string]$Tier = 'auto',
   [switch]$Detect,
@@ -34,7 +29,6 @@ function Get-Spec {
   elseif ($threads -ge 12) { $rank = 2 }
   elseif ($threads -ge 6) { $rank = 1 }
   else { $rank = 0 }
-  # RAM membatasi: model tidak boleh membuat Excel/Word ikut macet.
   if ($ram -lt 7.5) { $rank = 0 } elseif ($ram -lt 15) { $rank = [math]::Min($rank, 1) }
   return @{ tier = @('ringan', 'sedang', 'kuat')[$rank]; cpu = $cpu; ram = $ram }
 }
@@ -68,7 +62,6 @@ function Install-Runtime {
   $have = if (Test-Path $zip) { (Get-Item $zip).Length } else { 0 }
   if ($have -ne $ZipBytes) {
     Say 'runtime' $null 'Mengunduh mesin AI (sekitar 1,6 GB)...'
-    # curl bawaan Windows: unduhan yang terputus dilanjutkan, bukan diulang.
     $p = Start-Process -FilePath 'curl.exe' -ArgumentList @('-L', '--fail', '-s', '-C', '-', '--retry', '5', '--retry-delay', '3', '-o', "`"$zip`"", $ZipUrl) -WindowStyle Hidden -PassThru
     $null = $p.Handle
     while (-not $p.HasExited) {

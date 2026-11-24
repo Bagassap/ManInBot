@@ -6,12 +6,10 @@ export interface FolderRule {
   mode: 'READ' | 'READWRITE';
 }
 
-/** Galat yang pesannya aman ditampilkan ke pengguna dan dikembalikan ke model sebagai hasil alat. */
 export class LocalToolError extends Error {}
 
 const isWin = process.platform === 'win32';
 
-/** target berada di dalam (atau sama dengan) root. Windows tidak membedakan huruf besar/kecil. */
 export function isInside(root: string, target: string): boolean {
   const a = isWin ? root.toLowerCase() : root;
   const b = isWin ? target.toLowerCase() : target;
@@ -19,10 +17,6 @@ export function isInside(root: string, target: string): boolean {
   return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
-/**
- * realpath untuk jalur yang mungkin belum ada (mis. berkas baru): realpath leluhur terdalam yang ada, lalu sisa
- * segmennya ditempel kembali. Dengan begini symlink/junction di leluhur tidak bisa dipakai keluar dari folder izin.
- */
 export async function realpathLoose(abs: string): Promise<string> {
   const rest: string[] = [];
   let cur = abs;
@@ -44,17 +38,12 @@ export interface Resolved {
   rule: FolderRule;
 }
 
-/**
- * Mengubah jalur dari agen menjadi jalur absolut yang sudah dipastikan berada di dalam salah satu folder izin.
- * Jalur relatif dihitung dari folder izin pertama. Tulis butuh folder bermode READWRITE.
- */
 export async function resolveInside(rules: FolderRule[], raw: unknown, needWrite: boolean): Promise<Resolved> {
   if (rules.length === 0) {
     throw new LocalToolError('Belum ada folder yang diizinkan. Minta pengguna menambahkannya di Pengaturan → Folder lokal.');
   }
   if (typeof raw !== 'string' || !raw.trim()) throw new LocalToolError('Jalur kosong');
   if (raw.includes('\0')) throw new LocalToolError('Jalur tidak valid');
-  // Windows: aliran data alternatif ("berkas.txt:rahasia") dan jalur perangkat tidak diizinkan
   if (isWin && (/^\\\\[?.]\\/.test(raw) || raw.slice(2).includes(':'))) throw new LocalToolError('Jalur tidak valid');
 
   const abs = path.resolve(path.isAbsolute(raw) ? raw : path.join(rules[0].path, raw));
@@ -71,7 +60,7 @@ export async function resolveInside(rules: FolderRule[], raw: unknown, needWrite
     try {
       root = await realpath(rule.path);
     } catch {
-      continue; // folder izin sudah tidak ada
+      continue;
     }
     if (!isInside(root, real)) continue;
     if (!needWrite || rule.mode === 'READWRITE') return { abs: real, rule };

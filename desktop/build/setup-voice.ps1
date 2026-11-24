@@ -1,7 +1,3 @@
-# Memasang pendengar suara MiB (Whisper + satu model) untuk pengguna ini, tanpa hak administrator.
-# Hanya karakter ASCII: PowerShell 5.1 membaca berkas tanpa BOM sebagai ANSI.
-#   -Model : base (PC ringan) | small (lebih akurat)
-#   -Json  : kemajuan sebagai JSON per baris (dibaca aplikasi)
 param(
   [ValidateSet('base', 'small')][string]$Model = 'base',
   [switch]$Json
@@ -55,7 +51,6 @@ try {
     New-Item -ItemType Directory -Force -Path $tmp | Out-Null
     & "$env:SystemRoot\System32\tar.exe" -xf $zip -C $tmp
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path (Join-Path $tmp 'Release\whisper-cli.exe'))) { throw 'Gagal membongkar mesin suara.' }
-    # Hanya program pendengar dan pustakanya yang disimpan.
     Get-ChildItem (Join-Path $tmp 'Release') -Filter *.exe | Where-Object { $_.Name -ne 'whisper-cli.exe' } | Remove-Item -Force
     if (Test-Path $Bin) { Remove-Item $Bin -Recurse -Force }
     Move-Item (Join-Path $tmp 'Release') $Bin

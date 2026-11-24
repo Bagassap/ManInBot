@@ -92,7 +92,6 @@ interface GwResult<T> {
   body: T & { error?: string; needVerify?: boolean };
 }
 
-/** Memanggil gateway MiB. Galat jaringan menjadi 503; galat dari gateway diteruskan apa adanya (pesannya sudah berbahasa Indonesia). */
 async function gw<T = Record<string, unknown>>(path: string, opts: { method?: string; body?: unknown; token?: string | null; timeoutMs?: number } = {}): Promise<GwResult<T>> {
   try {
     const r = await fetch(`${GATEWAY_URL}${path}`, {
@@ -129,7 +128,6 @@ export class SettingsController {
     void this.reportBrain(true);
   }
 
-  /** Memberi tahu dashboard admin model yang terpasang. Hanya nama model; gagal saat offline tidak mengganggu apa pun. */
   private async reportBrain(force = false) {
     const token = this.settings.accountToken;
     const b = this.brain.installed;
@@ -140,11 +138,9 @@ export class SettingsController {
       const r = await gw('/v1/account/device', { body: { tier: b.tier, model: b.model }, token, timeoutMs: 4000 });
       if (r.status === 200) this.reported = { key, at: Date.now() };
     } catch {
-      /* offline: dicoba lagi saat aplikasi berikutnya memeriksa akun */
     }
   }
 
-  /** Status akun MiB dari gateway. Sesi yang sudah berakhir dibersihkan agar pengguna diminta masuk lagi. */
   @Get()
   async status() {
     const token = this.settings.accountToken;
@@ -152,7 +148,6 @@ export class SettingsController {
     let problem: string | null = null;
     if (token) {
       try {
-        // MiB bekerja offline: bila server tak terjangkau, data akun terakhir yang dipakai.
         const r = await gw<AccountView>('/v1/account', { token, timeoutMs: 4000 });
         if (r.status === 200) {
           account = r.body as AccountView;
@@ -160,7 +155,6 @@ export class SettingsController {
           void this.reportBrain();
         } else if (r.status === 401 || r.status === 403) this.settings.setAccountToken(null);
       } catch {
-        /* offline */
       }
     }
     let plan: PlanView | null = account?.plan ?? null;
@@ -180,7 +174,6 @@ export class SettingsController {
   @Throttle({ default: { limit: 8, ttl: 60_000 } })
   async register(@Body() dto: RegisterDto) {
     const b = ok(await gw<{ token?: string; needVerify?: boolean; account?: AccountView }>('/v1/account/register', { body: dto }));
-    // Tanpa verifikasi email, server langsung memberi token: pengguna langsung masuk.
     if (typeof b.token === 'string') this.signedIn(b.token, b.account);
     return { ok: true, needVerify: b.needVerify !== false && typeof b.token !== 'string' };
   }
@@ -228,7 +221,6 @@ export class SettingsController {
     return ok(await gw('/v1/account/reset', { body: dto }));
   }
 
-  /** Membuat pembayaran paket berbayar; mengembalikan alamat halaman bayar yang dibuka pengguna di browser. */
   @Post('account/checkout')
   @UseGuards(AdminGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })

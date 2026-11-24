@@ -76,7 +76,6 @@ export class WorkspacesController {
     return { ok: true };
   }
 
-  /** Semua anggota boleh memanggil ini untuk dirinya sendiri (keluar); mengeluarkan orang lain dicek di service. */
   @Delete(':workspaceId/members/:userId')
   @HttpCode(204)
   @UseGuards(WorkspaceGuard)

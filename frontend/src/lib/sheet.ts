@@ -1,4 +1,3 @@
-/** Bentuk data lembar kerja yang dialirkan backend ke layar bersama, plus pemformat tampilannya. */
 
 export type CellValue = string | number | boolean | null;
 
@@ -54,9 +53,7 @@ export interface SheetState {
   sheets: Record<string, SheetData>;
   active: string;
   warnings: string[];
-  /** Naik setiap kali agen menyentuh sel: dipakai memicu animasi dan perpindahan tab. */
   seq: number;
-  /** Sel yang baru disentuh beserta urutannya (untuk animasi mengisi satu per satu). */
   touch: { sheet: string; order: Record<string, number> } | null;
 }
 
@@ -124,7 +121,6 @@ export function applyPatch(
   };
 }
 
-/* ---------- alamat sel ---------- */
 export function colLetters(col: number): string {
   let n = col;
   let s = "";
@@ -144,7 +140,6 @@ export function parseRef(ref: string): { col: number; row: number } | null {
   return { col, row: Number(m[2]) };
 }
 
-/* ---------- format tampilan ---------- */
 const nf = (decimals: number, grouping: boolean) =>
   new Intl.NumberFormat("id-ID", {
     minimumFractionDigits: decimals,
@@ -166,7 +161,6 @@ function formatDate(serial: number, fmt: string): string {
     .replace(/mm/gi, pad(d.getUTCMonth() + 1));
 }
 
-/** Menampilkan nilai sel sesuai format angka (#,##0 / 0.00 / 0% / Rp #,##0 / dd/mm/yyyy). */
 export function formatValue(view: CellView | undefined): string {
   if (!view) return "";
   if (view.e) return view.e;

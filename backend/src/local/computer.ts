@@ -8,7 +8,6 @@ import { LocalToolError } from './paths.js';
 import { cleanEnv } from './shell.js';
 import type { LocalCtx } from './types.js';
 
-/** Kendali komputer hanya untuk aplikasi yang berjalan di komputer pengguna sendiri (Windows), bukan server bersama. */
 export const computerEnabled = () => process.platform === 'win32' && process.env.MIB_LOCAL === '1';
 
 export interface ComputerOutput {
@@ -28,10 +27,8 @@ interface DriverReply {
 const MAX_ACTIONS = 300;
 const TYPE_MAX = 4000;
 const START_TIMEOUT_MS = 30_000;
-/** Jumlah elemen layar yang dikirim ke otak per langkah; dijaga kecil agar model lokal tetap cepat. */
 const MAX_ELEMENTS = 90;
 
-/** Aplikasi yang boleh diluncurkan agen: nama tetap -> perintah tetap (tidak pernah dari teks bebas). */
 const APPS: Record<string, string> = {
   word: 'winword',
   excel: 'excel',
@@ -39,10 +36,6 @@ const APPS: Record<string, string> = {
   outlook: 'outlook',
 };
 
-/**
- * Penjaga "khusus kantor" yang ditegakkan di pengendali: pembacaan layar dan masukan hanya untuk jendela proses ini.
- * Jendela lain (peramban, terminal, Pengaturan, bilah tugas, dialog Jalankan) ditolak.
- */
 export const OFFICE_PROCESSES = ['WINWORD', 'EXCEL', 'POWERPNT', 'OUTLOOK', 'olk', 'ONENOTE', 'MSPUB'];
 
 class Driver {
@@ -51,7 +44,6 @@ class Driver {
   private ready: Promise<void> | null = null;
 
   private start(): Promise<void> {
-    // Skrip melebihi batas panjang baris perintah Windows, jadi hanya pemuat kecil yang lewat argumen; isinya lewat stdin.
     const loader = Buffer.from(DRIVER_LOADER, 'utf16le').toString('base64');
     const proc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', loader], {
       env: cleanEnv(),
@@ -105,7 +97,7 @@ class Driver {
       };
       const onAbort = () => {
         done();
-        this.stop(); // mematikan driver juga menghentikan ketikan yang sedang berjalan
+        this.stop();
         reject(new LocalToolError('Dibatalkan'));
       };
       const timer = setTimeout(() => {
@@ -147,7 +139,6 @@ export class ComputerService {
     private readonly audit: AuditService,
   ) {}
 
-  /** Dipanggil saat satu putaran agen selesai (sukses, gagal, atau dibatalkan). */
   endRun(conversationId: string) {
     if (this.sessions.delete(conversationId) && this.sessions.size === 0) this.driver.stop();
   }
@@ -220,7 +211,7 @@ export class ComputerService {
         if (!exe) throw new LocalToolError(`Aplikasi tidak dikenal. Pilihan: ${Object.keys(APPS).join(', ')}. Aplikasi di luar daftar ini tidak boleh dioperasikan.`);
         await this.launch(exe);
         label = `launch ${name}`;
-        await new Promise((r) => setTimeout(r, 2500)); // beri waktu aplikasi muncul
+        await new Promise((r) => setTimeout(r, 2500));
         cmd = { action: 'wait', seconds: 1 };
         break;
       }
@@ -284,7 +275,6 @@ export class ComputerService {
 
   private launch(exe: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Nama berasal dari daftar tetap di atas, bukan dari masukan model.
       const c = spawn('cmd.exe', ['/c', 'start', '', exe], { windowsHide: true, detached: true, stdio: 'ignore' });
       c.once('error', () => reject(new LocalToolError('Tidak bisa meluncurkan aplikasi')));
       c.once('spawn', () => {

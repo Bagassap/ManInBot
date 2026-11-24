@@ -23,7 +23,6 @@ export interface BrainStatus {
 
 const ORDER: Tier[] = ["ringan", "sedang", "kuat"];
 
-/** Status otak lokal, pilihan model, dan pemasangan/pelanjutan unduhan. */
 export default function BrainPanel({ isAdmin, onReady }: { isAdmin: boolean; onReady?: () => void }) {
   const [s, setS] = useState<BrainStatus | null>(null);
   const [picked, setPicked] = useState<Tier | null>(null);
@@ -31,10 +30,8 @@ export default function BrainPanel({ isAdmin, onReady }: { isAdmin: boolean; onR
 
   const load = useCallback(async () => {
     const next = await api<BrainStatus>("/brain");
-    setS((prev) => {
-      if (prev?.job.running && !next.job.running && next.ready) onReady?.();
-      return next;
-    });
+    setS(next);
+    if (next.ready && !next.job.running) onReady?.();
   }, [onReady]);
 
   useEffect(() => {

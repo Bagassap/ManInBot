@@ -23,13 +23,8 @@ type WorkspaceRequest = Request & { user?: AuthUser; workspace?: WorkspaceAccess
 
 const ROLES_KEY = 'workspace_roles';
 
-/** Membatasi rute ke peran tertentu di workspace (tanpa dekorator: semua anggota boleh). */
 export const WorkspaceRoles = (...roles: WorkspaceRoleName[]) => SetMetadata(ROLES_KEY, roles);
 
-/**
- * Dipasang SETELAH AuthGuard pada rute berparameter :workspaceId. Hanya anggota yang lolos; bukan anggota
- * mendapat 404 (sama dengan workspace yang tidak ada), sehingga keberadaan workspace orang lain tidak bocor.
- */
 @Injectable()
 export class WorkspaceGuard implements CanActivate {
   constructor(

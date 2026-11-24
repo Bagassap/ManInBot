@@ -29,7 +29,7 @@ describe('impor .xlsx', () => {
     expect(s.cells.A1).toEqual({ v: 'Nama', s: { b: true, color: '#FF0000', bg: '#FFEEAA' } });
     expect(s.cells.B1.s?.fmt).toBe('#,##0');
     expect(s.cells.B2.f).toBe('B1*2');
-    expect(s.cells.C1.v).toBeCloseTo(46053, 0); // 2026-01-31 sebagai nomor seri Excel
+    expect(s.cells.C1.v).toBeCloseTo(46053, 0);
     expect(s.cells.C1.s?.fmt).toBe('dd/mm/yyyy');
     expect(s.cells.D1.v).toBe('Rich text');
     expect(s.widths.A).toBe(22);
@@ -66,7 +66,7 @@ describe('impor .xlsx', () => {
 
   it('menolak zip bomb yang mengaku besar', async () => {
     const zip = new JSZip();
-    zip.file('a.bin', Buffer.alloc(90 * 1024 * 1024)); // 90 MB nol: menyusut jadi ~90 KB
+    zip.file('a.bin', Buffer.alloc(90 * 1024 * 1024));
     const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
     expect(buf.length).toBeLessThan(1_000_000);
     expect(() => inspectZip(buf)).toThrow(/terlalu besar/);
@@ -76,7 +76,6 @@ describe('impor .xlsx', () => {
     const zip = new JSZip();
     zip.file('a.bin', Buffer.alloc(3 * 1024 * 1024));
     const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
-    // ubah klaim ukuran di central directory menjadi 1000 byte
     const eocd = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
     const cd = buf.readUInt32LE(eocd + 16);
     buf.writeUInt32LE(1000, cd + 24);
@@ -127,8 +126,8 @@ describe('ekspor .xlsx', () => {
     const ws = back.getWorksheet('Sheet1')!;
     const a1 = ws.getCell('A1').value as unknown;
     const b1 = ws.getCell('B1').value as unknown;
-    expect(typeof a1).toBe('string'); // teks biasa, bukan rumus
-    expect(typeof b1).toBe('string'); // fungsi tidak didukung -> teks
+    expect(typeof a1).toBe('string');
+    expect(typeof b1).toBe('string');
     expect(ws.getCell('C1').value).toMatchObject({ formula: 'SUM(1,2)', result: 3 });
   });
 });

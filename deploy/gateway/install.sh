@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# Dijalankan DI SERVER sebagai root: memasang/memperbarui gateway MiB (akun, kuota harian, pembayaran, perantara AI).
-# Berkas server.mjs db.mjs mail.mjs main.mjs cli.mjs admin.mjs package.json harus ada di direktori yang sama dengan skrip ini.
 set -euo pipefail
 SRC="$(cd "$(dirname "$0")" && pwd)"
 NODE_VER="${NODE_VER:-v22.23.4}"
 NODE_DIR=/opt/node22
 
-# Node 22 (butuh node:sqlite). Dipasang terpisah dari Node sistem agar tidak mengganggu apa pun.
 if [ ! -x "$NODE_DIR/bin/node" ] || ! "$NODE_DIR/bin/node" -e 'require("node:sqlite")' 2>/dev/null; then
   echo "[gateway] memasang Node $NODE_VER"
   mkdir -p "$NODE_DIR"
@@ -21,7 +18,6 @@ for f in server.mjs db.mjs mail.mjs main.mjs cli.mjs admin.mjs package.json; do 
 rm -f /opt/mib-gateway/store.mjs
 (cd /opt/mib-gateway && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1)
 
-# Berkas lingkungan (rahasia). Hanya menambah kunci yang belum ada; nilai yang sudah diisi tidak disentuh.
 umask 077
 touch /etc/mib-gateway.env
 add() { grep -q "^$1=" /etc/mib-gateway.env || printf '%s=%s\n' "$1" "$2" >> /etc/mib-gateway.env; }
@@ -76,7 +72,6 @@ UNIT
 systemctl daemon-reload
 systemctl enable mib-gateway >/dev/null 2>&1
 
-# Perintah admin
 cat > /usr/local/bin/mib-admin <<WRAP
 #!/bin/sh
 exec sudo -u mibgw env DATA_DIR=/var/lib/mib-gateway $NODE_DIR/bin/node --disable-warning=ExperimentalWarning /opt/mib-gateway/cli.mjs "\$@"
@@ -84,8 +79,6 @@ WRAP
 chmod 755 /usr/local/bin/mib-admin
 rm -f /usr/local/bin/mib-license
 
-# Mengisi satu nilai rahasia tanpa menampilkannya di layar atau riwayat perintah.
-#   mib-set ANTHROPIC_API_KEY | MIDTRANS_SERVER_KEY | SMTP_PASS
 cat > /usr/local/bin/mib-set <<'SET'
 #!/bin/bash
 set -e
@@ -107,9 +100,6 @@ chmod 755 /usr/local/bin/mib-set
 printf '#!/bin/sh\nexec /usr/local/bin/mib-set ANTHROPIC_API_KEY\n' > /usr/local/bin/mib-set-key
 chmod 755 /usr/local/bin/mib-set-key
 
-# Dashboard admin: membuat alamat rahasia acak (sekali) dan mengatur kata sandi admin.
-#   mib-admin-setup            atur/ganti kata sandi (alamat tetap)
-#   mib-admin-setup --new-url  buat alamat rahasia baru (alamat lama langsung mati)
 cat > /usr/local/bin/mib-admin-setup <<SETUP
 #!/bin/bash
 set -e
@@ -134,8 +124,6 @@ echo "  https://maninbot.id/ai/\$P/"
 SETUP
 chmod 755 /usr/local/bin/mib-admin-setup
 
-# Email kode verifikasi lewat Gmail (App Password). Menanyakan alamat + sandi aplikasi, mematikan mode uji,
-# lalu mengirim email percobaan ke alamat itu sendiri.
 cat > /usr/local/bin/mib-email-gmail <<GMAIL
 #!/bin/bash
 set -e
@@ -167,7 +155,6 @@ fi
 GMAIL
 chmod 755 /usr/local/bin/mib-email-gmail
 
-# nginx: pembatas laju + /ai/ diteruskan ke gateway (tanpa buffer agar aliran SSE langsung sampai)
 cat > /etc/nginx/conf.d/mib-gateway-limit.conf <<'LIM'
 limit_req_zone $binary_remote_addr zone=mibai:10m rate=30r/s;
 LIM

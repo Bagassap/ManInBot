@@ -1,4 +1,3 @@
-/** Isi dokumentasi MiB. Hanya menjelaskan yang benar-benar sudah ada; yang belum ditandai "Segera". */
 
 export type Block =
   | { t: "p"; text: string }
@@ -46,8 +45,8 @@ export const DOCS: DocPage[] = [
     blocks: [
       { t: "ol", items: [
         "Unduh MiB-Setup.exe dari halaman Unduh, jalankan, lalu klik Next, Install, dan Finish.",
-        "Pilih model di pemasang (Ringan, Sedang, atau Kuat), lalu tunggu unduhannya selesai.",
-        "Buka MiB, daftar akun, isi data diri, lalu pilih folder kerja dan beri tugas di chat.",
+        "Buka MiB, pilih model (Ringan, Sedang, atau Kuat), lalu tunggu unduhannya selesai.",
+        "Daftar akun, isi data diri, lalu pilih folder kerja dan beri tugas di chat.",
       ] },
       { t: "p", text: "Lebih suka terminal? Buka PowerShell dan jalankan:" },
       { t: "code", text: "irm https://maninbot.id/download/install.ps1 | iex" },
@@ -65,18 +64,45 @@ export const DOCS: DocPage[] = [
       { t: "ul", items: [
         "Windows 10 atau 11 (64-bit)",
         "Ruang kosong 8 sampai 12 GB, sesuai model",
-        "Internet saat memasang dan saat masuk ke akun",
+        "Internet saat mengunduh model dan saat masuk ke akun",
       ] },
       { t: "h2", text: "Pasang" },
       { t: "ol", items: [
         "Unduh MiB-Setup.exe dari halaman Unduh.",
         "Jalankan berkasnya, lalu klik Next, Install, dan Finish.",
+        "Buka MiB, pilih model yang disarankan atau model lain, lalu tunggu unduhannya selesai.",
       ] },
       { t: "note", kind: "info", text: "Jika muncul layar biru Windows protected your PC, klik Info lainnya, lalu Tetap jalankan. Itu normal untuk pemasang yang belum ditandatangani." },
       { t: "h2", text: "Atau lewat PowerShell" },
       { t: "code", text: "irm https://maninbot.id/download/install.ps1 | iex" },
       { t: "h2", text: "Memperbarui dan mencopot" },
       { t: "p", text: "Untuk memperbarui, unduh dan pasang ulang; data Anda tetap aman. Untuk mencopot, buka Pengaturan Windows, Aplikasi, lalu MiB." },
+    ],
+  },
+  {
+    slug: "model",
+    group: "Memulai",
+    icon: "book",
+    title: "Tiga model offline",
+    summary: "Perbedaan model Ringan, Sedang, dan Kuat, serta cara memilihnya.",
+    blocks: [
+      { t: "p", text: "MiB menyediakan tiga model gratis yang berjalan di komputer Anda. Ketiganya punya fitur yang sama. Bedanya ada pada kemampuan menangani tugas panjang dan sumber daya komputer yang dipakai." },
+      { t: "table", head: ["", "Ringan", "Sedang", "Kuat"], rows: [
+        ["Prosesor", "Core i3 / Ryzen 3", "Core i5 / Ryzen 5", "Core i7 / Ryzen 7"],
+        ["RAM", "4–8 GB", "8 GB ke atas", "16 GB ke atas"],
+        ["Unduhan", "±3 GB", "±4 GB", "±7 GB"],
+        ["Ruang kosong", "±8 GB", "±9 GB", "±12 GB"],
+        ["Paling cocok", "Surat, email, ringkasan singkat", "Laporan, notulen, Excel, slide", "Dokumen panjang, tugas banyak langkah"],
+      ] },
+      { t: "h2", text: "Cara memilih" },
+      { t: "ol", items: [
+        "Unduh dan pasang MiB. Pilihan model tidak ada di web.",
+        "Saat MiB pertama dibuka, aplikasi memeriksa prosesor dan RAM lalu menandai model yang Disarankan.",
+        "Pilih model, klik Pasang sekarang, lalu tunggu unduhannya selesai.",
+      ] },
+      { t: "h2", text: "Mengganti model" },
+      { t: "p", text: "Buka Pengaturan, bagian Otak MiB, pilih model lain, lalu klik Ganti ke model ini. Internet dibutuhkan untuk mengunduh model baru." },
+      { t: "note", kind: "info", text: "Kecepatan mengikuti prosesor dan RAM komputer Anda. Seperti semua AI, hasilnya bisa keliru, jadi periksa dokumen sebelum dikirim." },
     ],
   },
   {

@@ -1,4 +1,3 @@
-// Pengiriman email lewat SMTP (nodemailer). Tanpa SMTP_HOST, kode hanya dicatat di log bila DEV_LOG_CODES=1 (untuk uji).
 import nodemailer from 'nodemailer';
 
 let transport = null;
@@ -18,7 +17,6 @@ export const mailReady = () => !!process.env.SMTP_HOST || process.env.DEV_LOG_CO
 const SUBJECT = { verify: 'Kode verifikasi MiB', reset: 'Kode atur ulang kata sandi MiB' };
 const INTRO = { verify: 'Gunakan kode berikut untuk memverifikasi akun MiB Anda', reset: 'Gunakan kode berikut untuk mengatur ulang kata sandi akun MiB Anda' };
 
-/** Versi HTML sederhana; kode tampil besar agar mudah disalin. Tanpa gambar atau tautan luar. */
 function htmlBody(intro, code) {
   return `<!doctype html><html><body style="margin:0;background:#f4f6f7;font-family:Segoe UI,Arial,sans-serif;color:#1d2427">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">

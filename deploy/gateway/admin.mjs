@@ -1,14 +1,3 @@
-// Dashboard admin MiB: daftar akun (email), paket, pemakaian, dan pembayaran.
-//
-// Pengamanan berlapis:
-//  1. Alamat rahasia acak (ADMIN_PATH, minimal 24 karakter). Alamat lain apa pun, termasuk /admin, menjawab 404
-//     yang sama persis dengan alamat tak dikenal, jadi keberadaan dashboard tidak bisa ditebak.
-//  2. Kata sandi admin (ADMIN_PASS_HASH, scrypt). Diisi lewat `mib-admin-setup` di server, tidak pernah lewat web.
-//  3. Percobaan masuk dibatasi (5 per 15 menit per IP, 20 per jam total) dan dicatat di journal.
-//  4. Sesi di memori (12 jam), cookie HttpOnly + Secure + SameSite=Strict yang hanya berlaku untuk alamat rahasia.
-//  5. Permintaan yang mengubah data wajib dari situs yang sama (Origin diperiksa) dan memakai header khusus.
-//  6. CSP ketat, noindex, tanpa cache, tidak bisa dimuat di dalam frame.
-//  7. Opsional: ADMIN_IPS (dipisah koma) membatasi dashboard hanya untuk alamat IP tertentu.
 import { randomBytes } from 'node:crypto';
 import { checkPassword, sha } from './db.mjs';
 
@@ -21,9 +10,9 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
   const ips = String(process.env.ADMIN_IPS || '').split(',').map((s) => s.trim()).filter(Boolean);
   const enabled = base.length >= 24 && passHash.startsWith('s1$');
   const prefix = `/${base}`;
-  const sessions = new Map(); // sha(token) -> kedaluwarsa
+  const sessions = new Map();
 
-  const notFound = (res) => json(res, 404, { error: 'tidak ditemukan' }); // sama dengan router utama
+  const notFound = (res) => json(res, 404, { error: 'tidak ditemukan' });
 
   const secHeaders = {
     'Cache-Control': 'no-store',
@@ -49,17 +38,15 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
     }
     return true;
   };
-  // Path cookie mengikuti alamat yang dilihat browser (/ai/<rahasia>), bukan alamat internal setelah nginx.
   const publicBase = String(process.env.ADMIN_PUBLIC_BASE ?? '/ai').replace(/[^A-Za-z0-9_/-]/g, '');
   const cookiePath = () => `${publicBase}${prefix}`;
   const setCookie = (req, res, token, maxAge) =>
     res.setHeader('Set-Cookie', `${COOKIE}=${token}; Path=${cookiePath()}; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`);
 
-  /** Perubahan data hanya dari halaman dashboard sendiri. */
   const sameOrigin = (req) => {
     if (req.headers['x-mib-admin'] !== '1') return false;
     const o = req.headers.origin;
-    if (!o) return true; // header khusus di atas sudah memaksa preflight lintas situs
+    if (!o) return true;
     try {
       return new URL(o).host === req.headers.host;
     } catch {
@@ -151,7 +138,6 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
         freePerDay: cfg.freePerDay,
         paidPerDay: cfg.paidPerDay,
         unlimited: cfg.unlimited,
-        // Perkiraan biaya: token tercatat sudah setara harga token masukan (lihat usageTracker di server.mjs).
         priceUsdPerMTok: Number(process.env.PRICE_USD_PER_MTOK) || 2,
         usdIdr: Number(process.env.USD_IDR) || 16500,
       },
@@ -175,7 +161,6 @@ export function createAdmin(db, { json, fail, ipOf, allow, readJson, cfg }) {
       return json(res, 200, { ok: true, paidUntil: new Date(until).toISOString() });
     }
     if (kind === 'resetpw') {
-      // Sandi sementara untuk pengguna yang lupa (tidak ada atur ulang lewat email). Semua sesi lamanya diakhiri.
       const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
       const temp = Array.from(randomBytes(12), (x) => alphabet[x % alphabet.length]).join('');
       db.setPassword(u.id, temp);

@@ -13,7 +13,6 @@ const RATE = 16000;
 const MAX_SECONDS = 60;
 const SILENCE_MS = 1500;
 const SPEECH_RMS = 0.015;
-/** Tanpa ucapan sama sekali selama ini, rekaman dibatalkan. */
 const NO_SPEECH_MS = 8000;
 
 function toWav(chunks: Float32Array[]) {
@@ -44,13 +43,11 @@ function toWav(chunks: Float32Array[]) {
 }
 
 export interface Recording {
-  /** Selesai merekam; null bila tidak ada ucapan. */
   result: Promise<Blob | null>;
   stop: () => void;
   cancel: () => void;
 }
 
-/** Merekam dari mikrofon dan berhenti sendiri setelah pengguna diam. */
 export async function record(): Promise<Recording> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -110,7 +107,6 @@ export function stopSpeaking() {
   current = null;
 }
 
-/** Membacakan teks; selesai saat audio berhenti. */
 export async function speak(text: string) {
   stopSpeaking();
   const r = await fetch(`${API_URL}/voice/speak`, {

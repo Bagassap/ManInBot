@@ -25,7 +25,6 @@ export default function Reveal({
   delay?: number;
   className?: string;
   variant?: keyof typeof VARIANTS;
-  /** Untuk hero: tunda sampai animasi pembuka selesai (hanya pada kunjungan pertama). */
   afterSplash?: boolean;
 }) {
   return (

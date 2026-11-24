@@ -7,7 +7,6 @@ import type { LoginDto, RegisterDto } from './auth.dto.js';
 import { WorkspacesService } from '../workspaces/workspaces.service.js';
 import type { GoogleProfile } from './google.service.js';
 
-// Hash asli untuk email yang tidak terdaftar, agar waktu respons login seragam.
 let dummyHash: Promise<string> | null = null;
 const DUMMY_HASH = () => (dummyHash ??= argon2.hash('mib-dummy-password'));
 
@@ -24,7 +23,6 @@ export class AuthService {
     if (await this.prisma.user.findUnique({ where: { email } })) {
       throw new ConflictException('Email sudah terdaftar');
     }
-    // Instalasi lokal (MIB_LOCAL=1): pengguna pertama adalah pemilik komputer ini, jadi langsung admin.
     const first = process.env.MIB_LOCAL === '1' && (await this.prisma.user.count()) === 0;
     const user = await this.prisma.user.create({
       data: { email, name: dto.name?.trim() || null, passwordHash: await argon2.hash(dto.password), role: first ? 'ADMIN' : 'USER' },
@@ -33,10 +31,6 @@ export class AuthService {
     return this.issue(user);
   }
 
-  /**
-   * Masuk otomatis untuk aplikasi desktop (MIB_LOCAL=1): memakai pengguna pertama di komputer ini,
-   * atau membuat pemilik lokal bila belum ada. Pengguna tidak perlu membuat akun lokal sendiri.
-   */
   async localStart() {
     let user = await this.prisma.user.findFirst({ where: { blockedAt: null }, orderBy: { createdAt: 'asc' } });
     if (!user) {
@@ -58,15 +52,10 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     const ok = await argon2.verify(user?.passwordHash ?? (await DUMMY_HASH()), dto.password).catch(() => false);
     if (!user || !ok) throw new UnauthorizedException('Email atau kata sandi salah');
-    // Diperiksa setelah kata sandi benar, agar status blokir tidak bisa ditebak oleh orang lain.
     if (user.blockedAt) throw new ForbiddenException('Akun diblokir. Hubungi admin.');
     return this.issue(user);
   }
 
-  /**
-   * Masuk/daftar lewat Google. Google sudah memverifikasi kepemilikan email, jadi akun
-   * berpassword dengan email yang sama aman ditautkan ke identitas Google ini.
-   */
   async loginWithGoogle(profile: GoogleProfile) {
     let user = await this.prisma.user.findUnique({ where: { googleId: profile.sub } });
     let created = false;

@@ -23,7 +23,6 @@ export type AgentEvent =
   | SheetEvent
   | ApprovalEvent;
 
-/** Siapa yang sedang memakai agen (dibutuhkan alat yang menyimpan data, mis. lembar kerja). */
 export interface RunContext {
   userId: string;
   userEmail: string;
@@ -31,7 +30,6 @@ export interface RunContext {
   conversationId: string;
 }
 
-/** Akumulator pemakaian token; diisi selama run() dan tetap terbaca walau run() melempar galat. */
 export interface RunUsage {
   inputTokens: number;
   outputTokens: number;
@@ -44,7 +42,6 @@ export interface ChatTurn {
 
 const MAX_TURNS = 25;
 const COMPUTER_MAX_TURNS = 60;
-/** Model lokal punya konteks kecil: riwayat dan keluaran alat dibatasi agar instruksi tidak terdorong keluar. */
 const HISTORY_TURNS = 8;
 const HISTORY_CHARS = 3000;
 const TOOL_OUTPUT_CHARS = 8000;
@@ -82,7 +79,6 @@ const WANTS_DOC = /word|\.docx|powerpoint|\.pptx|slide|presentasi|dokumen|surat|
 const WANTS_SCREEN = /\b(buka|jalankan|operasikan)\s+(aplikasi\s+)?(word|excel|powerpoint|outlook)|\bketik|di layar|\bklik\b/i;
 const WANTS_SHELL = /powershell|perintah sistem|pindahkan|rapikan|salin berkas|ganti nama/i;
 
-/** Otak kecil makin akurat dan cepat bila hanya melihat alat yang relevan dengan permintaan. */
 export function pickTools(recentUserText: string): { tools: OllamaTool[]; hints: string; screen: boolean } {
   const excel = WANTS_EXCEL.test(recentUserText);
   const doc = WANTS_DOC.test(recentUserText);
@@ -118,7 +114,6 @@ function argsOf(call: OllamaToolCall): Record<string, unknown> {
   }
 }
 
-/** Model kecil kadang menulis panggilan alat sebagai teks; dibaca di sini agar tugas tidak berhenti. */
 export function toolCallsInText(text: string): OllamaToolCall[] {
   const calls: OllamaToolCall[] = [];
   for (const m of text.matchAll(/<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g)) {
@@ -126,7 +121,6 @@ export function toolCallsInText(text: string): OllamaToolCall[] {
       const o = JSON.parse(m[1]) as { name?: unknown; arguments?: unknown };
       if (typeof o.name === 'string') calls.push({ function: { name: o.name, arguments: (o.arguments ?? {}) as Record<string, unknown> } });
     } catch {
-      /* bukan JSON */
     }
   }
   return calls;
@@ -150,7 +144,6 @@ export class AgentService {
     return this.brain.ready;
   }
 
-  /** Menjalankan loop agen; mengembalikan teks akhir dan langkah alat yang dikerjakan. */
   async run(
     history: ChatTurn[],
     emit: (event: AgentEvent) => void,
@@ -161,7 +154,6 @@ export class AgentService {
     try {
       return await this.runLoop(history, emit, signal, usage, ctx);
     } finally {
-      // Sesi kendali komputer tidak boleh bertahan melewati satu putaran agen.
       if (ctx) this.local.endRun(ctx.conversationId);
     }
   }
@@ -178,7 +170,6 @@ export class AgentService {
     const { tools, hints, screen } = pickTools(userText);
     const folders = ctx ? await this.local.folders(ctx.workspaceId) : [];
     const where = folders.length ? `Folder yang diizinkan: ${folders.map((f) => `${f.path} [${f.mode}]`).join('; ')}.` : 'Belum ada folder yang diizinkan; minta pengguna menambahkannya di Pengaturan.';
-    // Tanggal (bukan jam) agar awal prompt sama antarlangkah dan Ollama bisa memakai ulang hasil bacanya.
     const system = `${SYSTEM_PROMPT}${hints}\n\n${where}\nTanggal: ${new Date().toISOString().slice(0, 10)}`;
     const messages: OllamaMessage[] = [{ role: 'system', content: system }, ...recent];
 
@@ -221,7 +212,6 @@ export class AgentService {
         const key = `${name}:${JSON.stringify(input)}`;
         const times = (seen.get(key) ?? 0) + 1;
         seen.set(key, times);
-        // Aksi "wait"/"read" boleh berulang; selain itu pengulangan persis berarti model berputar-putar.
         if (times > SAME_CALL_LIMIT && !(name === 'computer' && ['read', 'wait', 'key'].includes(String(input.action)))) looping = true;
         emit({ type: 'tool_start', id, name, input });
         const known = tools.some((t) => t.function.name === name);

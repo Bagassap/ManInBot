@@ -20,7 +20,6 @@ const TOOL_LABEL: Record<string, string> = {
   computer_start: "Mengendalikan komputer",
 };
 
-/** Kartu izin: agen berhenti sampai pengguna memilih. Tampilkan persis apa yang akan dilakukan. */
 export default function ApprovalCard({
   request,
   onAnswer,

@@ -56,18 +56,12 @@ const write = (id: string) => {
   try {
     localStorage.setItem(KEY, id);
   } catch {
-    /* penyimpanan diblokir: pilihan hanya berlaku di sesi ini */
   }
 };
 
-/** Path API di dalam workspace, mis. wsPath(id, "/conversations"). */
 export const wsPath = (workspaceId: string, path = "") =>
   `/workspaces/${workspaceId}${path}`;
 
-/**
- * Daftar workspace pengguna dan yang sedang aktif. Pilihan diingat di browser; bila workspace
- * tersimpan sudah tidak bisa diakses (dikeluarkan/dihapus), otomatis pindah ke yang pertama.
- */
 export function useWorkspace() {
   const [workspaces, setWorkspaces] = useState<WorkspaceItem[] | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);

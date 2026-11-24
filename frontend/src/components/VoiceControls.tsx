@@ -7,7 +7,6 @@ import { record, speak, stopSpeaking, transcribe, type Recording, type VoiceStat
 
 const KEY = "mib-voice-reply";
 
-/** Tombol mikrofon dan speaker. `reply` berisi jawaban terbaru yang perlu dibacakan. */
 export default function VoiceControls({
   disabled,
   reply,
@@ -34,7 +33,6 @@ export default function VoiceControls({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setReplyOn(localStorage.getItem(KEY) === "1");
     } catch {
-      /* penyimpanan tidak tersedia */
     }
     return () => {
       rec.current?.cancel();
@@ -87,13 +85,11 @@ export default function VoiceControls({
       return;
     }
     if (!next) stopSpeaking();
-    // Jawaban yang sudah tampil tidak dibacakan mendadak saat speaker dinyalakan.
     if (next) spoken.current = reply?.id ?? null;
     setReplyOn(next);
     try {
       localStorage.setItem(KEY, next ? "1" : "0");
     } catch {
-      /* penyimpanan tidak tersedia */
     }
   }
 

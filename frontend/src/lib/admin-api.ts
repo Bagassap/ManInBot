@@ -148,7 +148,6 @@ export const adminApi = {
     api<void>(`/admin/users/${id}`, { method: "DELETE" }),
 };
 
-/** Kata sandi acak (tanpa karakter yang mudah tertukar seperti 0/O dan 1/l/I). */
 export function randomPassword(n = 14) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
   const a = new Uint32Array(n);
@@ -167,7 +166,6 @@ export const AUDIT_LABEL: Record<string, string> = {
   "user.delete": "menghapus akun",
 };
 
-/* ---------- pemformat ---------- */
 
 const nf = new Intl.NumberFormat("id-ID");
 export const fmtInt = (n: number) => nf.format(Math.round(n));
@@ -220,7 +218,6 @@ export const STATUS_LABEL: Record<RunStatus, string> = {
   ABORTED: "Dibatalkan",
 };
 
-/** Gabungkan deret harian menjadi paling banyak `max` kelompok (jumlah perintah dijumlah, latensi dirata-rata berbobot). */
 export function bucketSeries(series: AdminOverview["series"], max = 14) {
   const size = Math.max(1, Math.ceil(series.length / max));
   const out: {
@@ -246,7 +243,6 @@ export function bucketSeries(series: AdminOverview["series"], max = 14) {
   return out;
 }
 
-/** Ekspor CSV. Sel yang diawali = + - @ diberi apostrof agar tidak dijalankan sebagai rumus di Excel (CSV injection). */
 export function runsToCsv(items: AdminRunItem[]) {
   const cell = (v: string | number) => {
     let s = String(v).replace(/\r?\n/g, " ");

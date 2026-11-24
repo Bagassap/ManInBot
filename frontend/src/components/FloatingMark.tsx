@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { heroDelay } from "@/lib/splash-state";
 
-/** Lambang perisai di hero: muncul dari blur, lalu melayang pelan dengan cahaya berdenyut. */
 export default function FloatingMark() {
   return (
     <motion.div

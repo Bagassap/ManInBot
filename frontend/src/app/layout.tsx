@@ -4,7 +4,6 @@ import localFont from "next/font/local";
 import NextScript from "next/script";
 import "./globals.css";
 
-// Satoshi (Fontshare, ITF Free Font License, di-host sendiri): teks & UI. Sora: judul.
 const satoshi = localFont({
   src: [
     { path: "../fonts/satoshi-400.woff2", weight: "400", style: "normal" },
@@ -22,7 +21,6 @@ const sora = Sora({
   display: "swap",
 });
 
-// Aksen satu kata di judul: italic elegan bergaya editorial (lihat Script.tsx).
 const instrument = Instrument_Serif({
   variable: "--font-instrument",
   subsets: ["latin"],
@@ -47,10 +45,6 @@ export const viewport: Viewport = {
   themeColor: "#020202",
 };
 
-// Saat halaman di-refresh, selalu mulai dari paling atas. Browser memulihkan posisi gulir (dan hash
-// #bagian) sendiri, kadang setelah skrip pertama berjalan, jadi: matikan pemulihan, buang hash, lalu
-// jaga posisi di atas sampai pengguna menyentuh layar atau menggulir sendiri (maks. 5 detik).
-// Navigasi biasa dan tombol kembali tidak terpengaruh.
 const RESET_ON_RELOAD = `(function(){try{var n=performance.getEntriesByType("navigation")[0];if(!n||n.type!=="reload")return;history.scrollRestoration="manual";if(location.hash){history.replaceState(null,"",location.pathname+location.search)}var top=function(){try{window.scrollTo({top:0,left:0,behavior:"instant"})}catch(e){window.scrollTo(0,0)}};top();var done=false;var end=function(){done=true};["wheel","touchstart","keydown","mousedown"].forEach(function(t){window.addEventListener(t,end,{once:true,passive:true})});window.addEventListener("scroll",function(){if(!done&&window.scrollY!==0)top()},{passive:true});setTimeout(end,5000)}catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

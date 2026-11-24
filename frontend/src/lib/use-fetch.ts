@@ -9,10 +9,6 @@ interface Result<T> {
   at: number;
 }
 
-/**
- * Mengambil data setiap `key` berubah. Data lama tetap tampil selama data baru dimuat
- * (`loading` = true), jadi layar tidak berkedip. `key = null` berarti jangan mengambil.
- */
 export function useFetch<T>(key: string | null, fetcher: () => Promise<T>) {
   const [state, setState] = useState<Result<T> | null>(null);
 
@@ -34,7 +30,6 @@ export function useFetch<T>(key: string | null, fetcher: () => Promise<T>) {
     return () => {
       cancelled = true;
     };
-    // `fetcher` sengaja tidak jadi dependensi: `key` sudah mewakili seluruh parameternya.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 

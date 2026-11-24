@@ -42,7 +42,6 @@ interface SetupJob {
   error: string | null;
 }
 
-/** Otak lokal: mengelola Ollama milik MiB (port sendiri, folder sendiri) dan pemasangannya. */
 @Injectable()
 export class BrainService implements OnModuleDestroy {
   private readonly logger = new Logger(BrainService.name);
@@ -73,12 +72,10 @@ export class BrainService implements OnModuleDestroy {
     return this.config() !== null && (!!process.env.MIB_OLLAMA_URL || existsSync(this.exe));
   }
 
-  /** Model yang benar-benar terpasang; null bila belum ada. */
   get installed() {
     return this.ready ? this.config() : null;
   }
 
-  /** Dipanggil setiap kali pemasangan model selesai dengan sukses. */
   onInstalled(fn: () => void) {
     this.installedListeners.push(fn);
   }
@@ -99,7 +96,6 @@ export class BrainService implements OnModuleDestroy {
     }
   }
 
-  /** Menyalakan Ollama milik MiB bila belum berjalan. */
   private async ensureServer() {
     if (await this.alive()) return;
     if (process.env.MIB_OLLAMA_URL) throw new Error('Mesin AI tidak bisa dihubungi.');
@@ -134,7 +130,6 @@ export class BrainService implements OnModuleDestroy {
     throw new Error('Mesin AI tidak mau menyala.');
   }
 
-  /** Satu giliran percakapan; potongan jawaban dialirkan apa adanya dari Ollama. */
   async *chat(body: { messages: OllamaMessage[]; tools: OllamaTool[] }, signal: AbortSignal): AsyncGenerator<OllamaChunk> {
     const cfg = this.config();
     if (!cfg) throw new Error('Otak MiB belum dipasang.');
@@ -209,7 +204,6 @@ export class BrainService implements OnModuleDestroy {
     };
   }
 
-  /** Memasang atau mengganti model; berjalan di latar belakang, kemajuannya dibaca lewat status(). */
   setup(tier: BrainTier) {
     if (this.job.running) throw new ConflictException('Pemasangan sedang berjalan.');
     const p = this.script(['-Tier', tier, '-Json']);
@@ -220,7 +214,6 @@ export class BrainService implements OnModuleDestroy {
         const e = JSON.parse(line) as { phase: string; pct: number | null; msg: string };
         this.job = { ...this.job, phase: e.phase, pct: e.pct, message: e.msg, error: e.phase === 'error' ? e.msg : this.job.error };
       } catch {
-        /* baris bukan JSON */
       }
     });
     p.stderr?.resume();
